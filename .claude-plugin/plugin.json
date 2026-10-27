@@ -1,0 +1,12 @@
+{
+  "name": "agent-sync",
+  "version": "0.1.0",
+  "description": "Sync your skills, commands, agents and global instructions across devices through your own private git repository.",
+  "author": {
+    "name": "madmaxdios"
+  },
+  "homepage": "https://github.com/madmaxdios/sync-ai",
+  "repository": "https://github.com/madmaxdios/sync-ai",
+  "license": "MIT",
+  "keywords": ["sync", "dotfiles", "skills", "commands", "configuration"]
+}

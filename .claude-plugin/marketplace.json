@@ -1,0 +1,14 @@
+{
+  "name": "sync-ai",
+  "description": "Tools to keep AI agent configuration in sync across devices",
+  "owner": {
+    "name": "madmaxdios"
+  },
+  "plugins": [
+    {
+      "name": "agent-sync",
+      "source": "./",
+      "description": "Sync skills, commands, agents and global instructions through your own private git repository"
+    }
+  ]
+}
