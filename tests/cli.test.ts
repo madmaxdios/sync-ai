@@ -19,7 +19,6 @@ describe('command line handling', () => {
 
   it.each([
     ['a missing command', [] as string[], 'missing command'],
-    ['init without a URL', ['init'], 'init requires the repository URL'],
     ['an unknown option', ['--nope', 'status'], 'unknown option: --nope'],
     ['an unexpected extra argument', ['status', 'one', 'two'], 'unexpected argument: two'],
     ['an unknown command', ['bogus'], 'unknown command: bogus'],

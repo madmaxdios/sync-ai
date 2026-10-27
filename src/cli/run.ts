@@ -10,6 +10,7 @@ import type { CommandContext } from '../commands/context';
 import { AppError, UsageError } from '../domain/app-error';
 import { ExitCode } from '../domain/exit-code';
 import { resolveDataHome } from '../infra/data-home';
+import { GitHubCli } from '../infra/gh';
 import { Git } from '../infra/git';
 import type { Io } from '../infra/io';
 import { commandNameSchema, type CommandName } from './command-name';
@@ -68,9 +69,11 @@ async function execute(argv: readonly string[], runtime: Runtime): Promise<ExitC
     assumeYes: options.assumeYes,
     dryRun: options.dryRun,
     argument: options.argument,
+    repoName: options.name,
     io: runtime.io,
     git,
     repoGit: git.withRepo(repoDir),
+    gh: new GitHubCli(runtime.env),
     hostname: runtime.hostname,
     now: runtime.now,
   });

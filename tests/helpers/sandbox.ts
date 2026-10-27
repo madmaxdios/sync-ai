@@ -11,6 +11,8 @@ export interface RunResult {
   readonly output: string;
   readonly stdout: string;
   readonly stderr: string;
+  /** Confirmation questions asked during the run. */
+  readonly questions: readonly string[];
 }
 
 export interface RunOptions {
@@ -18,6 +20,8 @@ export interface RunOptions {
   readonly confirm?: boolean;
   /** Agent passed with --agent (defaults to claude). */
   readonly agent?: string;
+  /** Environment overrides for the run (e.g. a fake `gh` on PATH). */
+  readonly env?: Readonly<Record<string, string | undefined>>;
 }
 
 export type Device = 'A' | 'B';
@@ -46,6 +50,11 @@ export class Sandbox {
 
   agentHome(device: Device): string {
     return path.join(this.home(device), '.claude');
+  }
+
+  /** Path of the isolated global git config shared by every device. */
+  get globalGitConfig(): string {
+    return this.gitConfig;
   }
 
   dataHome(device: Device): string {
@@ -82,13 +91,17 @@ export class Sandbox {
 
   async run(device: Device, args: readonly string[], options: RunOptions = {}): Promise<RunResult> {
     const entries: { stream: 'out' | 'err'; text: string }[] = [];
+    const questions: string[] = [];
     const io: Io = {
       info: (message) => entries.push({ stream: 'out', text: message }),
       warn: (message) => entries.push({ stream: 'err', text: message }),
-      confirm: () => Promise.resolve(options.confirm ?? false),
+      confirm: (question) => {
+        questions.push(question);
+        return Promise.resolve(options.confirm ?? false);
+      },
     };
     const code = await runCli(['--agent', options.agent ?? 'claude', ...args], {
-      env: this.env(device),
+      env: { ...this.env(device), ...options.env },
       homeDir: this.home(device),
       platform: process.platform,
       hostname: `device-${device}.local`,
@@ -100,7 +113,7 @@ export class Sandbox {
         .filter((entry) => stream === undefined || entry.stream === stream)
         .map((entry) => entry.text)
         .join('\n');
-    return { code, output: join(), stdout: join('out'), stderr: join('err') };
+    return { code, output: join(), stdout: join('out'), stderr: join('err'), questions };
   }
 
   /** Files tracked on the remote main branch, one path per entry. */

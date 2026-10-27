@@ -7,6 +7,7 @@ export const cliOptionsSchema = z.object({
   dryRun: z.boolean(),
   command: z.string().optional(),
   argument: z.string().optional(),
+  name: z.string().optional(),
 });
 
 export type CliOptions = z.infer<typeof cliOptionsSchema>;
@@ -24,6 +25,7 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
   let dryRun = false;
   let command: string | undefined;
   let argument: string | undefined;
+  let name: string | undefined;
 
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index] ?? '';
@@ -37,6 +39,17 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
     }
     if (arg.startsWith('--agent=')) {
       agent = arg.slice('--agent='.length);
+      continue;
+    }
+    if (arg === '--name') {
+      const value = argv[index + 1];
+      if (value === undefined) throw new UsageError('--name requires a value');
+      name = value;
+      index += 1;
+      continue;
+    }
+    if (arg.startsWith('--name=')) {
+      name = arg.slice('--name='.length);
       continue;
     }
     if (arg === '--yes' || arg === '-y') {
@@ -61,6 +74,6 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
     throw new UsageError(`unexpected argument: ${arg}`);
   }
 
-  const options = cliOptionsSchema.parse({ agent, assumeYes, dryRun, command, argument });
+  const options = cliOptionsSchema.parse({ agent, assumeYes, dryRun, command, argument, name });
   return { kind: 'run', options };
 }

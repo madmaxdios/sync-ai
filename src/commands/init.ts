@@ -1,13 +1,17 @@
-import fs from 'node:fs/promises';
 import path from 'node:path';
 import { AppError, UsageError } from '../domain/app-error';
 import { ExitCode } from '../domain/exit-code';
 import { isDirectory } from '../infra/file-system';
+import { cloneRepository } from './clone-repo';
 import type { CommandContext } from './context';
+import { runInitWithGitHub } from './init-with-github';
 
 export async function runInit(context: CommandContext): Promise<ExitCode> {
-  const { argument: url, repoDir, dataHome, io, git, repoGit } = context;
-  if (!url) throw new UsageError('init requires the repository URL');
+  const { argument: url, repoDir, io, repoGit } = context;
+  if (!url) return runInitWithGitHub(context);
+  if (context.repoName !== undefined) {
+    throw new UsageError('--name only applies when init is run without a URL');
+  }
 
   if (await isDirectory(path.join(repoDir, '.git'))) {
     const existing = await repoGit.run(['remote', 'get-url', 'origin']);
@@ -24,8 +28,7 @@ export async function runInit(context: CommandContext): Promise<ExitCode> {
     return ExitCode.Ok;
   }
 
-  await fs.mkdir(dataHome, { recursive: true });
-  await git.must(['clone', '--quiet', '--', url, repoDir]);
+  await cloneRepository(context, url);
   io.info(`Initialized: ${repoDir}`);
   io.warn(
     'Warning: use a PRIVATE repository. Your skills and instructions may contain sensitive data.',

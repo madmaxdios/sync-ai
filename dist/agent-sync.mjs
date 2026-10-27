@@ -7,7 +7,7 @@ var __export = (target, all) => {
 
 // src/cli/run.ts
 import os from "node:os";
-import path6 from "node:path";
+import path7 from "node:path";
 
 // src/domain/app-error.ts
 var AppError = class extends Error {
@@ -842,10 +842,10 @@ function mergeDefs(...defs) {
 function cloneDef(schema) {
   return mergeDefs(schema._zod.def);
 }
-function getElementAtPath(obj, path7) {
-  if (!path7)
+function getElementAtPath(obj, path8) {
+  if (!path8)
     return obj;
-  return path7.reduce((acc, key) => acc?.[key], obj);
+  return path8.reduce((acc, key) => acc?.[key], obj);
 }
 function promiseAllObject(promisesObj) {
   const keys = Object.keys(promisesObj);
@@ -1185,11 +1185,11 @@ function explicitlyAborted(x, startIndex = 0) {
   }
   return false;
 }
-function prefixIssues(path7, issues) {
+function prefixIssues(path8, issues) {
   return issues.map((iss) => {
     var _a3;
     (_a3 = iss).path ?? (_a3.path = []);
-    iss.path.unshift(path7);
+    iss.path.unshift(path8);
     return iss;
   });
 }
@@ -1651,16 +1651,16 @@ function flattenError(error62, mapper = (issue2) => issue2.message) {
 }
 function formatError(error62, mapper = (issue2) => issue2.message) {
   const fieldErrors = { _errors: [] };
-  const processError = (error63, path7 = []) => {
+  const processError = (error63, path8 = []) => {
     for (const issue2 of error63.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
-        issue2.errors.map((issues) => processError({ issues }, [...path7, ...issue2.path]));
+        issue2.errors.map((issues) => processError({ issues }, [...path8, ...issue2.path]));
       } else if (issue2.code === "invalid_key") {
-        processError({ issues: issue2.issues }, [...path7, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path8, ...issue2.path]);
       } else if (issue2.code === "invalid_element") {
-        processError({ issues: issue2.issues }, [...path7, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path8, ...issue2.path]);
       } else {
-        const fullpath = [...path7, ...issue2.path];
+        const fullpath = [...path8, ...issue2.path];
         if (fullpath.length === 0) {
           fieldErrors._errors.push(mapper(issue2));
         } else {
@@ -1699,17 +1699,17 @@ function formatError(error62, mapper = (issue2) => issue2.message) {
 }
 function treeifyError(error62, mapper = (issue2) => issue2.message) {
   const result = { errors: [] };
-  const processError = (error63, path7 = []) => {
+  const processError = (error63, path8 = []) => {
     var _a3;
     for (const issue2 of error63.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
-        issue2.errors.map((issues) => processError({ issues }, [...path7, ...issue2.path]));
+        issue2.errors.map((issues) => processError({ issues }, [...path8, ...issue2.path]));
       } else if (issue2.code === "invalid_key") {
-        processError({ issues: issue2.issues }, [...path7, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path8, ...issue2.path]);
       } else if (issue2.code === "invalid_element") {
-        processError({ issues: issue2.issues }, [...path7, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path8, ...issue2.path]);
       } else {
-        const fullpath = [...path7, ...issue2.path];
+        const fullpath = [...path8, ...issue2.path];
         if (fullpath.length === 0) {
           result.errors.push(mapper(issue2));
           continue;
@@ -1748,8 +1748,8 @@ function treeifyError(error62, mapper = (issue2) => issue2.message) {
 }
 function toDotPath(_path) {
   const segs = [];
-  const path7 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
-  for (const seg of path7) {
+  const path8 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
+  for (const seg of path8) {
     if (typeof seg === "number")
       segs.push(`[${seg}]`);
     else if (typeof seg === "symbol")
@@ -18887,13 +18887,13 @@ function resolveRef(ref, ctx) {
   if (!ref.startsWith("#")) {
     throw new Error("External $ref is not supported, only local refs (#/...) are allowed");
   }
-  const path7 = ref.slice(1).split("/").filter(Boolean);
-  if (path7.length === 0) {
+  const path8 = ref.slice(1).split("/").filter(Boolean);
+  if (path8.length === 0) {
     return ctx.rootSchema;
   }
   const defsKey = ctx.version === "draft-2020-12" ? "$defs" : "definitions";
-  if (path7[0] === defsKey) {
-    const key = path7[1] === void 0 ? void 0 : decodeJSONPointerSegment(path7[1]);
+  if (path8[0] === defsKey) {
+    const key = path8[1] === void 0 ? void 0 : decodeJSONPointerSegment(path8[1]);
     if (!key || !ctx.defs[key]) {
       throw new Error(`Reference not found: ${ref}`);
     }
@@ -19797,8 +19797,7 @@ function resolveAgent(name, environment) {
 }
 
 // src/commands/init.ts
-import fs2 from "node:fs/promises";
-import path3 from "node:path";
+import path4 from "node:path";
 
 // src/infra/file-system.ts
 import fs from "node:fs/promises";
@@ -19843,11 +19842,150 @@ async function pruneEmptyDirs(root) {
   if ((await fs.readdir(root)).length === 0) await fs.rmdir(root);
 }
 
+// src/commands/clone-repo.ts
+import fs2 from "node:fs/promises";
+
+// src/domain/github-repo.ts
+var GH_CREDENTIAL_HELPER = "!gh auth git-credential";
+var gitProtocolSchema = external_exports.enum(["ssh", "https"]);
+var repoInfoSchema = external_exports.object({
+  isPrivate: external_exports.boolean(),
+  url: external_exports.string().min(1),
+  sshUrl: external_exports.string().min(1)
+});
+function parseRepoInfo(json2) {
+  try {
+    return repoInfoSchema.parse(JSON.parse(json2));
+  } catch {
+    throw new AppError("could not understand the repository information returned by gh");
+  }
+}
+function parseGitProtocol(output2) {
+  const parsed = gitProtocolSchema.safeParse(output2.trim());
+  return parsed.success ? parsed.data : "https";
+}
+function cloneUrl(info, protocol) {
+  return protocol === "ssh" ? info.sshUrl : `${info.url}.git`;
+}
+function isRepoNotFound(stderr) {
+  return /could not resolve to a repository|http 404|not found/i.test(stderr);
+}
+
+// src/commands/clone-repo.ts
+async function cloneRepository(context, url2, options = {}) {
+  const { git, repoGit, repoDir, dataHome } = context;
+  await fs2.mkdir(dataHome, { recursive: true });
+  if (!options.withGhCredentials) {
+    await git.must(["clone", "--quiet", "--", url2, repoDir]);
+    return;
+  }
+  await git.must([
+    "-c",
+    "credential.helper=",
+    "-c",
+    `credential.helper=${GH_CREDENTIAL_HELPER}`,
+    "clone",
+    "--quiet",
+    "--",
+    url2,
+    repoDir
+  ]);
+  await repoGit.must(["config", "--local", "--add", "credential.helper", ""]);
+  await repoGit.must(["config", "--local", "--add", "credential.helper", GH_CREDENTIAL_HELPER]);
+}
+
+// src/commands/init-with-github.ts
+import path3 from "node:path";
+
+// src/domain/repo-name.ts
+var DEFAULT_REPO_NAME = "sync-ai-data";
+var repoNameSchema = external_exports.string().max(100).regex(/^[A-Za-z0-9_][A-Za-z0-9._-]*$/).refine((name) => !name.endsWith(".git") && !name.includes(".."));
+
+// src/commands/init-with-github.ts
+var REPO_DESCRIPTION = "AI agent configuration synced with agent-sync";
+async function findRepository(gh, slug) {
+  const result = await gh.run(["repo", "view", slug, "--json", "isPrivate,url,sshUrl"]);
+  if (result.code === 0) return parseRepoInfo(result.stdout);
+  if (isRepoNotFound(result.stderr)) return void 0;
+  throw new AppError(`gh repo view failed: ${result.stderr.trim() || `exit code ${result.code}`}`);
+}
+async function requireAuthenticatedLogin(gh) {
+  const status = await gh.run(["auth", "status"]);
+  if (status.code !== 0) {
+    throw new AppError(
+      "gh is not logged in to GitHub. Run `gh auth login`, or pass the URL of a private repository: init <url>",
+      2 /* Usage */
+    );
+  }
+  const login = await gh.must(["api", "user", "--jq", ".login"]);
+  if (!login) throw new AppError("gh did not return your GitHub username");
+  return login;
+}
+async function reportExistingClone(context) {
+  const { repoDir, repoGit, io } = context;
+  if (!await isDirectory(path3.join(repoDir, ".git"))) return false;
+  const origin = await repoGit.run(["remote", "get-url", "origin"]);
+  const where = origin.code === 0 ? ` (origin: ${origin.stdout.trim()})` : "";
+  io.info(`Already initialized: ${repoDir}${where}`);
+  return true;
+}
+async function runInitWithGitHub(context) {
+  const { gh, io, repoDir } = context;
+  if (await reportExistingClone(context)) return 0 /* Ok */;
+  const parsedName = repoNameSchema.safeParse(context.repoName ?? DEFAULT_REPO_NAME);
+  if (!parsedName.success) {
+    throw new UsageError(
+      'invalid repository name: use letters, digits, ".", "_" or "-" (it cannot start with "-" or end with ".git")'
+    );
+  }
+  const name = parsedName.data;
+  const login = await requireAuthenticatedLogin(gh);
+  const slug = `${login}/${name}`;
+  if (await findRepository(gh, slug)) {
+    throw new AppError(
+      `the repository ${slug} already exists and will not be reused or overwritten. Pass its URL explicitly (init <url>) or choose another name with --name <repo>.`
+    );
+  }
+  if (context.dryRun) {
+    io.info(`[dry-run] Would create the PRIVATE repository ${slug} on GitHub and clone it into ${repoDir}`);
+    return 0 /* Ok */;
+  }
+  if (!context.assumeYes) {
+    const confirmed = await io.confirm(
+      `Create the PRIVATE repository ${slug} on GitHub and use it for your configuration? (y/N) `
+    );
+    if (!confirmed) {
+      io.warn("Cancelled: nothing was created on GitHub.");
+      io.warn(`Review it and repeat with --yes to create the private repository ${slug}.`);
+      return 3 /* ConfirmationRequired */;
+    }
+  }
+  await gh.must(["repo", "create", name, "--private", "--description", REPO_DESCRIPTION]);
+  const created = await findRepository(gh, slug);
+  if (!created) throw new AppError(`gh created ${slug} but it cannot be found afterwards`);
+  if (!created.isPrivate) {
+    throw new AppError(
+      `the repository ${created.url} was created but GitHub reports it is NOT private. Nothing was cloned or uploaded. Make it private or delete it, then run init again.`
+    );
+  }
+  const protocol = parseGitProtocol((await gh.run(["config", "get", "git_protocol"])).stdout);
+  await cloneRepository(context, cloneUrl(created, protocol), {
+    withGhCredentials: protocol === "https"
+  });
+  io.info(`Created the private repository ${created.url}`);
+  io.info(`Initialized: ${repoDir}`);
+  io.info("Next step: run 'push' to upload your configuration.");
+  return 0 /* Ok */;
+}
+
 // src/commands/init.ts
 async function runInit(context) {
-  const { argument: url2, repoDir, dataHome, io, git, repoGit } = context;
-  if (!url2) throw new UsageError("init requires the repository URL");
-  if (await isDirectory(path3.join(repoDir, ".git"))) {
+  const { argument: url2, repoDir, io, repoGit } = context;
+  if (!url2) return runInitWithGitHub(context);
+  if (context.repoName !== void 0) {
+    throw new UsageError("--name only applies when init is run without a URL");
+  }
+  if (await isDirectory(path4.join(repoDir, ".git"))) {
     const existing = await repoGit.run(["remote", "get-url", "origin"]);
     const current = existing.code === 0 ? existing.stdout.trim() : "";
     if (current === url2) {
@@ -19860,8 +19998,7 @@ async function runInit(context) {
     io.info(`[dry-run] Would clone ${url2} into ${repoDir}`);
     return 0 /* Ok */;
   }
-  await fs2.mkdir(dataHome, { recursive: true });
-  await git.must(["clone", "--quiet", "--", url2, repoDir]);
+  await cloneRepository(context, url2);
   io.info(`Initialized: ${repoDir}`);
   io.warn(
     "Warning: use a PRIVATE repository. Your skills and instructions may contain sensitive data."
@@ -19887,7 +20024,7 @@ function formatStamp(date5) {
 }
 
 // src/commands/local-tree.ts
-import path4 from "node:path";
+import path5 from "node:path";
 import fs4 from "node:fs/promises";
 
 // src/domain/path-filter.ts
@@ -19958,7 +20095,7 @@ async function listTree(base, allow, isDenied) {
 
 // src/commands/local-tree.ts
 function agentRepoDir(context) {
-  return path4.join(context.repoDir, context.agent.name);
+  return path5.join(context.repoDir, context.agent.name);
 }
 function listLocalFiles(context) {
   const { home, allow, deny } = context.agent;
@@ -19969,7 +20106,7 @@ function listRepoFiles(context) {
   return listTree(agentRepoDir(context), allow, createDenyMatcher(deny));
 }
 async function requireRepo(context) {
-  if (await isDirectory(path4.join(context.repoDir, ".git"))) return;
+  if (await isDirectory(path5.join(context.repoDir, ".git"))) return;
   throw new AppError(
     `no repository initialized at ${context.repoDir}. Run first: init <url>`
   );
@@ -20255,19 +20392,68 @@ async function runStatus(context) {
 }
 
 // src/infra/data-home.ts
-import path5 from "node:path";
+import path6 from "node:path";
 function resolveDataHome(env, homeDir, platform) {
   if (env.AGENT_SYNC_HOME) return env.AGENT_SYNC_HOME;
   if (platform === "win32") {
-    const localAppData = env.LOCALAPPDATA || path5.join(homeDir, "AppData", "Local");
-    return path5.join(localAppData, "agent-sync");
+    const localAppData = env.LOCALAPPDATA || path6.join(homeDir, "AppData", "Local");
+    return path6.join(localAppData, "agent-sync");
   }
-  return path5.join(homeDir, ".local", "share", "agent-sync");
+  return path6.join(homeDir, ".local", "share", "agent-sync");
 }
 
-// src/infra/git.ts
+// src/infra/run-process.ts
 import { execFile } from "node:child_process";
 var MAX_OUTPUT_BYTES = 64 * 1024 * 1024;
+function runProcess(file2, args, env) {
+  return new Promise((resolve) => {
+    execFile(
+      file2,
+      [...args],
+      { env: { ...env }, encoding: "utf8", maxBuffer: MAX_OUTPUT_BYTES, windowsHide: true },
+      (error62, stdout, stderr) => {
+        if (!error62) {
+          resolve({ code: 0, stdout, stderr });
+          return;
+        }
+        if (error62.code === "ENOENT") {
+          resolve(void 0);
+          return;
+        }
+        const code = typeof error62.code === "number" ? error62.code : 1;
+        resolve({ code, stdout, stderr: stderr || error62.message });
+      }
+    );
+  });
+}
+
+// src/infra/gh.ts
+var GitHubCli = class {
+  constructor(env) {
+    this.env = env;
+  }
+  env;
+  /** Runs gh without a shell and without interactive prompts. */
+  async run(args) {
+    const result = await runProcess("gh", args, { ...this.env, GH_PROMPT_DISABLED: "1" });
+    if (!result) {
+      throw new AppError(
+        "the GitHub CLI (gh) is required to create the repository automatically. Install it from https://cli.github.com and run `gh auth login`, or pass the URL of a private repository: init <url>",
+        2 /* Usage */
+      );
+    }
+    return result;
+  }
+  /** Runs gh and returns trimmed stdout, or throws an AppError with gh's message. */
+  async must(args) {
+    const result = await this.run(args);
+    if (result.code === 0) return result.stdout.trim();
+    const reason = result.stderr.trim() || result.stdout.trim() || `exit code ${result.code}`;
+    throw new AppError(`gh ${args.slice(0, 2).join(" ")} failed: ${reason}`);
+  }
+};
+
+// src/infra/git.ts
 var Git = class _Git {
   constructor(env, prefix = []) {
     this.env = env;
@@ -20280,32 +20466,11 @@ var Git = class _Git {
     return new _Git(this.env, ["-C", repoDir]);
   }
   /** Runs git without a shell. Resolves on non-zero exit codes too. */
-  run(args) {
-    return new Promise((resolve, reject) => {
-      execFile(
-        "git",
-        [...this.prefix, ...args],
-        {
-          // Never block on a credentials prompt: this runs inside a non-interactive slash command.
-          env: { ...this.env, GIT_TERMINAL_PROMPT: "0" },
-          encoding: "utf8",
-          maxBuffer: MAX_OUTPUT_BYTES,
-          windowsHide: true
-        },
-        (error62, stdout, stderr) => {
-          if (!error62) {
-            resolve({ code: 0, stdout, stderr });
-            return;
-          }
-          if (error62.code === "ENOENT") {
-            reject(new AppError("git is not installed or not found in PATH"));
-            return;
-          }
-          const code = typeof error62.code === "number" ? error62.code : 1;
-          resolve({ code, stdout, stderr: stderr || error62.message });
-        }
-      );
-    });
+  async run(args) {
+    const env = { ...this.env, GIT_TERMINAL_PROMPT: "0" };
+    const result = await runProcess("git", [...this.prefix, ...args], env);
+    if (!result) throw new AppError("git is not installed or not found in PATH");
+    return result;
   }
   /** Runs git and returns stdout, or throws an AppError with git's message. */
   async must(args) {
@@ -20328,7 +20493,8 @@ var cliOptionsSchema = external_exports.object({
   assumeYes: external_exports.boolean(),
   dryRun: external_exports.boolean(),
   command: external_exports.string().optional(),
-  argument: external_exports.string().optional()
+  argument: external_exports.string().optional(),
+  name: external_exports.string().optional()
 });
 var DEFAULT_AGENT = "claude";
 function parseArgs(argv) {
@@ -20337,6 +20503,7 @@ function parseArgs(argv) {
   let dryRun = false;
   let command;
   let argument;
+  let name;
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index] ?? "";
     if (arg === "--agent") {
@@ -20348,6 +20515,17 @@ function parseArgs(argv) {
     }
     if (arg.startsWith("--agent=")) {
       agent = arg.slice("--agent=".length);
+      continue;
+    }
+    if (arg === "--name") {
+      const value = argv[index + 1];
+      if (value === void 0) throw new UsageError("--name requires a value");
+      name = value;
+      index += 1;
+      continue;
+    }
+    if (arg.startsWith("--name=")) {
+      name = arg.slice("--name=".length);
       continue;
     }
     if (arg === "--yes" || arg === "-y") {
@@ -20370,7 +20548,7 @@ function parseArgs(argv) {
     }
     throw new UsageError(`unexpected argument: ${arg}`);
   }
-  const options = cliOptionsSchema.parse({ agent, assumeYes, dryRun, command, argument });
+  const options = cliOptionsSchema.parse({ agent, assumeYes, dryRun, command, argument, name });
   return { kind: "run", options };
 }
 
@@ -20378,14 +20556,17 @@ function parseArgs(argv) {
 var USAGE = `Usage: agent-sync [--agent NAME] [--yes] [--dry-run] <command>
 
 Commands:
-  init <url>   Clone your PRIVATE configuration repository
+  init [url]   Clone your PRIVATE configuration repository; without a URL, create
+               one with the GitHub CLI (gh) and clone it
   pull         Fetch changes from the repository and install the files into the agent
   push         Publish your local configuration (with secret scanning)
   status       Compare your local configuration with the repository
 
 Options:
   --agent NAME    Agent to sync (default: claude)
-  --yes, -y       Confirm overwrites without asking (required without a terminal)
+  --name REPO     Name of the private repository init creates (default: sync-ai-data)
+  --yes, -y       Confirm overwrites and repository creation without asking
+                  (required without a terminal)
   --dry-run       Do not modify your local configuration, create commits or publish
 
 Exit codes: 0 ok, 1 error, 2 incorrect usage,
@@ -20420,7 +20601,7 @@ async function execute(argv, runtime) {
   const command = commandNameSchema.safeParse(options.command);
   if (!command.success) throw new UsageError(`unknown command: ${options.command}`);
   const dataHome = resolveDataHome(runtime.env, runtime.homeDir, runtime.platform);
-  const repoDir = path6.join(dataHome, "repo");
+  const repoDir = path7.join(dataHome, "repo");
   const git = new Git(runtime.env);
   return COMMANDS[command.data]({
     agent,
@@ -20429,9 +20610,11 @@ async function execute(argv, runtime) {
     assumeYes: options.assumeYes,
     dryRun: options.dryRun,
     argument: options.argument,
+    repoName: options.name,
     io: runtime.io,
     git,
     repoGit: git.withRepo(repoDir),
+    gh: new GitHubCli(runtime.env),
     hostname: runtime.hostname,
     now: runtime.now
   });

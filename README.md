@@ -14,6 +14,8 @@ installing the `/sync` command.
 - Node.js 20 or newer (the core is a single dependency-free JavaScript file:
   `dist/agent-sync.mjs`).
 - `git` on the `PATH`.
+- Optional: the [GitHub CLI](https://cli.github.com) (`gh`), logged in with
+  `gh auth login`, so `init` can create your private repository for you.
 - Works on Linux, macOS and Windows.
 
 ## Installation
@@ -32,19 +34,39 @@ Plugin commands are prefixed with the plugin name, so the command is
 
 | Command | What it does |
 | --- | --- |
-| `/agent-sync:sync init <url>` | Clones your **private** repository into `~/.local/share/agent-sync/repo` |
+| `/agent-sync:sync init` | Creates a **private** GitHub repository (`sync-ai-data`) with `gh` and clones it into `~/.local/share/agent-sync/repo` |
+| `/agent-sync:sync init <url>` | Clones a **private** repository you already have |
 | `/agent-sync:sync push` | Scans for secrets, copies the allowed files, commits and pushes |
 | `/agent-sync:sync pull` | Fetches changes (`git pull --ff-only`) and installs the files into `~/.claude` |
 | `/agent-sync:sync status` | Shows whether you are ahead or behind and which files differ |
 
-Without arguments it runs `status`. The core also works outside Claude Code:
+Without arguments it runs `status`.
+
+## First use
+
+1. Install the plugin and run `/agent-sync:sync init`. With `gh` installed and
+   logged in, it asks for confirmation and creates the private repository
+   `<your-user>/sync-ai-data` (choose another name with `--name <repo>`), then
+   clones it. Without a terminal (for example inside Claude Code) it stops with
+   exit code 3 until you repeat it with `--yes`.
+2. Run `/agent-sync:sync push` to upload your configuration.
+3. On another device, install the plugin, run `/agent-sync:sync init <url>` with
+   the repository URL and then `/agent-sync:sync pull`.
+
+`init` never reuses or overwrites a repository that already exists: if
+`<your-user>/sync-ai-data` is taken it stops and asks you to pass its URL or pick
+another `--name`. After creating the repository it checks that GitHub reports it
+as private and aborts if it does not. Over https, the clone is configured to
+authenticate through `gh auth git-credential` in its own git config only; your
+global git config is not modified and no token is written anywhere. The core also works outside Claude Code:
 
 ```bash
 node sync/dist/agent-sync.mjs --agent claude status
 ```
 
-Options: `--yes` confirms overwrites without asking, and `--dry-run` does not
-modify your local configuration, create commits or publish. The clone lives by
+Options: `--yes` confirms overwrites and repository creation without asking,
+`--name <repo>` names the repository `init` creates, and `--dry-run` does not
+modify your local configuration, create repositories, create commits or publish. The clone lives by
 default in `~/.local/share/agent-sync/repo` (on Windows,
 `%LOCALAPPDATA%\agent-sync\repo`); change it with `AGENT_SYNC_HOME`. When
 comparing text files, CRLF and LF line-ending differences are ignored.
@@ -115,7 +137,7 @@ Run `npm run build` and commit `dist/` together with any change to `src/`.
 Structure of `src/`:
 
 - `cli/`: argument parsing (Zod) and command dispatch.
-- `commands/`: `init`, `pull`, `push` and `status`.
+- `commands/`: `init` (including the `gh` flow), `pull`, `push` and `status`.
 - `domain/`: pure functions (deny list, secret scanner, differences).
 - `agents/`: typed configuration for each agent, validated with Zod.
 - `infra/`: git (no shell), file system and input/output.

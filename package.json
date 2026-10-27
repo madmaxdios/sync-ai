@@ -1,6 +1,6 @@
 {
   "name": "agent-sync",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "description": "Sync an allowlisted subset of an AI agent's user-level config through a private git repository.",

@@ -1,14 +1,8 @@
-import { execFile, type ExecFileException } from 'node:child_process';
 import type { Env } from '../agents/agent-config';
 import { AppError } from '../domain/app-error';
+import { runProcess, type ProcessResult } from './run-process';
 
-export interface GitResult {
-  readonly code: number;
-  readonly stdout: string;
-  readonly stderr: string;
-}
-
-const MAX_OUTPUT_BYTES = 64 * 1024 * 1024;
+export type GitResult = ProcessResult;
 
 export class Git {
   constructor(
@@ -22,32 +16,12 @@ export class Git {
   }
 
   /** Runs git without a shell. Resolves on non-zero exit codes too. */
-  run(args: readonly string[]): Promise<GitResult> {
-    return new Promise((resolve, reject) => {
-      execFile(
-        'git',
-        [...this.prefix, ...args],
-        {
-          // Never block on a credentials prompt: this runs inside a non-interactive slash command.
-          env: { ...this.env, GIT_TERMINAL_PROMPT: '0' },
-          encoding: 'utf8',
-          maxBuffer: MAX_OUTPUT_BYTES,
-          windowsHide: true,
-        },
-        (error: ExecFileException | null, stdout, stderr) => {
-          if (!error) {
-            resolve({ code: 0, stdout, stderr });
-            return;
-          }
-          if (error.code === 'ENOENT') {
-            reject(new AppError('git is not installed or not found in PATH'));
-            return;
-          }
-          const code = typeof error.code === 'number' ? error.code : 1;
-          resolve({ code, stdout, stderr: stderr || error.message });
-        },
-      );
-    });
+  async run(args: readonly string[]): Promise<GitResult> {
+    // Never block on a credentials prompt: this runs inside a non-interactive slash command.
+    const env = { ...this.env, GIT_TERMINAL_PROMPT: '0' };
+    const result = await runProcess('git', [...this.prefix, ...args], env);
+    if (!result) throw new AppError('git is not installed or not found in PATH');
+    return result;
   }
 
   /** Runs git and returns stdout, or throws an AppError with git's message. */
