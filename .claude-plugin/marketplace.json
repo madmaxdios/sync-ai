@@ -6,7 +6,7 @@
   },
   "plugins": [
     {
-      "name": "agent-sync",
+      "name": "sync-ai",
       "source": "./",
       "description": "Sync skills, commands, agents and global instructions through your own private git repository"
     }

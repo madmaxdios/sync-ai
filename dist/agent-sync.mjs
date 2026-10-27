@@ -19797,7 +19797,7 @@ function resolveAgent(name, environment) {
 }
 
 // src/commands/init.ts
-import path4 from "node:path";
+import path5 from "node:path";
 
 // src/infra/file-system.ts
 import fs from "node:fs/promises";
@@ -19895,136 +19895,14 @@ async function cloneRepository(context, url2, options = {}) {
 }
 
 // src/commands/init-with-github.ts
-import path3 from "node:path";
+import path4 from "node:path";
 
 // src/domain/repo-name.ts
 var DEFAULT_REPO_NAME = "sync-ai-data";
 var repoNameSchema = external_exports.string().max(100).regex(/^[A-Za-z0-9_][A-Za-z0-9._-]*$/).refine((name) => !name.endsWith(".git") && !name.includes(".."));
 
-// src/commands/init-with-github.ts
-var REPO_DESCRIPTION = "AI agent configuration synced with agent-sync";
-async function findRepository(gh, slug) {
-  const result = await gh.run(["repo", "view", slug, "--json", "isPrivate,url,sshUrl"]);
-  if (result.code === 0) return parseRepoInfo(result.stdout);
-  if (isRepoNotFound(result.stderr)) return void 0;
-  throw new AppError(`gh repo view failed: ${result.stderr.trim() || `exit code ${result.code}`}`);
-}
-async function requireAuthenticatedLogin(gh) {
-  const status = await gh.run(["auth", "status"]);
-  if (status.code !== 0) {
-    throw new AppError(
-      "gh is not logged in to GitHub. Run `gh auth login`, or pass the URL of a private repository: init <url>",
-      2 /* Usage */
-    );
-  }
-  const login = await gh.must(["api", "user", "--jq", ".login"]);
-  if (!login) throw new AppError("gh did not return your GitHub username");
-  return login;
-}
-async function reportExistingClone(context) {
-  const { repoDir, repoGit, io } = context;
-  if (!await isDirectory(path3.join(repoDir, ".git"))) return false;
-  const origin = await repoGit.run(["remote", "get-url", "origin"]);
-  const where = origin.code === 0 ? ` (origin: ${origin.stdout.trim()})` : "";
-  io.info(`Already initialized: ${repoDir}${where}`);
-  return true;
-}
-async function runInitWithGitHub(context) {
-  const { gh, io, repoDir } = context;
-  if (await reportExistingClone(context)) return 0 /* Ok */;
-  const parsedName = repoNameSchema.safeParse(context.repoName ?? DEFAULT_REPO_NAME);
-  if (!parsedName.success) {
-    throw new UsageError(
-      'invalid repository name: use letters, digits, ".", "_" or "-" (it cannot start with "-" or end with ".git")'
-    );
-  }
-  const name = parsedName.data;
-  const login = await requireAuthenticatedLogin(gh);
-  const slug = `${login}/${name}`;
-  if (await findRepository(gh, slug)) {
-    throw new AppError(
-      `the repository ${slug} already exists and will not be reused or overwritten. Pass its URL explicitly (init <url>) or choose another name with --name <repo>.`
-    );
-  }
-  if (context.dryRun) {
-    io.info(`[dry-run] Would create the PRIVATE repository ${slug} on GitHub and clone it into ${repoDir}`);
-    return 0 /* Ok */;
-  }
-  if (!context.assumeYes) {
-    const confirmed = await io.confirm(
-      `Create the PRIVATE repository ${slug} on GitHub and use it for your configuration? (y/N) `
-    );
-    if (!confirmed) {
-      io.warn("Cancelled: nothing was created on GitHub.");
-      io.warn(`Review it and repeat with --yes to create the private repository ${slug}.`);
-      return 3 /* ConfirmationRequired */;
-    }
-  }
-  await gh.must(["repo", "create", name, "--private", "--description", REPO_DESCRIPTION]);
-  const created = await findRepository(gh, slug);
-  if (!created) throw new AppError(`gh created ${slug} but it cannot be found afterwards`);
-  if (!created.isPrivate) {
-    throw new AppError(
-      `the repository ${created.url} was created but GitHub reports it is NOT private. Nothing was cloned or uploaded. Make it private or delete it, then run init again.`
-    );
-  }
-  const protocol = parseGitProtocol((await gh.run(["config", "get", "git_protocol"])).stdout);
-  await cloneRepository(context, cloneUrl(created, protocol), {
-    withGhCredentials: protocol === "https"
-  });
-  io.info(`Created the private repository ${created.url}`);
-  io.info(`Initialized: ${repoDir}`);
-  io.info("Next step: run 'push' to upload your configuration.");
-  return 0 /* Ok */;
-}
-
-// src/commands/init.ts
-async function runInit(context) {
-  const { argument: url2, repoDir, io, repoGit } = context;
-  if (!url2) return runInitWithGitHub(context);
-  if (context.repoName !== void 0) {
-    throw new UsageError("--name only applies when init is run without a URL");
-  }
-  if (await isDirectory(path4.join(repoDir, ".git"))) {
-    const existing = await repoGit.run(["remote", "get-url", "origin"]);
-    const current = existing.code === 0 ? existing.stdout.trim() : "";
-    if (current === url2) {
-      io.info(`Already initialized: ${repoDir}`);
-      return 0 /* Ok */;
-    }
-    throw new AppError(`a clone already exists at ${repoDir} pointing to '${current}'`);
-  }
-  if (context.dryRun) {
-    io.info(`[dry-run] Would clone ${url2} into ${repoDir}`);
-    return 0 /* Ok */;
-  }
-  await cloneRepository(context, url2);
-  io.info(`Initialized: ${repoDir}`);
-  io.warn(
-    "Warning: use a PRIVATE repository. Your skills and instructions may contain sensitive data."
-  );
-  return 0 /* Ok */;
-}
-
-// src/domain/report.ts
-function formatList(prefix, items) {
-  return items.map((item) => `  ${prefix} ${item}`);
-}
-function describeRelation(ahead, behind) {
-  if (ahead === 0 && behind === 0) return "up to date";
-  if (behind === 0) return `${ahead} commit(s) to publish from the clone`;
-  if (ahead === 0) return `${behind} new commit(s) on the remote (run 'pull')`;
-  return `diverged (${ahead} to publish, ${behind} new on the remote)`;
-}
-function formatStamp(date5) {
-  const pad = (value) => String(value).padStart(2, "0");
-  const day = `${date5.getFullYear()}${pad(date5.getMonth() + 1)}${pad(date5.getDate())}`;
-  const time3 = `${pad(date5.getHours())}${pad(date5.getMinutes())}${pad(date5.getSeconds())}`;
-  return `${day}-${time3}`;
-}
-
 // src/commands/local-tree.ts
-import path5 from "node:path";
+import path3 from "node:path";
 import fs4 from "node:fs/promises";
 
 // src/domain/path-filter.ts
@@ -20095,7 +19973,7 @@ async function listTree(base, allow, isDenied) {
 
 // src/commands/local-tree.ts
 function agentRepoDir(context) {
-  return path5.join(context.repoDir, context.agent.name);
+  return path3.join(context.repoDir, context.agent.name);
 }
 function listLocalFiles(context) {
   const { home, allow, deny } = context.agent;
@@ -20106,9 +19984,9 @@ function listRepoFiles(context) {
   return listTree(agentRepoDir(context), allow, createDenyMatcher(deny));
 }
 async function requireRepo(context) {
-  if (await isDirectory(path5.join(context.repoDir, ".git"))) return;
+  if (await isDirectory(path3.join(context.repoDir, ".git"))) return;
   throw new AppError(
-    `no repository initialized at ${context.repoDir}. Run first: init <url>`
+    `no repository initialized at ${context.repoDir}. Run first: init [repo-url]`
   );
 }
 async function differsFromRepo(context, rel) {
@@ -20129,6 +20007,23 @@ async function compareWithRepo(context) {
     if (await differsFromRepo(context, rel)) modified.push(rel);
   }
   return { ...differences, modified };
+}
+
+// src/domain/report.ts
+function formatList(prefix, items) {
+  return items.map((item) => `  ${prefix} ${item}`);
+}
+function describeRelation(ahead, behind) {
+  if (ahead === 0 && behind === 0) return "up to date";
+  if (behind === 0) return `${ahead} commit(s) to publish from the clone`;
+  if (ahead === 0) return `${behind} new commit(s) on the remote (run 'pull')`;
+  return `diverged (${ahead} to publish, ${behind} new on the remote)`;
+}
+function formatStamp(date5) {
+  const pad = (value) => String(value).padStart(2, "0");
+  const day = `${date5.getFullYear()}${pad(date5.getMonth() + 1)}${pad(date5.getDate())}`;
+  const time3 = `${pad(date5.getHours())}${pad(date5.getMinutes())}${pad(date5.getSeconds())}`;
+  return `${day}-${time3}`;
 }
 
 // src/commands/remote-state.ts
@@ -20232,6 +20127,152 @@ async function runPull(context) {
   await install(context, [...added, ...changed]);
   io.info(`Installed ${total} file(s) into ${agent.home}.`);
   io.info("Note: pull does not delete local files that no longer exist in the repository.");
+  return 0 /* Ok */;
+}
+
+// src/commands/init-existing-repo.ts
+async function runInitWithExistingRepository(context, slug, info) {
+  const { gh, io, repoDir, repoGit } = context;
+  if (!info.isPrivate) {
+    throw new AppError(
+      `the repository ${info.url} already exists but GitHub reports it as PUBLIC, and sync-ai never uses a public repository for configuration. Make it private, choose another name with --name <repo>, or pass the URL of a private repository: init <url>`
+    );
+  }
+  if (context.dryRun) {
+    io.info(
+      `[dry-run] Would clone the existing PRIVATE repository ${slug} into ${repoDir} and install its configuration`
+    );
+    return 0 /* Ok */;
+  }
+  if (!context.assumeYes) {
+    const confirmed = await io.confirm(
+      `Clone the existing PRIVATE repository ${slug} into ${repoDir} and install its configuration? (y/N) `
+    );
+    if (!confirmed) {
+      io.warn("Cancelled: nothing was cloned.");
+      io.warn(`Repeat with --yes to clone the existing private repository ${slug}.`);
+      return 3 /* ConfirmationRequired */;
+    }
+  }
+  const protocol = parseGitProtocol((await gh.run(["config", "get", "git_protocol"])).stdout);
+  await cloneRepository(context, cloneUrl(info, protocol), {
+    withGhCredentials: protocol === "https"
+  });
+  io.info(`Cloned the existing private repository ${info.url}`);
+  io.info(`Initialized: ${repoDir}`);
+  const remote = requireReachable(await refreshRemote(repoGit));
+  if (remote.status === "empty" || (await listRepoFiles(context)).length === 0) {
+    io.info(`The repository has no '${context.agent.name}' files yet.`);
+    io.info("Next step: run 'push' to upload your configuration.");
+    return 0 /* Ok */;
+  }
+  const pulled = await runPull({ ...context, assumeYes: false });
+  if (pulled === 3 /* ConfirmationRequired */) {
+    io.warn(`The repository is cloned and initialized, but your local files in ${context.agent.home} were not changed.`);
+    io.warn("Review the list above and run 'pull --yes' to overwrite them; a .backup-* copy will be kept.");
+  }
+  return pulled;
+}
+
+// src/commands/init-with-github.ts
+var REPO_DESCRIPTION = "AI agent configuration synced with sync-ai";
+async function findRepository(gh, slug) {
+  const result = await gh.run(["repo", "view", slug, "--json", "isPrivate,url,sshUrl"]);
+  if (result.code === 0) return parseRepoInfo(result.stdout);
+  if (isRepoNotFound(result.stderr)) return void 0;
+  throw new AppError(`gh repo view failed: ${result.stderr.trim() || `exit code ${result.code}`}`);
+}
+async function requireAuthenticatedLogin(gh) {
+  const status = await gh.run(["auth", "status"]);
+  if (status.code !== 0) {
+    throw new AppError(
+      "gh is not logged in to GitHub. Run `gh auth login`, or pass the URL of a private repository: init <url>",
+      2 /* Usage */
+    );
+  }
+  const login = await gh.must(["api", "user", "--jq", ".login"]);
+  if (!login) throw new AppError("gh did not return your GitHub username");
+  return login;
+}
+async function reportExistingClone(context) {
+  const { repoDir, repoGit, io } = context;
+  if (!await isDirectory(path4.join(repoDir, ".git"))) return false;
+  const origin = await repoGit.run(["remote", "get-url", "origin"]);
+  const where = origin.code === 0 ? ` (origin: ${origin.stdout.trim()})` : "";
+  io.info(`Already initialized: ${repoDir}${where}`);
+  return true;
+}
+async function runInitWithGitHub(context) {
+  const { gh, io, repoDir } = context;
+  if (await reportExistingClone(context)) return 0 /* Ok */;
+  const parsedName = repoNameSchema.safeParse(context.repoName ?? DEFAULT_REPO_NAME);
+  if (!parsedName.success) {
+    throw new UsageError(
+      'invalid repository name: use letters, digits, ".", "_" or "-" (it cannot start with "-" or end with ".git")'
+    );
+  }
+  const name = parsedName.data;
+  const login = await requireAuthenticatedLogin(gh);
+  const slug = `${login}/${name}`;
+  const existing = await findRepository(gh, slug);
+  if (existing) return runInitWithExistingRepository(context, slug, existing);
+  if (context.dryRun) {
+    io.info(`[dry-run] Would create the PRIVATE repository ${slug} on GitHub and clone it into ${repoDir}`);
+    return 0 /* Ok */;
+  }
+  if (!context.assumeYes) {
+    const confirmed = await io.confirm(
+      `Create the PRIVATE repository ${slug} on GitHub and use it for your configuration? (y/N) `
+    );
+    if (!confirmed) {
+      io.warn("Cancelled: nothing was created on GitHub.");
+      io.warn(`Review it and repeat with --yes to create the private repository ${slug}.`);
+      return 3 /* ConfirmationRequired */;
+    }
+  }
+  await gh.must(["repo", "create", name, "--private", "--description", REPO_DESCRIPTION]);
+  const created = await findRepository(gh, slug);
+  if (!created) throw new AppError(`gh created ${slug} but it cannot be found afterwards`);
+  if (!created.isPrivate) {
+    throw new AppError(
+      `the repository ${created.url} was created but GitHub reports it is NOT private. Nothing was cloned or uploaded. Make it private or delete it, then run init again.`
+    );
+  }
+  const protocol = parseGitProtocol((await gh.run(["config", "get", "git_protocol"])).stdout);
+  await cloneRepository(context, cloneUrl(created, protocol), {
+    withGhCredentials: protocol === "https"
+  });
+  io.info(`Created the private repository ${created.url}`);
+  io.info(`Initialized: ${repoDir}`);
+  io.info("Next step: run 'push' to upload your configuration.");
+  return 0 /* Ok */;
+}
+
+// src/commands/init.ts
+async function runInit(context) {
+  const { argument: url2, repoDir, io, repoGit } = context;
+  if (!url2) return runInitWithGitHub(context);
+  if (context.repoName !== void 0) {
+    throw new UsageError("--name only applies when init is run without a URL");
+  }
+  if (await isDirectory(path5.join(repoDir, ".git"))) {
+    const existing = await repoGit.run(["remote", "get-url", "origin"]);
+    const current = existing.code === 0 ? existing.stdout.trim() : "";
+    if (current === url2) {
+      io.info(`Already initialized: ${repoDir}`);
+      return 0 /* Ok */;
+    }
+    throw new AppError(`a clone already exists at ${repoDir} pointing to '${current}'`);
+  }
+  if (context.dryRun) {
+    io.info(`[dry-run] Would clone ${url2} into ${repoDir}`);
+    return 0 /* Ok */;
+  }
+  await cloneRepository(context, url2);
+  io.info(`Initialized: ${repoDir}`);
+  io.warn(
+    "Warning: use a PRIVATE repository. Your skills and instructions may contain sensitive data."
+  );
   return 0 /* Ok */;
 }
 
@@ -20556,8 +20597,9 @@ function parseArgs(argv) {
 var USAGE = `Usage: agent-sync [--agent NAME] [--yes] [--dry-run] <command>
 
 Commands:
-  init [url]   Clone your PRIVATE configuration repository; without a URL, create
-               one with the GitHub CLI (gh) and clone it
+  init [url]   Clone your PRIVATE configuration repository; without a URL, use the
+               GitHub CLI (gh): create it, or clone it and install its files if it
+               already exists (setting up another device)
   pull         Fetch changes from the repository and install the files into the agent
   push         Publish your local configuration (with secret scanning)
   status       Compare your local configuration with the repository
@@ -20565,8 +20607,8 @@ Commands:
 Options:
   --agent NAME    Agent to sync (default: claude)
   --name REPO     Name of the private repository init creates (default: sync-ai-data)
-  --yes, -y       Confirm overwrites and repository creation without asking
-                  (required without a terminal)
+  --yes, -y       Confirm overwrites, repository creation and cloning without
+                  asking (required without a terminal)
   --dry-run       Do not modify your local configuration, create commits or publish
 
 Exit codes: 0 ok, 1 error, 2 incorrect usage,

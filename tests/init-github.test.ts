@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { FakeGh, pathWithoutGh } from './helpers/fake-gh';
-import { Sandbox } from './helpers/sandbox';
+import { Sandbox, type Device } from './helpers/sandbox';
 
 describe.skipIf(process.platform === 'win32')('init without a URL (GitHub CLI)', () => {
   let sandbox: Sandbox;
@@ -95,18 +95,6 @@ describe.skipIf(process.platform === 'win32')('init without a URL (GitHub CLI)',
     expect(gh.calls()).toEqual([]);
   });
 
-  it('never reuses an existing repository and creates nothing', async () => {
-    gh.seedRepository('tester/sync-ai-data');
-
-    const result = await sandbox.run('A', ['init', '--yes'], { env: gh.env() });
-
-    expect(result.code).toBe(1);
-    expect(result.stderr).toContain('already exists');
-    expect(result.stderr).toContain('--name');
-    expect(created()).toEqual([]);
-    expect(fs.existsSync(repoDir())).toBe(false);
-  });
-
   it('exits 3 without a terminal and without --yes, creating nothing', async () => {
     const result = await sandbox.run('A', ['init'], { confirm: false, env: gh.env() });
 
@@ -143,6 +131,131 @@ describe.skipIf(process.platform === 'win32')('init without a URL (GitHub CLI)',
     expect(result.code).toBe(0);
     expect(result.stdout).toContain('Already initialized');
     expect(gh.calls()).toEqual([]);
+  });
+});
+
+describe.skipIf(process.platform === 'win32')('init without a URL when the repository already exists', () => {
+  const SLUG = 'tester/sync-ai-data';
+  let sandbox: Sandbox;
+  let gh: FakeGh;
+
+  beforeEach(() => {
+    sandbox = new Sandbox();
+    gh = new FakeGh();
+  });
+
+  afterEach(() => {
+    sandbox.cleanup();
+    gh.cleanup();
+  });
+
+  const repoDir = (device: Device): string => path.join(sandbox.dataHome(device), 'repo');
+  const created = (): string[] => gh.calls().filter((call) => call.startsWith('repo create'));
+
+  /** Device A publishes its configuration to the repository that "already exists" on GitHub. */
+  async function publishFromDeviceA(): Promise<void> {
+    gh.seedRepository(SLUG);
+    sandbox.write('A', 'CLAUDE.md', 'instructions from A\n');
+    sandbox.write('A', 'skills/foo/SKILL.md', 'skill foo\n');
+    await sandbox.run('A', ['init', gh.remoteDir(SLUG)]);
+    const pushed = await sandbox.run('A', ['push']);
+    expect(pushed.code).toBe(0);
+  }
+
+  it('clones the existing private repository and installs its configuration', async () => {
+    await publishFromDeviceA();
+
+    const result = await sandbox.run('B', ['init'], { confirm: true, env: gh.env() });
+
+    expect(result.code).toBe(0);
+    expect(result.questions).toHaveLength(1);
+    expect(result.questions[0]).toContain(SLUG);
+    expect(result.questions[0]).toContain('PRIVATE');
+    expect(fs.existsSync(path.join(repoDir('B'), '.git'))).toBe(true);
+    expect(sandbox.read('B', 'CLAUDE.md')).toBe('instructions from A\n');
+    expect(sandbox.read('B', 'skills/foo/SKILL.md')).toBe('skill foo\n');
+    expect(created()).toEqual([]);
+  });
+
+  it('applies new files directly even with --yes, without asking again', async () => {
+    await publishFromDeviceA();
+
+    const result = await sandbox.run('B', ['init', '--yes'], { env: gh.env() });
+
+    expect(result.code).toBe(0);
+    expect(result.questions).toEqual([]);
+    expect(sandbox.read('B', 'CLAUDE.md')).toBe('instructions from A\n');
+  });
+
+  it('clones but never overwrites differing local files unless pull is confirmed explicitly', async () => {
+    await publishFromDeviceA();
+    sandbox.write('B', 'CLAUDE.md', 'local edit on B\n');
+
+    const result = await sandbox.run('B', ['init', '--yes'], { env: gh.env() });
+
+    expect(result.code).toBe(3);
+    expect(result.stdout).toContain('CLAUDE.md');
+    expect(result.stderr).toContain('pull --yes');
+    expect(fs.existsSync(path.join(repoDir('B'), '.git'))).toBe(true);
+    expect(sandbox.read('B', 'CLAUDE.md')).toBe('local edit on B\n');
+    expect(sandbox.backupsOf('B', 'CLAUDE.md')).toEqual([]);
+
+    const pulled = await sandbox.run('B', ['pull', '--yes']);
+
+    expect(pulled.code).toBe(0);
+    expect(sandbox.read('B', 'CLAUDE.md')).toBe('instructions from A\n');
+    expect(sandbox.backupsOf('B', 'CLAUDE.md')).toHaveLength(1);
+  });
+
+  it('refuses a public repository and clones nothing', async () => {
+    await publishFromDeviceA();
+    gh.markPublic(SLUG);
+
+    const result = await sandbox.run('B', ['init', '--yes'], { env: gh.env() });
+
+    expect(result.code).toBe(1);
+    expect(result.stderr).toContain('PUBLIC');
+    expect(result.stderr).toContain('init <url>');
+    expect(fs.existsSync(repoDir('B'))).toBe(false);
+    expect(sandbox.exists('B', 'CLAUDE.md')).toBe(false);
+    expect(created()).toEqual([]);
+  });
+
+  it('exits 3 without a terminal and without --yes, cloning nothing', async () => {
+    await publishFromDeviceA();
+
+    const result = await sandbox.run('B', ['init'], { confirm: false, env: gh.env() });
+
+    expect(result.code).toBe(3);
+    expect(result.stderr).toContain(`existing private repository ${SLUG}`);
+    expect(result.stderr).toContain('--yes');
+    expect(fs.existsSync(repoDir('B'))).toBe(false);
+    expect(sandbox.exists('B', 'CLAUDE.md')).toBe(false);
+  });
+
+  it('only reports what it would do with --dry-run', async () => {
+    await publishFromDeviceA();
+
+    const result = await sandbox.run('B', ['init', '--dry-run'], { env: gh.env() });
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain('[dry-run]');
+    expect(result.stdout).toContain(SLUG);
+    expect(result.questions).toEqual([]);
+    expect(fs.existsSync(repoDir('B'))).toBe(false);
+    expect(sandbox.exists('B', 'CLAUDE.md')).toBe(false);
+  });
+
+  it('clones an empty private repository without pulling and points to push', async () => {
+    gh.seedRepository(SLUG);
+
+    const result = await sandbox.run('B', ['init', '--yes'], { env: gh.env() });
+
+    expect(result.code).toBe(0);
+    expect(fs.existsSync(path.join(repoDir('B'), '.git'))).toBe(true);
+    expect(result.stdout).toContain("'push'");
+    expect(result.stdout).not.toContain('Installed');
+    expect(created()).toEqual([]);
   });
 });
 

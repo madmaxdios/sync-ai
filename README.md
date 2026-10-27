@@ -1,4 +1,4 @@
-# agent-sync
+# sync-ai
 
 Sync your skills, commands, agents and global instructions across devices
 through **your own private git repository**, much like VS Code Settings Sync.
@@ -7,7 +7,7 @@ your repository.
 
 For now there is only an adapter for Claude Code. Codex and OpenCode adapters
 are planned: each one only adds its path map in `src/agents/` and its way of
-installing the `/sync` command.
+installing its commands.
 
 ## Requirements
 
@@ -22,41 +22,60 @@ installing the `/sync` command.
 
 ```bash
 claude plugin marketplace add madmaxdios/sync-ai
-claude plugin install agent-sync@sync-ai
+claude plugin install sync-ai@sync-ai
 ```
 
 Then, inside Claude Code, run `/reload-plugins` or start a new session.
 
 ## Usage
 
-Plugin commands are prefixed with the plugin name, so the command is
-`/agent-sync:sync`:
+Plugin commands are prefixed with the plugin name, and there is one command per
+action:
 
 | Command | What it does |
 | --- | --- |
-| `/agent-sync:sync init` | Creates a **private** GitHub repository (`sync-ai-data`) with `gh` and clones it into `~/.local/share/agent-sync/repo` |
-| `/agent-sync:sync init <url>` | Clones a **private** repository you already have |
-| `/agent-sync:sync push` | Scans for secrets, copies the allowed files, commits and pushes |
-| `/agent-sync:sync pull` | Fetches changes (`git pull --ff-only`) and installs the files into `~/.claude` |
-| `/agent-sync:sync status` | Shows whether you are ahead or behind and which files differ |
+| `/sync-ai:init` | With `gh`: creates a **private** GitHub repository (`sync-ai-data`) and clones it into `~/.local/share/agent-sync/repo`, or clones and installs it if it already exists (second device) |
+| `/sync-ai:init <url>` | Clones a **private** repository you already have |
+| `/sync-ai:push` | Scans for secrets, copies the allowed files, commits and pushes |
+| `/sync-ai:pull` | Fetches changes (`git pull --ff-only`) and installs the files into `~/.claude` |
+| `/sync-ai:status` | Shows whether you are ahead or behind and which files differ |
 
-Without arguments it runs `status`.
+## Upgrading from `agent-sync`
+
+Versions up to 0.2.0 shipped the plugin as `agent-sync` with a single
+`/agent-sync:sync` command. From 0.3.0 the plugin is called `sync-ai`. Your data
+repository and local clone are unchanged, so just swap the plugin:
+
+```bash
+claude plugin uninstall agent-sync@sync-ai
+claude plugin marketplace update sync-ai
+claude plugin install sync-ai@sync-ai
+```
+
+Then restart Claude Code.
 
 ## First use
 
-1. Install the plugin and run `/agent-sync:sync init`. With `gh` installed and
+1. Install the plugin and run `/sync-ai:init`. With `gh` installed and
    logged in, it asks for confirmation and creates the private repository
    `<your-user>/sync-ai-data` (choose another name with `--name <repo>`), then
    clones it. Without a terminal (for example inside Claude Code) it stops with
    exit code 3 until you repeat it with `--yes`.
-2. Run `/agent-sync:sync push` to upload your configuration.
-3. On another device, install the plugin, run `/agent-sync:sync init <url>` with
-   the repository URL and then `/agent-sync:sync pull`.
+2. Run `/sync-ai:push` to upload your configuration.
+3. On another device, install the plugin and run `/sync-ai:init`. Because
+   `<your-user>/sync-ai-data` already exists, it clones it and installs your
+   configuration with `pull`. That is all.
 
-`init` never reuses or overwrites a repository that already exists: if
-`<your-user>/sync-ai-data` is taken it stops and asks you to pass its URL or pick
-another `--name`. After creating the repository it checks that GitHub reports it
-as private and aborts if it does not. Over https, the clone is configured to
+If local files on the new device differ from the repository, `init` still clones
+it but changes nothing locally and exits with code 3; review the list and run
+`/sync-ai:pull --yes` to overwrite them (a `.backup-*` copy is kept).
+`--yes` on `init` only confirms the clone, never the overwrite.
+
+`init` never overwrites anything on GitHub: it creates the repository only when it
+does not exist, and otherwise clones the existing one, but only if GitHub reports
+it as private (a public repository is refused; pass another `--name` or an
+`init <url>`). After creating a repository it checks that GitHub reports it as
+private and aborts if it does not. Over https, the clone is configured to
 authenticate through `gh auth git-credential` in its own git config only; your
 global git config is not modified and no token is written anywhere. The core also works outside Claude Code:
 

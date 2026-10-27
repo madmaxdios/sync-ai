@@ -110,6 +110,11 @@ export class FakeGh {
     execFileSync('git', ['init', '--quiet', '--bare', dir], { stdio: 'ignore' });
   }
 
+  /** Makes an existing repository report isPrivate=false. */
+  markPublic(slug: string): void {
+    fs.writeFileSync(path.join(this.remoteDir(slug), 'fake-public'), '');
+  }
+
   cleanup(): void {
     fs.rmSync(this.root, { recursive: true, force: true });
   }

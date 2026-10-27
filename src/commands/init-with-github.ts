@@ -13,8 +13,9 @@ import { isDirectory } from '../infra/file-system';
 import type { GitHubCli } from '../infra/gh';
 import { cloneRepository } from './clone-repo';
 import type { CommandContext } from './context';
+import { runInitWithExistingRepository } from './init-existing-repo';
 
-const REPO_DESCRIPTION = 'AI agent configuration synced with agent-sync';
+const REPO_DESCRIPTION = 'AI agent configuration synced with sync-ai';
 
 /** Returns the repository when it exists and undefined when GitHub says it does not. */
 async function findRepository(gh: GitHubCli, slug: string): Promise<RepoInfo | undefined> {
@@ -46,7 +47,10 @@ async function reportExistingClone(context: CommandContext): Promise<boolean> {
   return true;
 }
 
-/** `init` without a URL: creates a PRIVATE repository with the GitHub CLI and clones it. */
+/**
+ * `init` without a URL: creates a PRIVATE repository with the GitHub CLI and clones it, or
+ * clones the user's existing private data repository when it is already there.
+ */
 export async function runInitWithGitHub(context: CommandContext): Promise<ExitCode> {
   const { gh, io, repoDir } = context;
   if (await reportExistingClone(context)) return ExitCode.Ok;
@@ -61,12 +65,8 @@ export async function runInitWithGitHub(context: CommandContext): Promise<ExitCo
 
   const login = await requireAuthenticatedLogin(gh);
   const slug = `${login}/${name}`;
-  if (await findRepository(gh, slug)) {
-    throw new AppError(
-      `the repository ${slug} already exists and will not be reused or overwritten. ` +
-        'Pass its URL explicitly (init <url>) or choose another name with --name <repo>.',
-    );
-  }
+  const existing = await findRepository(gh, slug);
+  if (existing) return runInitWithExistingRepository(context, slug, existing);
 
   if (context.dryRun) {
     io.info(`[dry-run] Would create the PRIVATE repository ${slug} on GitHub and clone it into ${repoDir}`);

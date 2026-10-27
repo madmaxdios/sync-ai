@@ -60,7 +60,7 @@ describe('command line handling', () => {
     const result = await sandbox.run('A', ['status']);
 
     expect(result.code).toBe(1);
-    expect(result.stderr).toContain('Run first: init <url>');
+    expect(result.stderr).toContain('Run first: init [repo-url]');
   });
 
   it('refuses to init over a clone that points to another remote', async () => {
