@@ -1,10 +1,7 @@
 import path from 'node:path';
-import fs from 'node:fs/promises';
 import { AppError } from '../domain/app-error';
 import { createDenyMatcher } from '../domain/path-filter';
-import { sameContent } from '../domain/line-endings';
-import { diffTrees, type TreeDifferences } from '../domain/tree-differences';
-import { isDirectory, toNativePath } from '../infra/file-system';
+import { isDirectory } from '../infra/file-system';
 import { listTree } from '../infra/file-tree';
 import type { CommandContext } from './context';
 
@@ -27,29 +24,4 @@ export async function requireRepo(context: CommandContext): Promise<void> {
   throw new AppError(
     `no repository initialized at ${context.repoDir}. Run first: init [repo-url]`,
   );
-}
-
-export async function differsFromRepo(context: CommandContext, rel: string): Promise<boolean> {
-  const [local, repo] = await Promise.all([
-    fs.readFile(toNativePath(context.agent.home, rel)),
-    fs.readFile(toNativePath(agentRepoDir(context), rel)),
-  ]);
-  return !sameContent(local, repo);
-}
-
-export interface LocalComparison extends TreeDifferences {
-  readonly modified: readonly string[];
-}
-
-export async function compareWithRepo(context: CommandContext): Promise<LocalComparison> {
-  const [localFiles, repoFiles] = await Promise.all([
-    listLocalFiles(context),
-    listRepoFiles(context),
-  ]);
-  const differences = diffTrees(localFiles, repoFiles);
-  const modified: string[] = [];
-  for (const rel of differences.common) {
-    if (await differsFromRepo(context, rel)) modified.push(rel);
-  }
-  return { ...differences, modified };
 }

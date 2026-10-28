@@ -58,11 +58,12 @@ export async function runInitWithExistingRepository(
     return ExitCode.Ok;
   }
 
-  // --yes confirmed the clone only: overwriting local files needs its own explicit `pull --yes`.
+  // --yes confirmed the clone only: conflicting local files are never overwritten here, so
+  // pull runs without it and the user settles them with `resolve` or an explicit `pull --yes`.
   const pulled = await runPull({ ...context, assumeYes: false });
-  if (pulled === ExitCode.ConfirmationRequired) {
-    io.warn(`The repository is cloned and initialized, but your local files in ${context.agent.home} were not changed.`);
-    io.warn("Review the list above and run 'pull --yes' to overwrite them; a .backup-* copy will be kept.");
+  if (pulled === ExitCode.Conflicts) {
+    io.warn(`The repository is cloned and initialized, but your conflicting local files in ${context.agent.home} were not changed.`);
+    io.warn("Run 'resolve' to review them, or 'pull --yes' to take the repository versions; a .backup-* copy is kept.");
   }
   return pulled;
 }

@@ -100,8 +100,8 @@ describe('agent-sync between two devices', () => {
     });
   });
 
-  describe('overwrite confirmation and backups', () => {
-    it('status shows pending pull', async () => {
+  describe('conflicts, --yes and backups', () => {
+    it('status shows pending pull and the conflict', async () => {
       sandbox.write('B', 'CLAUDE.md', 'B local edit\n');
       sandbox.write('A', 'CLAUDE.md', 'instructions v2\n');
       await sandbox.run('A', ['push']);
@@ -109,18 +109,18 @@ describe('agent-sync between two devices', () => {
       expect(result.output).toContain("new commit(s) on the remote (run 'pull')");
     });
 
-    it('pull without --yes on a non-interactive session exits 3', async () => {
+    it('pull on a file edited on both devices exits 5 and does not touch it', async () => {
       const result = await sandbox.run('B', ['pull']);
-      expect(result.code).toBe(3);
+      expect(result.code).toBe(5);
     });
 
     it('local file untouched after refusal', () => {
       expect(sandbox.read('B', 'CLAUDE.md')).toBe('B local edit\n');
     });
 
-    it('dry-run pull exits 0', async () => {
+    it('dry-run pull reports the conflict with exit 5', async () => {
       const result = await sandbox.run('B', ['pull', '--dry-run']);
-      expect(result.code).toBe(0);
+      expect(result.code).toBe(5);
     });
 
     it('dry-run leaves local file untouched', () => {

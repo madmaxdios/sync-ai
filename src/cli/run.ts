@@ -5,6 +5,7 @@ import type { Env } from '../agents/agent-config';
 import { runInit } from '../commands/init';
 import { runPull } from '../commands/pull';
 import { runPush } from '../commands/push';
+import { runResolve } from '../commands/resolve';
 import { runStatus } from '../commands/status';
 import type { CommandContext } from '../commands/context';
 import { AppError, UsageError } from '../domain/app-error';
@@ -24,6 +25,8 @@ export interface Runtime {
   readonly hostname: string;
   readonly io: Io;
   readonly now: () => Date;
+  /** Whether stdin is an interactive terminal (defaults to false). */
+  readonly hasTerminal?: boolean;
 }
 
 export function defaultRuntime(io: Io): Runtime {
@@ -34,6 +37,7 @@ export function defaultRuntime(io: Io): Runtime {
     hostname: os.hostname(),
     io,
     now: () => new Date(),
+    hasTerminal: Boolean(process.stdin.isTTY),
   };
 }
 
@@ -42,6 +46,7 @@ const COMMANDS: Record<CommandName, (context: CommandContext) => Promise<ExitCod
   pull: runPull,
   push: runPush,
   status: runStatus,
+  resolve: runResolve,
 };
 
 async function execute(argv: readonly string[], runtime: Runtime): Promise<ExitCode> {
@@ -70,11 +75,16 @@ async function execute(argv: readonly string[], runtime: Runtime): Promise<ExitC
     dryRun: options.dryRun,
     argument: options.argument,
     repoName: options.name,
+    resolution: options.resolution,
+    editor: options.editor,
     io: runtime.io,
     git,
     repoGit: git.withRepo(repoDir),
     gh: new GitHubCli(runtime.env),
     hostname: runtime.hostname,
+    env: runtime.env,
+    platform: runtime.platform,
+    hasTerminal: runtime.hasTerminal ?? false,
     now: runtime.now,
   });
 }

@@ -7,7 +7,7 @@ var __export = (target, all) => {
 
 // src/cli/run.ts
 import os from "node:os";
-import path7 from "node:path";
+import path10 from "node:path";
 
 // src/domain/app-error.ts
 var AppError = class extends Error {
@@ -842,10 +842,10 @@ function mergeDefs(...defs) {
 function cloneDef(schema) {
   return mergeDefs(schema._zod.def);
 }
-function getElementAtPath(obj, path8) {
-  if (!path8)
+function getElementAtPath(obj, path11) {
+  if (!path11)
     return obj;
-  return path8.reduce((acc, key) => acc?.[key], obj);
+  return path11.reduce((acc, key) => acc?.[key], obj);
 }
 function promiseAllObject(promisesObj) {
   const keys = Object.keys(promisesObj);
@@ -1185,11 +1185,11 @@ function explicitlyAborted(x, startIndex = 0) {
   }
   return false;
 }
-function prefixIssues(path8, issues) {
+function prefixIssues(path11, issues) {
   return issues.map((iss) => {
     var _a3;
     (_a3 = iss).path ?? (_a3.path = []);
-    iss.path.unshift(path8);
+    iss.path.unshift(path11);
     return iss;
   });
 }
@@ -1651,16 +1651,16 @@ function flattenError(error62, mapper = (issue2) => issue2.message) {
 }
 function formatError(error62, mapper = (issue2) => issue2.message) {
   const fieldErrors = { _errors: [] };
-  const processError = (error63, path8 = []) => {
+  const processError = (error63, path11 = []) => {
     for (const issue2 of error63.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
-        issue2.errors.map((issues) => processError({ issues }, [...path8, ...issue2.path]));
+        issue2.errors.map((issues) => processError({ issues }, [...path11, ...issue2.path]));
       } else if (issue2.code === "invalid_key") {
-        processError({ issues: issue2.issues }, [...path8, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path11, ...issue2.path]);
       } else if (issue2.code === "invalid_element") {
-        processError({ issues: issue2.issues }, [...path8, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path11, ...issue2.path]);
       } else {
-        const fullpath = [...path8, ...issue2.path];
+        const fullpath = [...path11, ...issue2.path];
         if (fullpath.length === 0) {
           fieldErrors._errors.push(mapper(issue2));
         } else {
@@ -1699,17 +1699,17 @@ function formatError(error62, mapper = (issue2) => issue2.message) {
 }
 function treeifyError(error62, mapper = (issue2) => issue2.message) {
   const result = { errors: [] };
-  const processError = (error63, path8 = []) => {
+  const processError = (error63, path11 = []) => {
     var _a3;
     for (const issue2 of error63.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
-        issue2.errors.map((issues) => processError({ issues }, [...path8, ...issue2.path]));
+        issue2.errors.map((issues) => processError({ issues }, [...path11, ...issue2.path]));
       } else if (issue2.code === "invalid_key") {
-        processError({ issues: issue2.issues }, [...path8, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path11, ...issue2.path]);
       } else if (issue2.code === "invalid_element") {
-        processError({ issues: issue2.issues }, [...path8, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path11, ...issue2.path]);
       } else {
-        const fullpath = [...path8, ...issue2.path];
+        const fullpath = [...path11, ...issue2.path];
         if (fullpath.length === 0) {
           result.errors.push(mapper(issue2));
           continue;
@@ -1748,8 +1748,8 @@ function treeifyError(error62, mapper = (issue2) => issue2.message) {
 }
 function toDotPath(_path) {
   const segs = [];
-  const path8 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
-  for (const seg of path8) {
+  const path11 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
+  for (const seg of path11) {
     if (typeof seg === "number")
       segs.push(`[${seg}]`);
     else if (typeof seg === "symbol")
@@ -18887,13 +18887,13 @@ function resolveRef(ref, ctx) {
   if (!ref.startsWith("#")) {
     throw new Error("External $ref is not supported, only local refs (#/...) are allowed");
   }
-  const path8 = ref.slice(1).split("/").filter(Boolean);
-  if (path8.length === 0) {
+  const path11 = ref.slice(1).split("/").filter(Boolean);
+  if (path11.length === 0) {
     return ctx.rootSchema;
   }
   const defsKey = ctx.version === "draft-2020-12" ? "$defs" : "definitions";
-  if (path8[0] === defsKey) {
-    const key = path8[1] === void 0 ? void 0 : decodeJSONPointerSegment(path8[1]);
+  if (path11[0] === defsKey) {
+    const key = path11[1] === void 0 ? void 0 : decodeJSONPointerSegment(path11[1]);
     if (!key || !ctx.defs[key]) {
       throw new Error(`Reference not found: ${ref}`);
     }
@@ -19797,7 +19797,7 @@ function resolveAgent(name, environment) {
 }
 
 // src/commands/init.ts
-import path5 from "node:path";
+import path8 from "node:path";
 
 // src/infra/file-system.ts
 import fs from "node:fs/promises";
@@ -19895,7 +19895,7 @@ async function cloneRepository(context, url2, options = {}) {
 }
 
 // src/commands/init-with-github.ts
-import path4 from "node:path";
+import path7 from "node:path";
 
 // src/domain/repo-name.ts
 var DEFAULT_REPO_NAME = "sync-ai-data";
@@ -19903,7 +19903,6 @@ var repoNameSchema = external_exports.string().max(100).regex(/^[A-Za-z0-9_][A-Z
 
 // src/commands/local-tree.ts
 import path3 from "node:path";
-import fs4 from "node:fs/promises";
 
 // src/domain/path-filter.ts
 var REGEXP_SPECIALS = /[.+^${}()|[\]\\]/g;
@@ -19914,29 +19913,6 @@ function globToRegExp(glob) {
 function createDenyMatcher(patterns) {
   const matchers = patterns.map(globToRegExp);
   return (relPath) => relPath.split("/").some((part) => matchers.some((matcher) => matcher.test(part)));
-}
-
-// src/domain/line-endings.ts
-function isBinary(content) {
-  return content.includes(0);
-}
-function normalize(content) {
-  if (isBinary(content)) return content;
-  return Buffer.from(content.toString("latin1").replace(/\r\n/g, "\n"), "latin1");
-}
-function sameContent(a, b) {
-  return normalize(a).equals(normalize(b));
-}
-
-// src/domain/tree-differences.ts
-function diffTrees(local, repo) {
-  const localSet = new Set(local);
-  const repoSet = new Set(repo);
-  return {
-    onlyLocal: local.filter((rel) => !repoSet.has(rel)),
-    onlyRepo: repo.filter((rel) => !localSet.has(rel)),
-    common: local.filter((rel) => repoSet.has(rel))
-  };
 }
 
 // src/infra/file-tree.ts
@@ -19989,25 +19965,6 @@ async function requireRepo(context) {
     `no repository initialized at ${context.repoDir}. Run first: init [repo-url]`
   );
 }
-async function differsFromRepo(context, rel) {
-  const [local, repo] = await Promise.all([
-    fs4.readFile(toNativePath(context.agent.home, rel)),
-    fs4.readFile(toNativePath(agentRepoDir(context), rel))
-  ]);
-  return !sameContent(local, repo);
-}
-async function compareWithRepo(context) {
-  const [localFiles, repoFiles] = await Promise.all([
-    listLocalFiles(context),
-    listRepoFiles(context)
-  ]);
-  const differences = diffTrees(localFiles, repoFiles);
-  const modified = [];
-  for (const rel of differences.common) {
-    if (await differsFromRepo(context, rel)) modified.push(rel);
-  }
-  return { ...differences, modified };
-}
 
 // src/domain/report.ts
 function formatList(prefix, items) {
@@ -20024,6 +19981,274 @@ function formatStamp(date5) {
   const day = `${date5.getFullYear()}${pad(date5.getMonth() + 1)}${pad(date5.getDate())}`;
   const time3 = `${pad(date5.getHours())}${pad(date5.getMinutes())}${pad(date5.getSeconds())}`;
   return `${day}-${time3}`;
+}
+
+// src/infra/state-store.ts
+import fs4 from "node:fs/promises";
+import path4 from "node:path";
+
+// src/domain/sync-state.ts
+var bases = external_exports.record(external_exports.string(), external_exports.string());
+var stateSchema = external_exports.object({
+  version: external_exports.literal(1),
+  agents: external_exports.record(external_exports.string(), external_exports.object({ bases }))
+});
+function emptyState() {
+  return { version: 1, agents: {} };
+}
+function parseState(json2) {
+  try {
+    const parsed = stateSchema.safeParse(JSON.parse(json2));
+    return parsed.success ? parsed.data : void 0;
+  } catch {
+    return void 0;
+  }
+}
+function serializeState(state) {
+  return `${JSON.stringify(state, null, 2)}
+`;
+}
+function basesOf(state, agent) {
+  return state.agents[agent]?.bases ?? {};
+}
+function setBase(state, agent, rel, blob) {
+  const next = { ...basesOf(state, agent) };
+  if (blob === void 0) delete next[rel];
+  else next[rel] = blob;
+  return { ...state, agents: { ...state.agents, [agent]: { bases: next } } };
+}
+
+// src/infra/state-store.ts
+var STATE_FILE = "state.json";
+async function loadState(dataHome) {
+  let content;
+  try {
+    content = await fs4.readFile(path4.join(dataHome, STATE_FILE), "utf8");
+  } catch {
+    return { state: emptyState(), invalid: false };
+  }
+  const parsed = parseState(content);
+  return parsed ? { state: parsed, invalid: false } : { state: emptyState(), invalid: true };
+}
+async function saveState(dataHome, state) {
+  await fs4.mkdir(dataHome, { recursive: true });
+  const target = path4.join(dataHome, STATE_FILE);
+  const temporary = `${target}.tmp`;
+  await fs4.writeFile(temporary, serializeState(state));
+  await fs4.rename(temporary, target);
+}
+
+// src/commands/apply-repo.ts
+import fs5 from "node:fs/promises";
+import path5 from "node:path";
+async function backUp(context, destination) {
+  if (!await pathExists(destination)) return;
+  await copyPreserving(destination, `${destination}.backup-${formatStamp(context.now())}`);
+}
+async function installFromSnapshot(context, snapshot, rels4) {
+  for (const rel of rels4) {
+    const blobId = snapshot.blobs.get(rel);
+    if (!blobId) throw new AppError(`${rel} is not in the repository`);
+    const content = await snapshot.read(blobId);
+    if (!content) throw new AppError(`the repository object for ${rel} is missing from the clone`);
+    const destination = toNativePath(context.agent.home, rel);
+    await backUp(context, destination);
+    await fs5.mkdir(path5.dirname(destination), { recursive: true });
+    await fs5.writeFile(destination, content, { mode: snapshot.executable.has(rel) ? 493 : 420 });
+  }
+}
+async function removeLocalWithBackup(context, rel) {
+  const target = toNativePath(context.agent.home, rel);
+  await backUp(context, target);
+  await removeFile(target);
+}
+
+// src/infra/conflict-store.ts
+import fs6 from "node:fs/promises";
+import path6 from "node:path";
+var MANIFEST_FILE = "manifest.json";
+var manifestSchema = external_exports.object({
+  version: external_exports.literal(1),
+  entries: external_exports.record(
+    external_exports.string(),
+    external_exports.object({
+      hasLocal: external_exports.boolean(),
+      hasRepo: external_exports.boolean(),
+      hasBase: external_exports.boolean(),
+      recordedAt: external_exports.string()
+    })
+  )
+});
+var SIDES = ["local", "repo", "base"];
+var ConflictStore = class {
+  constructor(dataHome, agent) {
+    this.dataHome = dataHome;
+    this.agent = agent;
+  }
+  dataHome;
+  agent;
+  get directory() {
+    return path6.join(this.dataHome, "conflicts", this.agent);
+  }
+  copyPath(rel, side) {
+    const target = toNativePath(this.directory, `${rel}.${side}`);
+    const relative = path6.relative(this.directory, target);
+    if (relative.startsWith("..") || path6.isAbsolute(relative)) {
+      throw new AppError(`refusing to store a conflict copy outside ${this.directory}: ${rel}`);
+    }
+    return target;
+  }
+  async load() {
+    try {
+      const content = await fs6.readFile(path6.join(this.directory, MANIFEST_FILE), "utf8");
+      const parsed = manifestSchema.safeParse(JSON.parse(content));
+      if (parsed.success) return parsed.data;
+    } catch {
+    }
+    return { version: 1, entries: {} };
+  }
+  /** Writes the copies of one conflict, removing the sides that do not exist. */
+  async write(rel, contents, recordedAt) {
+    for (const side of SIDES) {
+      const target = this.copyPath(rel, side);
+      const content = contents[side];
+      if (content === void 0) {
+        await removeFile(target);
+        continue;
+      }
+      await fs6.mkdir(path6.dirname(target), { recursive: true });
+      await fs6.writeFile(target, content);
+    }
+    return {
+      hasLocal: contents.local !== void 0,
+      hasRepo: contents.repo !== void 0,
+      hasBase: contents.base !== void 0,
+      recordedAt
+    };
+  }
+  async save(manifest) {
+    await fs6.mkdir(this.directory, { recursive: true });
+    await fs6.writeFile(
+      path6.join(this.directory, MANIFEST_FILE),
+      `${JSON.stringify(manifest, null, 2)}
+`
+    );
+  }
+  /** Removes the copies of one path (and prunes empty folders). */
+  async remove(rel) {
+    for (const side of SIDES) await removeFile(this.copyPath(rel, side));
+    if (await pathExists(this.directory)) await pruneEmptyDirsKeepingRoot(this.directory);
+  }
+};
+async function pruneEmptyDirsKeepingRoot(root) {
+  for (const entry of await fs6.readdir(root, { withFileTypes: true })) {
+    if (entry.isDirectory()) await pruneEmptyDirs(path6.join(root, entry.name));
+  }
+}
+
+// src/commands/sync-plan.ts
+import fs7 from "node:fs/promises";
+
+// src/domain/line-endings.ts
+function isBinary(content) {
+  return content.includes(0);
+}
+function normalize(content) {
+  if (isBinary(content)) return content;
+  return Buffer.from(content.toString("latin1").replace(/\r\n/g, "\n"), "latin1");
+}
+function sameContent(a, b) {
+  return normalize(a).equals(normalize(b));
+}
+
+// src/domain/classify-file.ts
+function same(a, b) {
+  return a !== void 0 && b !== void 0 && sameContent(a, b);
+}
+function classifyBothPresent(local, repo, base) {
+  if (sameContent(local, repo)) return "in-sync" /* InSync */;
+  if (base === void 0) return "conflict" /* Conflict */;
+  if (sameContent(local, base)) return "repo-changed" /* RepoChanged */;
+  if (sameContent(repo, base)) return "local-changed" /* LocalChanged */;
+  return "conflict" /* Conflict */;
+}
+function classifyFile({ local, repo, base }) {
+  if (local !== void 0 && repo !== void 0) return classifyBothPresent(local, repo, base);
+  if (local !== void 0) {
+    if (base === void 0) return "new-local" /* NewLocal */;
+    return same(local, base) ? "repo-deleted" /* RepoDeleted */ : "conflict" /* Conflict */;
+  }
+  if (repo !== void 0) {
+    if (base === void 0) return "new-repo" /* NewRepo */;
+    return same(repo, base) ? "local-deleted" /* LocalDeleted */ : "conflict" /* Conflict */;
+  }
+  return "gone" /* Gone */;
+}
+
+// src/domain/git-blob.ts
+import { createHash } from "node:crypto";
+function gitBlobId(content) {
+  return createHash("sha1").update(`blob ${content.length}\0`).update(content).digest("hex");
+}
+
+// src/commands/sync-plan.ts
+function entriesIn(plan, ...states) {
+  return plan.entries.filter((entry) => states.includes(entry.state));
+}
+async function readLocal(context, rel) {
+  return fs7.readFile(toNativePath(context.agent.home, rel));
+}
+async function buildPlan(context, snapshot, state) {
+  const bases2 = basesOf(state, context.agent.name);
+  const localFiles = new Set(await listLocalFiles(context));
+  const paths = /* @__PURE__ */ new Set([...localFiles, ...snapshot.blobs.keys(), ...Object.keys(bases2)]);
+  const entries = [];
+  for (const rel of [...paths].sort()) {
+    const local = localFiles.has(rel) ? await readLocal(context, rel) : void 0;
+    const repoBlob = snapshot.blobs.get(rel);
+    if (local && repoBlob && gitBlobId(local) === repoBlob) {
+      entries.push({ rel, state: "in-sync" /* InSync */, repoBlob, versions: void 0 });
+      continue;
+    }
+    const repo = repoBlob ? await snapshot.read(repoBlob) : void 0;
+    const baseBlob = bases2[rel];
+    const base = baseBlob ? await context.repoGit.blob(baseBlob) : void 0;
+    const fileState = classifyFile({ local, repo, base });
+    const versions = fileState === "conflict" /* Conflict */ ? { local, repo, base } : void 0;
+    entries.push({ rel, state: fileState, repoBlob, versions });
+  }
+  return { entries, snapshot };
+}
+function recordInSyncBases(state, agent, plan, extra = []) {
+  let next = state;
+  for (const entry of plan.entries) {
+    if (entry.state === "in-sync" /* InSync */) next = setBase(next, agent, entry.rel, entry.repoBlob);
+    if (entry.state === "gone" /* Gone */) next = setBase(next, agent, entry.rel, void 0);
+  }
+  for (const entry of extra) next = setBase(next, agent, entry.rel, entry.repoBlob);
+  return next;
+}
+
+// src/commands/conflict-area.ts
+function conflictStoreOf(context) {
+  return new ConflictStore(context.dataHome, context.agent.name);
+}
+async function recordConflicts(context, plan, settled = /* @__PURE__ */ new Set()) {
+  const store = conflictStoreOf(context);
+  const previous = await store.load();
+  const recordedAt = context.now().toISOString();
+  const entries = {};
+  const open2 = entriesIn(plan, "conflict" /* Conflict */).filter((entry) => !settled.has(entry.rel));
+  if (open2.length === 0 && Object.keys(previous.entries).length === 0) return [];
+  for (const entry of open2) {
+    if (!entry.versions) continue;
+    entries[entry.rel] = await store.write(entry.rel, entry.versions, recordedAt);
+  }
+  for (const rel of Object.keys(previous.entries)) {
+    if (!(rel in entries)) await store.remove(rel);
+  }
+  await store.save({ version: 1, entries });
+  return open2.map((entry) => entry.rel);
 }
 
 // src/commands/remote-state.ts
@@ -20055,32 +20280,82 @@ function requireReachable(state) {
   return state;
 }
 
-// src/commands/pull.ts
-async function planPull(context, repoFiles) {
-  const added = [];
-  const changed = [];
-  for (const rel of repoFiles) {
-    if (!await pathExists(toNativePath(context.agent.home, rel))) {
-      added.push(rel);
-      continue;
-    }
-    if (await differsFromRepo(context, rel)) changed.push(rel);
-  }
-  return { added, changed };
+// src/commands/repo-snapshot.ts
+function isAllowed(rel, allow) {
+  return allow.some((entry) => rel === entry || rel.startsWith(`${entry}/`));
 }
-async function install(context, files) {
-  const stamp = formatStamp(context.now());
-  const repoRoot = agentRepoDir(context);
-  for (const rel of files) {
-    const destination = toNativePath(context.agent.home, rel);
-    if (await pathExists(destination)) {
-      await copyPreserving(destination, `${destination}.backup-${stamp}`);
-    }
-    await copyPreserving(toNativePath(repoRoot, rel), destination);
+function parseTree(output2, prefix) {
+  const entries = /* @__PURE__ */ new Map();
+  for (const line of output2.split("\0")) {
+    const tab = line.indexOf("	");
+    if (tab < 0) continue;
+    const [mode, type, sha] = line.slice(0, tab).split(" ");
+    const path11 = line.slice(tab + 1);
+    if (type !== "blob" || !sha || !path11.startsWith(prefix)) continue;
+    entries.set(path11.slice(prefix.length), { sha, executable: mode === "100755" });
+  }
+  return entries;
+}
+async function readRepoSnapshot(context, ref) {
+  const { agent, repoGit } = context;
+  const read = (blobId) => repoGit.blob(blobId);
+  const hasRef = await repoGit.succeeds(["rev-parse", "--verify", "-q", `${ref}^{commit}`]);
+  if (!hasRef) return { ref, blobs: /* @__PURE__ */ new Map(), executable: /* @__PURE__ */ new Set(), read };
+  const prefix = `${agent.name}/`;
+  const output2 = await repoGit.must(["ls-tree", "-r", "-z", ref, "--", prefix]);
+  const isDenied = createDenyMatcher(agent.deny);
+  const blobs = /* @__PURE__ */ new Map();
+  const executable = /* @__PURE__ */ new Set();
+  for (const [rel, entry] of parseTree(output2, prefix)) {
+    if (!isAllowed(rel, agent.allow) || isDenied(rel)) continue;
+    blobs.set(rel, entry.sha);
+    if (entry.executable) executable.add(rel);
+  }
+  return { ref, blobs, executable, read };
+}
+
+// src/commands/pull.ts
+function rels(entries) {
+  return entries.map((entry) => entry.rel);
+}
+function printPlan(context, plan) {
+  const lines = [
+    ...formatList("+", rels(entriesIn(plan, "new-repo" /* NewRepo */))),
+    ...formatList("~", rels(entriesIn(plan, "repo-changed" /* RepoChanged */))),
+    ...formatList("!", rels(entriesIn(plan, "conflict" /* Conflict */)))
+  ];
+  const counts = `New files: ${entriesIn(plan, "new-repo" /* NewRepo */).length}; updated from the repository: ${entriesIn(plan, "repo-changed" /* RepoChanged */).length}; conflicts: ${entriesIn(plan, "conflict" /* Conflict */).length}`;
+  context.io.info(counts);
+  for (const line of lines) context.io.info(line);
+}
+function reportOpenConflicts(context, open2) {
+  const { io } = context;
+  io.warn("Conflicts (changed on both sides): your local files were NOT modified.");
+  for (const line of formatList("!", open2)) io.warn(line);
+  io.warn(`Copies for comparison: ${conflictStoreOf(context).directory}`);
+  io.warn(
+    "Run 'resolve' to review them, or repeat with --yes to take the repository version for all of them (a .backup-* copy is kept)."
+  );
+}
+function reportKeptLocalFiles(context, plan) {
+  const { io } = context;
+  const pending = entriesIn(
+    plan,
+    "local-changed" /* LocalChanged */,
+    "new-local" /* NewLocal */,
+    "local-deleted" /* LocalDeleted */
+  );
+  if (pending.length > 0) {
+    io.info(`${pending.length} local change(s) are waiting to be published (run 'push').`);
+  }
+  const removed = entriesIn(plan, "repo-deleted" /* RepoDeleted */);
+  if (removed.length > 0) {
+    io.info("These files were removed from the repository; your local copies were kept:");
+    for (const line of formatList("-", rels(removed))) io.info(line);
   }
 }
 async function runPull(context) {
-  const { agent, io, repoGit } = context;
+  const { agent, io, repoGit, dataHome } = context;
   await requireRepo(context);
   const remote = requireReachable(await refreshRemote(repoGit));
   if (remote.status === "empty") {
@@ -20095,39 +20370,52 @@ async function runPull(context) {
       );
     }
   }
-  const repoFiles = await listRepoFiles(context);
-  if (repoFiles.length === 0) {
+  const snapshot = await readRepoSnapshot(context, "HEAD");
+  if (snapshot.blobs.size === 0) {
     io.info(`The repository does not contain any '${agent.name}' files yet.`);
     return 0 /* Ok */;
   }
-  const { added, changed } = await planPull(context, repoFiles);
-  const total = added.length + changed.length;
-  if (total === 0) {
-    io.info(`Everything is up to date: ${agent.home} already matches the repository.`);
+  const loaded = await loadState(dataHome);
+  if (loaded.invalid) {
+    io.warn("The sync state file is unreadable and was ignored: differing files count as conflicts.");
+  }
+  const plan = await buildPlan(context, snapshot, loaded.state);
+  const toInstall = entriesIn(plan, "new-repo" /* NewRepo */, "repo-changed" /* RepoChanged */);
+  const conflicts = entriesIn(plan, "conflict" /* Conflict */);
+  if (toInstall.length === 0 && conflicts.length === 0) {
+    const pending = entriesIn(plan, "local-changed" /* LocalChanged */, "new-local" /* NewLocal */, "local-deleted" /* LocalDeleted */);
+    if (pending.length === 0 && entriesIn(plan, "repo-deleted" /* RepoDeleted */).length === 0) {
+      io.info(`Everything is up to date: ${agent.home} already matches the repository.`);
+    } else {
+      io.info("Nothing to pull from the repository.");
+      reportKeptLocalFiles(context, plan);
+    }
+    if (!context.dryRun) await saveState(dataHome, recordInSyncBases(loaded.state, agent.name, plan));
     return 0 /* Ok */;
   }
-  io.info(`New files: ${added.length}; differing local files: ${changed.length}`);
-  for (const line of [...formatList("+", added), ...formatList("~", changed)]) io.info(line);
+  printPlan(context, plan);
   if (context.dryRun) {
     io.info(`[dry-run] ${agent.home} was not modified.`);
-    return 0 /* Ok */;
+    return conflicts.length > 0 ? 5 /* Conflicts */ : 0 /* Ok */;
   }
-  if (changed.length > 0 && !context.assumeYes) {
-    const confirmed = await io.confirm(
-      "Local changes will be overwritten (a .backup-* copy is kept). Continue? (y/N) "
-    );
-    if (!confirmed) {
-      io.warn("Cancelled to protect your local files (marked with ~).");
-      io.warn(
-        "Review the list and repeat with --yes to overwrite them; a .backup-* copy will be kept."
-      );
-      return 3 /* ConfirmationRequired */;
+  await installFromSnapshot(context, snapshot, rels(toInstall));
+  const settled = [];
+  if (context.assumeYes) {
+    for (const entry of conflicts) {
+      if (entry.repoBlob) await installFromSnapshot(context, snapshot, [entry.rel]);
+      else await removeLocalWithBackup(context, entry.rel);
+      settled.push(entry);
     }
   }
-  await install(context, [...added, ...changed]);
-  io.info(`Installed ${total} file(s) into ${agent.home}.`);
-  io.info("Note: pull does not delete local files that no longer exist in the repository.");
-  return 0 /* Ok */;
+  const open2 = await recordConflicts(context, plan, new Set(rels(settled)));
+  const next = recordInSyncBases(loaded.state, agent.name, plan, [...toInstall, ...settled]);
+  await saveState(dataHome, next);
+  const applied = toInstall.length + settled.length;
+  if (applied > 0) io.info(`Installed ${applied} file(s) into ${agent.home}.`);
+  reportKeptLocalFiles(context, plan);
+  if (open2.length === 0) return 0 /* Ok */;
+  reportOpenConflicts(context, open2);
+  return 5 /* Conflicts */;
 }
 
 // src/commands/init-existing-repo.ts
@@ -20167,9 +20455,9 @@ async function runInitWithExistingRepository(context, slug, info) {
     return 0 /* Ok */;
   }
   const pulled = await runPull({ ...context, assumeYes: false });
-  if (pulled === 3 /* ConfirmationRequired */) {
-    io.warn(`The repository is cloned and initialized, but your local files in ${context.agent.home} were not changed.`);
-    io.warn("Review the list above and run 'pull --yes' to overwrite them; a .backup-* copy will be kept.");
+  if (pulled === 5 /* Conflicts */) {
+    io.warn(`The repository is cloned and initialized, but your conflicting local files in ${context.agent.home} were not changed.`);
+    io.warn("Run 'resolve' to review them, or 'pull --yes' to take the repository versions; a .backup-* copy is kept.");
   }
   return pulled;
 }
@@ -20196,7 +20484,7 @@ async function requireAuthenticatedLogin(gh) {
 }
 async function reportExistingClone(context) {
   const { repoDir, repoGit, io } = context;
-  if (!await isDirectory(path4.join(repoDir, ".git"))) return false;
+  if (!await isDirectory(path7.join(repoDir, ".git"))) return false;
   const origin = await repoGit.run(["remote", "get-url", "origin"]);
   const where = origin.code === 0 ? ` (origin: ${origin.stdout.trim()})` : "";
   io.info(`Already initialized: ${repoDir}${where}`);
@@ -20255,7 +20543,7 @@ async function runInit(context) {
   if (context.repoName !== void 0) {
     throw new UsageError("--name only applies when init is run without a URL");
   }
-  if (await isDirectory(path5.join(repoDir, ".git"))) {
+  if (await isDirectory(path8.join(repoDir, ".git"))) {
     const existing = await repoGit.run(["remote", "get-url", "origin"]);
     const current = existing.code === 0 ? existing.stdout.trim() : "";
     if (current === url2) {
@@ -20277,7 +20565,7 @@ async function runInit(context) {
 }
 
 // src/commands/scan-secrets.ts
-import fs5 from "node:fs/promises";
+import fs8 from "node:fs/promises";
 
 // src/domain/secret-scanner.ts
 var SECRET_PATTERNS = [
@@ -20314,7 +20602,7 @@ function scanText(content) {
 async function scanFilesForSecrets(context, files) {
   let hits = 0;
   for (const rel of files) {
-    const content = await fs5.readFile(toNativePath(context.agent.home, rel));
+    const content = await fs8.readFile(toNativePath(context.agent.home, rel));
     if (isBinary(content)) continue;
     for (const finding of scanText(content.toString("utf8"))) {
       context.io.warn(`  ${rel} (line ${finding.lines.join(",")}): ${finding.label}`);
@@ -20325,24 +20613,23 @@ async function scanFilesForSecrets(context, files) {
 }
 
 // src/commands/push.ts
-async function printPushPreview(context) {
-  const { onlyLocal, modified, onlyRepo } = await compareWithRepo(context);
+function rels2(entries) {
+  return entries.map((entry) => entry.rel);
+}
+function printPushPreview(context, plan) {
   context.io.info("[dry-run] Changes that would be published (local \u2192 repository):");
   const lines = [
-    ...formatList("+", onlyLocal),
-    ...formatList("~", modified),
-    ...formatList("-", onlyRepo)
+    ...formatList("+", rels2(entriesIn(plan, "new-local" /* NewLocal */))),
+    ...formatList("~", rels2(entriesIn(plan, "local-changed" /* LocalChanged */))),
+    ...formatList("-", rels2(entriesIn(plan, "local-deleted" /* LocalDeleted */)))
   ];
   for (const line of lines) context.io.info(line);
   if (lines.length === 0) context.io.info("  (none)");
 }
-async function mirrorToRepo(context, files) {
+async function applyToRepo(context, toCopy, toDelete) {
   const repoRoot = agentRepoDir(context);
-  const localFiles = new Set(files);
-  for (const rel of await listRepoFiles(context)) {
-    if (!localFiles.has(rel)) await removeFile(toNativePath(repoRoot, rel));
-  }
-  for (const rel of files) {
+  for (const rel of toDelete) await removeFile(toNativePath(repoRoot, rel));
+  for (const rel of toCopy) {
     await copyPreserving(toNativePath(context.agent.home, rel), toNativePath(repoRoot, rel));
   }
   await pruneEmptyDirs(repoRoot);
@@ -20360,8 +20647,19 @@ async function commitStaged(context, message) {
   const identity = hasIdentity ? [] : ["-c", "user.name=agent-sync", "-c", "user.email=agent-sync@localhost"];
   await repoGit.must([...identity, "commit", "--quiet", "-m", message]);
 }
+async function refreshBases(context, state) {
+  const snapshot = await readRepoSnapshot(context, "HEAD");
+  const plan = await buildPlan(context, snapshot, state);
+  await saveState(context.dataHome, recordInSyncBases(state, context.agent.name, plan));
+}
+function refuseConflicts(context, conflicts) {
+  context.io.warn("Push cancelled: these files changed on both sides, so publishing would overwrite work:");
+  for (const line of formatList("!", rels2(conflicts))) context.io.warn(line);
+  context.io.warn("Run 'pull' to refresh the comparison copies, then 'resolve' each file.");
+  return 5 /* Conflicts */;
+}
 async function runPush(context) {
-  const { agent, io, repoGit } = context;
+  const { agent, io, repoGit, dataHome } = context;
   await requireRepo(context);
   if (!await isDirectory(agent.home)) throw new AppError(`${agent.home} does not exist`);
   const files = await listLocalFiles(context);
@@ -20380,15 +20678,33 @@ async function runPush(context) {
       `the remote has ${remote.behind} commit(s) you do not have. Run 'pull' before 'push'.`
     );
   }
+  const loaded = await loadState(dataHome);
+  const plan = await buildPlan(context, await readRepoSnapshot(context, "HEAD"), loaded.state);
+  const conflicts = entriesIn(plan, "conflict" /* Conflict */);
+  if (conflicts.length > 0) return refuseConflicts(context, conflicts);
+  const stale = entriesIn(plan, "repo-changed" /* RepoChanged */);
+  if (stale.length > 0) {
+    throw new AppError(
+      `the repository has newer versions of ${stale.length} file(s) than this device (${rels2(stale).join(", ")}). Run 'pull' before 'push'.`
+    );
+  }
+  const toCopy = rels2(entriesIn(plan, "local-changed" /* LocalChanged */, "new-local" /* NewLocal */));
+  const toDelete = rels2(entriesIn(plan, "local-deleted" /* LocalDeleted */));
+  const removedUpstream = entriesIn(plan, "repo-deleted" /* RepoDeleted */);
+  if (removedUpstream.length > 0) {
+    io.info("Not re-publishing files that were removed from the repository (local copies kept):");
+    for (const line of formatList("-", rels2(removedUpstream))) io.info(line);
+  }
   if (context.dryRun) {
-    await printPushPreview(context);
+    printPushPreview(context, plan);
     return 0 /* Ok */;
   }
-  await mirrorToRepo(context, files);
+  await applyToRepo(context, toCopy, toDelete);
   await stageAllowedPaths(context);
   if (await repoGit.succeeds(["diff", "--cached", "--quiet"])) {
     if (remote.ahead === 0) {
       io.info("No changes to publish.");
+      await refreshBases(context, loaded.state);
       return 0 /* Ok */;
     }
     io.info(`No new changes; publishing ${remote.ahead} pending commit(s).`);
@@ -20398,53 +20714,26 @@ async function runPush(context) {
     await commitStaged(context, `chore(sync): update ${agent.name} config from ${host}`);
   }
   await repoGit.must(["push", "--quiet", "-u", "origin", "HEAD"]);
+  await refreshBases(context, loaded.state);
   io.info("Published.");
   return 0 /* Ok */;
 }
 
-// src/commands/status.ts
-async function runStatus(context) {
-  const { agent, io, repoDir } = context;
-  await requireRepo(context);
-  io.info(`Agent:       ${agent.name}`);
-  io.info(`Local:       ${agent.home}`);
-  io.info(`Repository:  ${repoDir}`);
-  const remote = await refreshRemote(context.repoGit);
-  if (remote.status === "unreachable") {
-    io.warn(`Remote:      unreachable (${remote.error})`);
-  } else if (remote.status === "empty") {
-    io.info("Remote:      empty (use 'push' to publish)");
-  } else {
-    io.info(`Remote:      ${describeRelation(remote.ahead, remote.behind)}`);
-  }
-  const { onlyLocal, onlyRepo, modified } = await compareWithRepo(context);
-  if (onlyLocal.length + onlyRepo.length + modified.length === 0) {
-    io.info("Local and clone: no differences.");
-    return 0 /* Ok */;
-  }
-  io.info("Differences between local and clone:");
-  const lines = [
-    ...formatList("+ local only     ", onlyLocal),
-    ...formatList("~ modified       ", modified),
-    ...formatList("- repo only      ", onlyRepo)
-  ];
-  for (const line of lines) io.info(line);
-  return 0 /* Ok */;
-}
+// src/commands/resolve.ts
+import fs9 from "node:fs/promises";
 
-// src/infra/data-home.ts
-import path6 from "node:path";
-function resolveDataHome(env, homeDir, platform) {
-  if (env.AGENT_SYNC_HOME) return env.AGENT_SYNC_HOME;
-  if (platform === "win32") {
-    const localAppData = env.LOCALAPPDATA || path6.join(homeDir, "AppData", "Local");
-    return path6.join(localAppData, "agent-sync");
-  }
-  return path6.join(homeDir, ".local", "share", "agent-sync");
+// src/domain/editor-command.ts
+function editorArguments(editor, files) {
+  if (editor === "code") return ["--wait", "--merge", files.local, files.repo, files.base, files.result];
+  return [files.result, files.base, files.repo];
+}
+var CMD_METACHARACTERS = /[&|<>^%!"]/;
+function isSafeForCmd(args) {
+  return args.every((arg) => !CMD_METACHARACTERS.test(arg));
 }
 
 // src/infra/run-process.ts
-import { execFile } from "node:child_process";
+import { execFile, spawn } from "node:child_process";
 var MAX_OUTPUT_BYTES = 64 * 1024 * 1024;
 function runProcess(file2, args, env) {
   return new Promise((resolve) => {
@@ -20466,6 +20755,321 @@ function runProcess(file2, args, env) {
       }
     );
   });
+}
+function runProcessBinary(file2, args, env) {
+  return new Promise((resolve) => {
+    execFile(
+      file2,
+      [...args],
+      { env: { ...env }, encoding: "buffer", maxBuffer: MAX_OUTPUT_BYTES, windowsHide: true },
+      (error62, stdout, stderr) => {
+        if (!error62) {
+          resolve({ code: 0, stdout, stderr: stderr.toString("utf8") });
+          return;
+        }
+        if (error62.code === "ENOENT") {
+          resolve(void 0);
+          return;
+        }
+        const code = typeof error62.code === "number" ? error62.code : 1;
+        resolve({ code, stdout, stderr: stderr.toString("utf8") || error62.message });
+      }
+    );
+  });
+}
+function runInteractive(file2, args, env) {
+  return new Promise((resolve) => {
+    const child = spawn(file2, [...args], { env: { ...env }, stdio: "inherit", windowsHide: false });
+    child.on("error", (error62) => {
+      resolve(error62.code === "ENOENT" ? void 0 : 1);
+    });
+    child.on("close", (code) => resolve(code ?? 1));
+  });
+}
+
+// src/commands/resolve-editor.ts
+async function hasCode(env, platform) {
+  if (platform === "win32") return (await runProcess("where", ["code"], env))?.code === 0;
+  return (await runProcess("code", ["--version"], env))?.code === 0;
+}
+async function hasVimdiff(env, platform) {
+  if (platform === "win32") return false;
+  return (await runProcess("vimdiff", ["--version"], env))?.code === 0;
+}
+async function chooseEditor(choice, { env, platform, hasTerminal }) {
+  if (choice === "code") {
+    if (!await hasCode(env, platform)) throw new AppError("the 'code' command was not found in PATH");
+    return "code";
+  }
+  if (choice === "vimdiff") {
+    if (!hasTerminal) throw new AppError("vimdiff needs a terminal; run this command in your own terminal");
+    if (!await hasVimdiff(env, platform)) throw new AppError("'vimdiff' was not found in PATH");
+    return "vimdiff";
+  }
+  if (await hasCode(env, platform)) return "code";
+  if (hasTerminal && await hasVimdiff(env, platform)) return "vimdiff";
+  return void 0;
+}
+function manualCommands(files) {
+  return [
+    `code --wait --merge "${files.local}" "${files.repo}" "${files.base}" "${files.result}"`,
+    `vimdiff "${files.result}" "${files.base}" "${files.repo}"`
+  ];
+}
+async function launchEditor(editor, files, { env, platform }) {
+  const args = editorArguments(editor, files);
+  if (editor === "code" && platform === "win32") {
+    if (!isSafeForCmd(args)) {
+      throw new AppError("a file path contains characters that are unsafe to pass to code.cmd");
+    }
+    const shell = env.ComSpec || "cmd.exe";
+    const code2 = await runInteractive(shell, ["/d", "/s", "/c", "code", ...args], env);
+    if (code2 === void 0) throw new AppError("could not start cmd.exe to run code");
+    return code2;
+  }
+  const command = editor === "code" ? "code" : "vimdiff";
+  const code = await runInteractive(command, args, env);
+  if (code === void 0) throw new AppError(`'${command}' was not found in PATH`);
+  return code;
+}
+
+// src/commands/resolve.ts
+function normalizePath(argument) {
+  return argument.replace(/\\/g, "/").replace(/^\.\//, "");
+}
+async function listConflicts(context) {
+  const { io } = context;
+  const store = conflictStoreOf(context);
+  const rels4 = Object.keys((await store.load()).entries).sort();
+  if (rels4.length === 0) {
+    io.info("No unresolved conflicts. ('pull' records the conflicts it finds.)");
+    return 0 /* Ok */;
+  }
+  io.info(`Unresolved conflicts (${rels4.length}):`);
+  for (const rel of rels4) io.info(`  ! ${rel}`);
+  io.info(`Comparison copies (.local, .repo, .base): ${store.directory}`);
+  io.info("Resolve each file with: resolve <path> --take-local | --take-repo | --auto | --editor");
+  return 0 /* Ok */;
+}
+async function readVersions(context, snapshot, rel) {
+  const localPath = toNativePath(context.agent.home, rel);
+  const local = await pathExists(localPath) ? await fs9.readFile(localPath) : void 0;
+  const repoBlob = snapshot.blobs.get(rel);
+  const repo = repoBlob ? await snapshot.read(repoBlob) : void 0;
+  const { state } = await loadState(context.dataHome);
+  const baseBlob = basesOf(state, context.agent.name)[rel];
+  const base = baseBlob ? await context.repoGit.blob(baseBlob) : void 0;
+  return { local, repo, base };
+}
+async function settle2(context, rel, repoBlob) {
+  const { state } = await loadState(context.dataHome);
+  await saveState(context.dataHome, setBase(state, context.agent.name, rel, repoBlob));
+  const store = conflictStoreOf(context);
+  const manifest = await store.load();
+  const entries = { ...manifest.entries };
+  delete entries[rel];
+  await store.remove(rel);
+  await store.save({ version: 1, entries });
+}
+async function backUpLocal(context, rel) {
+  const target = toNativePath(context.agent.home, rel);
+  if (!await pathExists(target)) return;
+  await copyPreserving(target, `${target}.backup-${formatStamp(context.now())}`);
+}
+async function takeLocal(context, rel, snapshot) {
+  await settle2(context, rel, snapshot.blobs.get(rel));
+  const exists = await pathExists(toNativePath(context.agent.home, rel));
+  context.io.info(
+    exists ? `Kept your local version of ${rel}. The next 'push' publishes it.` : `Kept your local deletion of ${rel}. The next 'push' removes it from the repository.`
+  );
+  return 0 /* Ok */;
+}
+async function takeRepo(context, rel, snapshot) {
+  if (snapshot.blobs.has(rel)) await installFromSnapshot(context, snapshot, [rel]);
+  else await removeLocalWithBackup(context, rel);
+  await settle2(context, rel, snapshot.blobs.get(rel));
+  context.io.info(`Took the repository version of ${rel} (a .backup-* copy of your file was kept).`);
+  return 0 /* Ok */;
+}
+async function autoMerge(context, rel, snapshot, versions) {
+  const { local, repo, base } = versions;
+  if (!local || !repo || !base) {
+    throw new AppError(
+      `${rel} was deleted on one side or has no recorded ancestor, so it cannot be merged automatically. Use --take-local or --take-repo.`
+    );
+  }
+  if (isBinary(local) || isBinary(repo) || isBinary(base)) {
+    throw new AppError(`${rel} is a binary file and cannot be merged automatically. Use --take-local or --take-repo.`);
+  }
+  const store = conflictStoreOf(context);
+  await store.write(rel, versions, context.now().toISOString());
+  const merge2 = await context.git.run([
+    "merge-file",
+    "-p",
+    toNativePath(context.agent.home, rel),
+    store.copyPath(rel, "base"),
+    store.copyPath(rel, "repo")
+  ]);
+  if (merge2.code < 0 || merge2.code > 127) {
+    throw new AppError(`git merge-file failed: ${merge2.stderr.trim() || `exit code ${merge2.code}`}`);
+  }
+  if (merge2.code > 0) {
+    context.io.warn(
+      `${rel} still conflicts (${merge2.code} overlapping change(s)): nothing was changed. Use --editor, --take-local or --take-repo.`
+    );
+    return 5 /* Conflicts */;
+  }
+  await backUpLocal(context, rel);
+  await fs9.writeFile(toNativePath(context.agent.home, rel), merge2.stdout);
+  await settle2(context, rel, snapshot.blobs.get(rel));
+  context.io.info(`Merged ${rel} automatically. Review it, then run 'push' to publish the result.`);
+  return 0 /* Ok */;
+}
+async function editInEditor(context, rel, snapshot, versions) {
+  const { io } = context;
+  const { local, repo, base } = versions;
+  if (!local || !repo) {
+    throw new AppError(
+      `${rel} was deleted on one side, so there is nothing to merge in an editor. Use --take-local or --take-repo.`
+    );
+  }
+  const store = conflictStoreOf(context);
+  await store.write(rel, { local, repo, base: base ?? Buffer.alloc(0) }, context.now().toISOString());
+  const files = {
+    local: store.copyPath(rel, "local"),
+    repo: store.copyPath(rel, "repo"),
+    base: store.copyPath(rel, "base"),
+    result: toNativePath(context.agent.home, rel)
+  };
+  const environment = {
+    env: context.env,
+    platform: context.platform,
+    hasTerminal: context.hasTerminal
+  };
+  const editor = await chooseEditor(context.editor ?? "auto", environment);
+  if (!editor) {
+    io.warn("No three-way editor can be started from here (no VS Code `code` command, and no terminal for vimdiff).");
+    io.warn("Open one yourself with either of these commands, then run resolve <path> --take-local:");
+    for (const command of manualCommands(files)) io.warn(`  ${command}`);
+    return 1 /* Error */;
+  }
+  await backUpLocal(context, rel);
+  io.info(`Opening ${editor} for ${rel}: left/right are your version and the repository's; the result is written to ${files.result}`);
+  const code = await launchEditor(editor, files, environment);
+  if (code !== 0) {
+    throw new AppError(`the editor exited with code ${code}; the conflict on ${rel} is still open`);
+  }
+  const confirmed = context.assumeYes || await io.confirm(`Mark ${rel} as resolved with the result in your file? (y/N) `);
+  if (!confirmed) {
+    io.warn(`The conflict on ${rel} is still open. Your edits are in ${files.result}.`);
+    io.warn(`When you are happy with that file, run: resolve ${rel} --take-local`);
+    return 3 /* ConfirmationRequired */;
+  }
+  return takeLocal(context, rel, snapshot);
+}
+async function runResolve(context) {
+  await requireRepo(context);
+  const { argument, resolution, io } = context;
+  if (!argument) {
+    if (resolution) throw new UsageError(`--${resolution} needs the path of the conflicting file: resolve <path> --${resolution}`);
+    return listConflicts(context);
+  }
+  if (!resolution) {
+    throw new UsageError(`choose how to resolve ${argument}: --take-local, --take-repo, --auto or --editor`);
+  }
+  const rel = normalizePath(argument);
+  const store = conflictStoreOf(context);
+  if (!(rel in (await store.load()).entries)) {
+    throw new AppError(`'${rel}' is not an unresolved conflict. Run 'resolve' to list them.`);
+  }
+  if (context.dryRun) {
+    io.info(`[dry-run] Would resolve ${rel} with --${resolution}; nothing was changed.`);
+    return 0 /* Ok */;
+  }
+  const snapshot = await readRepoSnapshot(context, "HEAD");
+  switch (resolution) {
+    case "take-local":
+      return takeLocal(context, rel, snapshot);
+    case "take-repo":
+      return takeRepo(context, rel, snapshot);
+    case "auto":
+      return autoMerge(context, rel, snapshot, await readVersions(context, snapshot, rel));
+    case "editor":
+      return editInEditor(context, rel, snapshot, await readVersions(context, snapshot, rel));
+  }
+}
+
+// src/commands/status.ts
+function rels3(entries) {
+  return entries.map((entry) => entry.rel);
+}
+function comparisonRef(remote) {
+  return remote.status === "ready" && remote.behind > 0 ? `origin/${remote.branch}` : "HEAD";
+}
+function printSection(context, title, lines) {
+  if (lines.length === 0) return;
+  context.io.info(title);
+  for (const line of lines) context.io.info(line);
+}
+function printPlan2(context, plan) {
+  const toPush = [
+    ...formatList("+", rels3(entriesIn(plan, "new-local" /* NewLocal */))),
+    ...formatList("~", rels3(entriesIn(plan, "local-changed" /* LocalChanged */))),
+    ...formatList("-", rels3(entriesIn(plan, "local-deleted" /* LocalDeleted */)))
+  ];
+  const toPull = [
+    ...formatList("+", rels3(entriesIn(plan, "new-repo" /* NewRepo */))),
+    ...formatList("~", rels3(entriesIn(plan, "repo-changed" /* RepoChanged */)))
+  ];
+  const conflicts = formatList("!", rels3(entriesIn(plan, "conflict" /* Conflict */)));
+  const removed = formatList("-", rels3(entriesIn(plan, "repo-deleted" /* RepoDeleted */)));
+  printSection(context, "To push (local changes, run push):", toPush);
+  printSection(context, "To pull (repository changes, run pull):", toPull);
+  printSection(
+    context,
+    "CONFLICT (changed on both sides; run resolve, push and pull will not overwrite them):",
+    conflicts
+  );
+  printSection(context, "Removed from the repository (your local copies are kept):", removed);
+  return toPush.length + toPull.length + conflicts.length + removed.length;
+}
+async function runStatus(context) {
+  const { agent, io, repoDir } = context;
+  await requireRepo(context);
+  io.info(`Agent:       ${agent.name}`);
+  io.info(`Local:       ${agent.home}`);
+  io.info(`Repository:  ${repoDir}`);
+  const remote = await refreshRemote(context.repoGit);
+  if (remote.status === "unreachable") {
+    io.warn(`Remote:      unreachable (${remote.error})`);
+  } else if (remote.status === "empty") {
+    io.info("Remote:      empty (use 'push' to publish)");
+  } else {
+    io.info(`Remote:      ${describeRelation(remote.ahead, remote.behind)}`);
+  }
+  const loaded = await loadState(context.dataHome);
+  if (loaded.invalid) io.warn("The sync state file is unreadable: differing files count as conflicts.");
+  const snapshot = await readRepoSnapshot(context, comparisonRef(remote));
+  const plan = await buildPlan(context, snapshot, loaded.state);
+  if (printPlan2(context, plan) === 0) {
+    io.info("Local and repository: no differences.");
+    return 0 /* Ok */;
+  }
+  if (entriesIn(plan, "conflict" /* Conflict */).length > 0) {
+    io.info("Next step: run 'resolve' to review the conflicts.");
+  }
+  return 0 /* Ok */;
+}
+
+// src/infra/data-home.ts
+import path9 from "node:path";
+function resolveDataHome(env, homeDir, platform) {
+  if (env.AGENT_SYNC_HOME) return env.AGENT_SYNC_HOME;
+  if (platform === "win32") {
+    const localAppData = env.LOCALAPPDATA || path9.join(homeDir, "AppData", "Local");
+    return path9.join(localAppData, "agent-sync");
+  }
+  return path9.join(homeDir, ".local", "share", "agent-sync");
 }
 
 // src/infra/gh.ts
@@ -20520,13 +21124,24 @@ var Git = class _Git {
     const reason = result.stderr.trim() || result.stdout.trim() || `exit code ${result.code}`;
     throw new AppError(`git ${args[0] ?? ""} failed: ${reason}`);
   }
+  /** Returns the raw content of a blob (`git cat-file blob`), or undefined when it is missing. */
+  async blob(id) {
+    const env = { ...this.env, GIT_TERMINAL_PROMPT: "0" };
+    const result = await runProcessBinary("git", [...this.prefix, "cat-file", "blob", id], env);
+    if (!result) throw new AppError("git is not installed or not found in PATH");
+    return result.code === 0 ? result.stdout : void 0;
+  }
   async succeeds(args) {
     return (await this.run(args)).code === 0;
   }
 };
 
 // src/cli/command-name.ts
-var commandNameSchema = external_exports.enum(["init", "pull", "push", "status"]);
+var commandNameSchema = external_exports.enum(["init", "pull", "push", "status", "resolve"]);
+
+// src/cli/resolution.ts
+var resolutionSchema = external_exports.enum(["take-local", "take-repo", "auto", "editor"]);
+var editorChoiceSchema = external_exports.enum(["auto", "code", "vimdiff"]);
 
 // src/cli/parse-args.ts
 var cliOptionsSchema = external_exports.object({
@@ -20535,9 +21150,17 @@ var cliOptionsSchema = external_exports.object({
   dryRun: external_exports.boolean(),
   command: external_exports.string().optional(),
   argument: external_exports.string().optional(),
-  name: external_exports.string().optional()
+  name: external_exports.string().optional(),
+  resolution: resolutionSchema.optional(),
+  editor: editorChoiceSchema.optional()
 });
 var DEFAULT_AGENT = "claude";
+var RESOLUTION_FLAGS = /* @__PURE__ */ new Map([
+  ["--take-local", "take-local"],
+  ["--take-repo", "take-repo"],
+  ["--auto", "auto"]
+]);
+var RESOLUTION_CHOICES = "--take-local, --take-repo, --auto or --editor";
 function parseArgs(argv) {
   let agent = DEFAULT_AGENT;
   let assumeYes = false;
@@ -20545,6 +21168,14 @@ function parseArgs(argv) {
   let command;
   let argument;
   let name;
+  let resolution;
+  let editor;
+  const choose = (value) => {
+    if (resolution !== void 0 && resolution !== value) {
+      throw new UsageError(`choose only one of ${RESOLUTION_CHOICES}`);
+    }
+    resolution = value;
+  };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index] ?? "";
     if (arg === "--agent") {
@@ -20569,6 +21200,22 @@ function parseArgs(argv) {
       name = arg.slice("--name=".length);
       continue;
     }
+    const flagged = RESOLUTION_FLAGS.get(arg);
+    if (flagged) {
+      choose(flagged);
+      continue;
+    }
+    if (arg === "--editor" || arg.startsWith("--editor=")) {
+      choose("editor");
+      const inline = arg.startsWith("--editor=") ? arg.slice("--editor=".length) : void 0;
+      const next = argv[index + 1];
+      const candidate = inline ?? (editorChoiceSchema.safeParse(next).success ? next : void 0);
+      if (inline === void 0 && candidate !== void 0) index += 1;
+      const parsedEditor = editorChoiceSchema.safeParse(candidate ?? "auto");
+      if (!parsedEditor.success) throw new UsageError("--editor accepts auto, code or vimdiff");
+      editor = parsedEditor.data;
+      continue;
+    }
     if (arg === "--yes" || arg === "-y") {
       assumeYes = true;
       continue;
@@ -20589,7 +21236,7 @@ function parseArgs(argv) {
     }
     throw new UsageError(`unexpected argument: ${arg}`);
   }
-  const options = cliOptionsSchema.parse({ agent, assumeYes, dryRun, command, argument, name });
+  const options = cliOptionsSchema.parse({ agent, assumeYes, dryRun, command, argument, name, resolution, editor });
   return { kind: "run", options };
 }
 
@@ -20602,17 +21249,24 @@ Commands:
                already exists (setting up another device)
   pull         Fetch changes from the repository and install the files into the agent
   push         Publish your local configuration (with secret scanning)
-  status       Compare your local configuration with the repository
+  status       Compare your local configuration with the repository, file by file
+  resolve      List the conflicts found by pull; resolve <path> settles one of them
 
 Options:
   --agent NAME    Agent to sync (default: claude)
   --name REPO     Name of the private repository init creates (default: sync-ai-data)
-  --yes, -y       Confirm overwrites, repository creation and cloning without
-                  asking (required without a terminal)
+  --yes, -y       Confirm repository creation, cloning, taking the repository version
+                  for conflicts in pull, and resolve --editor results without asking
+                  (required without a terminal)
   --dry-run       Do not modify your local configuration, create commits or publish
+  --take-local    resolve: keep your local file (the next push publishes it)
+  --take-repo     resolve: replace your file with the repository version (backup kept)
+  --auto          resolve: merge both versions with git merge-file when they do not overlap
+  --editor [E]    resolve: open a three-way editor (E: auto, code or vimdiff)
 
 Exit codes: 0 ok, 1 error, 2 incorrect usage,
-            3 confirmation required (repeat with --yes), 4 secrets detected`;
+            3 confirmation required (repeat with --yes), 4 secrets detected,
+            5 conflicts (changed on both sides: see resolve)`;
 
 // src/cli/run.ts
 function defaultRuntime(io) {
@@ -20622,14 +21276,16 @@ function defaultRuntime(io) {
     platform: process.platform,
     hostname: os.hostname(),
     io,
-    now: () => /* @__PURE__ */ new Date()
+    now: () => /* @__PURE__ */ new Date(),
+    hasTerminal: Boolean(process.stdin.isTTY)
   };
 }
 var COMMANDS = {
   init: runInit,
   pull: runPull,
   push: runPush,
-  status: runStatus
+  status: runStatus,
+  resolve: runResolve
 };
 async function execute(argv, runtime) {
   const parsed = parseArgs(argv);
@@ -20643,7 +21299,7 @@ async function execute(argv, runtime) {
   const command = commandNameSchema.safeParse(options.command);
   if (!command.success) throw new UsageError(`unknown command: ${options.command}`);
   const dataHome = resolveDataHome(runtime.env, runtime.homeDir, runtime.platform);
-  const repoDir = path7.join(dataHome, "repo");
+  const repoDir = path10.join(dataHome, "repo");
   const git = new Git(runtime.env);
   return COMMANDS[command.data]({
     agent,
@@ -20653,11 +21309,16 @@ async function execute(argv, runtime) {
     dryRun: options.dryRun,
     argument: options.argument,
     repoName: options.name,
+    resolution: options.resolution,
+    editor: options.editor,
     io: runtime.io,
     git,
     repoGit: git.withRepo(repoDir),
     gh: new GitHubCli(runtime.env),
     hostname: runtime.hostname,
+    env: runtime.env,
+    platform: runtime.platform,
+    hasTerminal: runtime.hasTerminal ?? false,
     now: runtime.now
   });
 }

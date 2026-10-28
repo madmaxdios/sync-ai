@@ -4,4 +4,5 @@ export enum ExitCode {
   Usage = 2,
   ConfirmationRequired = 3,
   SecretsDetected = 4,
+  Conflicts = 5,
 }

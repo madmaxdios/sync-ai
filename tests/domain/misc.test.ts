@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 import { isAffirmative } from '../../src/domain/answers';
 import { sameContent } from '../../src/domain/line-endings';
 import { describeRelation, formatStamp } from '../../src/domain/report';
-import { diffTrees } from '../../src/domain/tree-differences';
 import { resolveDataHome } from '../../src/infra/data-home';
 
 describe('isAffirmative', () => {
@@ -27,16 +26,6 @@ describe('sameContent', () => {
 
   it('compares binary files byte by byte', () => {
     expect(sameContent(Buffer.from([0, 13, 10]), Buffer.from([0, 10]))).toBe(false);
-  });
-});
-
-describe('diffTrees', () => {
-  it('splits paths into local-only, repo-only and common', () => {
-    expect(diffTrees(['a', 'b'], ['b', 'c'])).toEqual({
-      onlyLocal: ['a'],
-      onlyRepo: ['c'],
-      common: ['b'],
-    });
   });
 });
 

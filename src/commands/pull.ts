@@ -1,43 +1,65 @@
 import { AppError } from '../domain/app-error';
 import { ExitCode } from '../domain/exit-code';
-import { formatList, formatStamp } from '../domain/report';
-import { copyPreserving, pathExists, toNativePath } from '../infra/file-system';
+import { FileState } from '../domain/file-state';
+import { formatList } from '../domain/report';
+import { loadState, saveState } from '../infra/state-store';
+import { installFromSnapshot, removeLocalWithBackup } from './apply-repo';
+import { conflictStoreOf, recordConflicts } from './conflict-area';
 import type { CommandContext } from './context';
-import { agentRepoDir, differsFromRepo, listRepoFiles, requireRepo } from './local-tree';
+import { requireRepo } from './local-tree';
 import { refreshRemote, requireReachable } from './remote-state';
+import { readRepoSnapshot } from './repo-snapshot';
+import { buildPlan, entriesIn, recordInSyncBases, type PlanEntry, type SyncPlan } from './sync-plan';
 
-interface PullPlan {
-  readonly added: readonly string[];
-  readonly changed: readonly string[];
+function rels(entries: readonly PlanEntry[]): string[] {
+  return entries.map((entry) => entry.rel);
 }
 
-async function planPull(context: CommandContext, repoFiles: readonly string[]): Promise<PullPlan> {
-  const added: string[] = [];
-  const changed: string[] = [];
-  for (const rel of repoFiles) {
-    if (!(await pathExists(toNativePath(context.agent.home, rel)))) {
-      added.push(rel);
-      continue;
-    }
-    if (await differsFromRepo(context, rel)) changed.push(rel);
+function printPlan(context: CommandContext, plan: SyncPlan): void {
+  const lines = [
+    ...formatList('+', rels(entriesIn(plan, FileState.NewRepo))),
+    ...formatList('~', rels(entriesIn(plan, FileState.RepoChanged))),
+    ...formatList('!', rels(entriesIn(plan, FileState.Conflict))),
+  ];
+  const counts =
+    `New files: ${entriesIn(plan, FileState.NewRepo).length}; ` +
+    `updated from the repository: ${entriesIn(plan, FileState.RepoChanged).length}; ` +
+    `conflicts: ${entriesIn(plan, FileState.Conflict).length}`;
+  context.io.info(counts);
+  for (const line of lines) context.io.info(line);
+}
+
+function reportOpenConflicts(context: CommandContext, open: readonly string[]): void {
+  const { io } = context;
+  io.warn('Conflicts (changed on both sides): your local files were NOT modified.');
+  for (const line of formatList('!', open)) io.warn(line);
+  io.warn(`Copies for comparison: ${conflictStoreOf(context).directory}`);
+  io.warn(
+    "Run 'resolve' to review them, or repeat with --yes to take the repository version " +
+      'for all of them (a .backup-* copy is kept).',
+  );
+}
+
+function reportKeptLocalFiles(context: CommandContext, plan: SyncPlan): void {
+  const { io } = context;
+  const pending = entriesIn(
+    plan,
+    FileState.LocalChanged,
+    FileState.NewLocal,
+    FileState.LocalDeleted,
+  );
+  if (pending.length > 0) {
+    io.info(`${pending.length} local change(s) are waiting to be published (run 'push').`);
   }
-  return { added, changed };
-}
-
-async function install(context: CommandContext, files: readonly string[]): Promise<void> {
-  const stamp = formatStamp(context.now());
-  const repoRoot = agentRepoDir(context);
-  for (const rel of files) {
-    const destination = toNativePath(context.agent.home, rel);
-    if (await pathExists(destination)) {
-      await copyPreserving(destination, `${destination}.backup-${stamp}`);
-    }
-    await copyPreserving(toNativePath(repoRoot, rel), destination);
+  const removed = entriesIn(plan, FileState.RepoDeleted);
+  if (removed.length > 0) {
+    io.info('These files were removed from the repository; your local copies were kept:');
+    for (const line of formatList('-', rels(removed))) io.info(line);
   }
 }
 
 export async function runPull(context: CommandContext): Promise<ExitCode> {
-  const { agent, io, repoGit } = context;
+  const { agent, io, repoGit, dataHome } = context;
   await requireRepo(context);
   const remote = requireReachable(await refreshRemote(repoGit));
 
@@ -55,42 +77,59 @@ export async function runPull(context: CommandContext): Promise<ExitCode> {
     }
   }
 
-  const repoFiles = await listRepoFiles(context);
-  if (repoFiles.length === 0) {
+  const snapshot = await readRepoSnapshot(context, 'HEAD');
+  if (snapshot.blobs.size === 0) {
     io.info(`The repository does not contain any '${agent.name}' files yet.`);
     return ExitCode.Ok;
   }
 
-  const { added, changed } = await planPull(context, repoFiles);
-  const total = added.length + changed.length;
-  if (total === 0) {
-    io.info(`Everything is up to date: ${agent.home} already matches the repository.`);
+  const loaded = await loadState(dataHome);
+  if (loaded.invalid) {
+    io.warn('The sync state file is unreadable and was ignored: differing files count as conflicts.');
+  }
+  const plan = await buildPlan(context, snapshot, loaded.state);
+  const toInstall = entriesIn(plan, FileState.NewRepo, FileState.RepoChanged);
+  const conflicts = entriesIn(plan, FileState.Conflict);
+
+  if (toInstall.length === 0 && conflicts.length === 0) {
+    const pending = entriesIn(plan, FileState.LocalChanged, FileState.NewLocal, FileState.LocalDeleted);
+    if (pending.length === 0 && entriesIn(plan, FileState.RepoDeleted).length === 0) {
+      io.info(`Everything is up to date: ${agent.home} already matches the repository.`);
+    } else {
+      io.info('Nothing to pull from the repository.');
+      reportKeptLocalFiles(context, plan);
+    }
+    if (!context.dryRun) await saveState(dataHome, recordInSyncBases(loaded.state, agent.name, plan));
     return ExitCode.Ok;
   }
 
-  io.info(`New files: ${added.length}; differing local files: ${changed.length}`);
-  for (const line of [...formatList('+', added), ...formatList('~', changed)]) io.info(line);
+  printPlan(context, plan);
 
   if (context.dryRun) {
     io.info(`[dry-run] ${agent.home} was not modified.`);
-    return ExitCode.Ok;
+    return conflicts.length > 0 ? ExitCode.Conflicts : ExitCode.Ok;
   }
 
-  if (changed.length > 0 && !context.assumeYes) {
-    const confirmed = await io.confirm(
-      'Local changes will be overwritten (a .backup-* copy is kept). Continue? (y/N) ',
-    );
-    if (!confirmed) {
-      io.warn('Cancelled to protect your local files (marked with ~).');
-      io.warn(
-        'Review the list and repeat with --yes to overwrite them; a .backup-* copy will be kept.',
-      );
-      return ExitCode.ConfirmationRequired;
+  await installFromSnapshot(context, snapshot, rels(toInstall));
+
+  // --yes only ever settles conflicts, and always in favor of the repository.
+  const settled: PlanEntry[] = [];
+  if (context.assumeYes) {
+    for (const entry of conflicts) {
+      if (entry.repoBlob) await installFromSnapshot(context, snapshot, [entry.rel]);
+      else await removeLocalWithBackup(context, entry.rel);
+      settled.push(entry);
     }
   }
+  const open = await recordConflicts(context, plan, new Set(rels(settled)));
 
-  await install(context, [...added, ...changed]);
-  io.info(`Installed ${total} file(s) into ${agent.home}.`);
-  io.info('Note: pull does not delete local files that no longer exist in the repository.');
-  return ExitCode.Ok;
+  const next = recordInSyncBases(loaded.state, agent.name, plan, [...toInstall, ...settled]);
+  await saveState(dataHome, next);
+
+  const applied = toInstall.length + settled.length;
+  if (applied > 0) io.info(`Installed ${applied} file(s) into ${agent.home}.`);
+  reportKeptLocalFiles(context, plan);
+  if (open.length === 0) return ExitCode.Ok;
+  reportOpenConflicts(context, open);
+  return ExitCode.Conflicts;
 }

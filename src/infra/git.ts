@@ -1,6 +1,6 @@
 import type { Env } from '../agents/agent-config';
 import { AppError } from '../domain/app-error';
-import { runProcess, type ProcessResult } from './run-process';
+import { runProcess, runProcessBinary, type ProcessResult } from './run-process';
 
 export type GitResult = ProcessResult;
 
@@ -30,6 +30,14 @@ export class Git {
     if (result.code === 0) return result.stdout;
     const reason = result.stderr.trim() || result.stdout.trim() || `exit code ${result.code}`;
     throw new AppError(`git ${args[0] ?? ''} failed: ${reason}`);
+  }
+
+  /** Returns the raw content of a blob (`git cat-file blob`), or undefined when it is missing. */
+  async blob(id: string): Promise<Buffer | undefined> {
+    const env = { ...this.env, GIT_TERMINAL_PROMPT: '0' };
+    const result = await runProcessBinary('git', [...this.prefix, 'cat-file', 'blob', id], env);
+    if (!result) throw new AppError('git is not installed or not found in PATH');
+    return result.code === 0 ? result.stdout : undefined;
   }
 
   async succeeds(args: readonly string[]): Promise<boolean> {

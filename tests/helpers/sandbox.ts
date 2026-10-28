@@ -1,4 +1,4 @@
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawn } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -22,6 +22,12 @@ export interface RunOptions {
   readonly agent?: string;
   /** Environment overrides for the run (e.g. a fake `gh` on PATH). */
   readonly env?: Readonly<Record<string, string | undefined>>;
+}
+
+export interface ExternalRunResult {
+  readonly code: number;
+  readonly stdout: string;
+  readonly stderr: string;
 }
 
 export type Device = 'A' | 'B';
@@ -114,6 +120,26 @@ export class Sandbox {
         .map((entry) => entry.text)
         .join('\n');
     return { code, output: join(), stdout: join('out'), stderr: join('err'), questions };
+  }
+
+  /**
+   * Runs a built bundle as a real external process (no shell) with the device's isolated
+   * environment. stdin is closed, so prompts behave like a non-interactive session.
+   */
+  runBundle(bundlePath: string, device: Device, args: readonly string[]): Promise<ExternalRunResult> {
+    return new Promise((resolve, reject) => {
+      const child = spawn(process.execPath, [bundlePath, '--agent', 'claude', ...args], {
+        env: this.env(device),
+        stdio: ['ignore', 'pipe', 'pipe'],
+        windowsHide: true,
+      });
+      let stdout = '';
+      let stderr = '';
+      child.stdout.setEncoding('utf8').on('data', (chunk: string) => (stdout += chunk));
+      child.stderr.setEncoding('utf8').on('data', (chunk: string) => (stderr += chunk));
+      child.on('error', reject);
+      child.on('close', (code) => resolve({ code: code ?? 1, stdout, stderr }));
+    });
   }
 
   /** Files tracked on the remote main branch, one path per entry. */

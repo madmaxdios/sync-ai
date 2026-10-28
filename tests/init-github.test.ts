@@ -187,14 +187,14 @@ describe.skipIf(process.platform === 'win32')('init without a URL when the repos
     expect(sandbox.read('B', 'CLAUDE.md')).toBe('instructions from A\n');
   });
 
-  it('clones but never overwrites differing local files unless pull is confirmed explicitly', async () => {
+  it('clones but never overwrites differing local files: they become conflicts until pull --yes', async () => {
     await publishFromDeviceA();
     sandbox.write('B', 'CLAUDE.md', 'local edit on B\n');
 
     const result = await sandbox.run('B', ['init', '--yes'], { env: gh.env() });
 
-    expect(result.code).toBe(3);
-    expect(result.stdout).toContain('CLAUDE.md');
+    expect(result.code).toBe(5);
+    expect(result.stdout).toContain('! CLAUDE.md');
     expect(result.stderr).toContain('pull --yes');
     expect(fs.existsSync(path.join(repoDir('B'), '.git'))).toBe(true);
     expect(sandbox.read('B', 'CLAUDE.md')).toBe('local edit on B\n');
