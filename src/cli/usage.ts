@@ -1,6 +1,7 @@
 export const USAGE = `Usage: agent-sync [--agent NAME] [--yes] [--dry-run] <command>
 
 Commands:
+  sync         Run the safe automatic sync flow (no arguments)
   init [url]   Clone your PRIVATE configuration repository; without a URL, use the
                GitHub CLI (gh): create it, or clone it and install its files if it
                already exists (setting up another device)

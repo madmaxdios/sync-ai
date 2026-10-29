@@ -14,6 +14,7 @@ import { CheckEvent } from '../domain/check-event';
 import { ExitCode } from '../domain/exit-code';
 import { FileState } from '../domain/file-state';
 import { formatHookOutput, manualInput, parseHookInput, type HookInput } from '../domain/hook-input';
+import { formatList } from '../domain/report';
 import { basesOf, type SyncState } from '../domain/sync-state';
 import { loadCheckCache, saveCheckCache } from '../infra/check-cache-store';
 import { startDeadline } from '../infra/deadline';
@@ -35,24 +36,71 @@ const OVERALL_BUDGET_MS = 7000;
 interface Findings {
   /** New and changed local files of the opt-in list: what a push would publish. */
   readonly pushFiles: readonly string[];
+  /** Local files classified as added, changed or deleted. */
+  readonly pushChanges: readonly { readonly prefix: '+' | '~' | '-'; readonly rel: string }[];
   /** Local files deleted here that the repository still has. */
   readonly deletions: number;
   readonly toPull: number;
+  /** Repository files classified as added, changed or deleted. */
+  readonly pullChanges: readonly { readonly prefix: '+' | '~' | '-'; readonly rel: string }[];
   readonly conflicts: number;
+  readonly conflictFiles: readonly string[];
 }
 
-const NO_FINDINGS: Findings = { pushFiles: [], deletions: 0, toPull: 0, conflicts: 0 };
+const NO_FINDINGS: Findings = {
+  pushFiles: [],
+  pushChanges: [],
+  deletions: 0,
+  toPull: 0,
+  pullChanges: [],
+  conflicts: 0,
+  conflictFiles: [],
+};
 const AUTO_PUSH_OFF: AutoPushOutcome = { kind: 'off' };
 
 async function compare(context: CommandContext, state: SyncState, ref: string): Promise<Findings> {
   const snapshot = await readRepoSnapshot(context, ref);
   const plan = await buildPlan(context, snapshot, state);
+  const pushChanges = [
+    ...entriesIn(plan, FileState.NewLocal).map((entry) => ({ prefix: '+' as const, rel: entry.rel })),
+    ...entriesIn(plan, FileState.LocalChanged).map((entry) => ({ prefix: '~' as const, rel: entry.rel })),
+    ...entriesIn(plan, FileState.LocalDeleted).map((entry) => ({ prefix: '-' as const, rel: entry.rel })),
+  ];
+  const pullChanges = [
+    ...entriesIn(plan, FileState.NewRepo).map((entry) => ({ prefix: '+' as const, rel: entry.rel })),
+    ...entriesIn(plan, FileState.RepoChanged).map((entry) => ({ prefix: '~' as const, rel: entry.rel })),
+    ...entriesIn(plan, FileState.RepoDeleted).map((entry) => ({ prefix: '-' as const, rel: entry.rel })),
+  ];
+  const conflictFiles = entriesIn(plan, FileState.Conflict).map((entry) => entry.rel);
   return {
     pushFiles: entriesIn(plan, FileState.NewLocal, FileState.LocalChanged).map((entry) => entry.rel),
-    deletions: entriesIn(plan, FileState.LocalDeleted).length,
+    pushChanges,
+    deletions: pushChanges.filter((entry) => entry.prefix === '-').length,
     toPull: entriesIn(plan, FileState.NewRepo, FileState.RepoChanged).length,
-    conflicts: entriesIn(plan, FileState.Conflict).length,
+    pullChanges,
+    conflicts: conflictFiles.length,
+    conflictFiles,
   };
+}
+
+function printDetectedChanges(context: CommandContext, findings: Findings): void {
+  const { io } = context;
+  if (findings.pushChanges.length > 0) {
+    io.info('Changes to publish (local → repository):');
+    for (const entry of findings.pushChanges) {
+      for (const line of formatList(entry.prefix, [entry.rel])) io.info(line);
+    }
+  }
+  if (findings.pullChanges.length > 0) {
+    io.info('Changes to pull (repository → local):');
+    for (const entry of findings.pullChanges) {
+      for (const line of formatList(entry.prefix, [entry.rel])) io.info(line);
+    }
+  }
+  if (findings.conflictFiles.length > 0) {
+    io.info('Conflicts (changed on both sides):');
+    for (const line of formatList('!', findings.conflictFiles)) io.info(line);
+  }
 }
 
 /** Applies the repository changes with the normal pull (same backups; conflicts are never overwritten). */
@@ -124,6 +172,7 @@ async function check(context: CommandContext): Promise<void> {
   }
 
   let autoPush: AutoPushOutcome = AUTO_PUSH_OFF;
+  if (manual) printDetectedChanges(context, findings);
   if (hasBaseline) {
     const run = await runAutoPush(context, {
       event: input.event,

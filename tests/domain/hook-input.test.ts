@@ -23,7 +23,7 @@ describe('parseHookInput', () => {
 });
 
 describe('formatHookOutput', () => {
-  const withAction = { user: 'sync-ai: 1 local change not pushed', claude: 'Offer /sync-ai:push.', signature: 's' };
+  const withAction = { user: 'sync-ai: 1 local change not pushed', claude: 'Offer /sync-ai:sync.', signature: 's' };
 
   it('prints a message for the user and context for the agent', () => {
     const output = JSON.parse(
@@ -32,7 +32,7 @@ describe('formatHookOutput', () => {
 
     expect(output).toEqual({
       systemMessage: 'sync-ai: 1 local change not pushed',
-      hookSpecificOutput: { hookEventName: 'UserPromptSubmit', additionalContext: 'Offer /sync-ai:push.' },
+      hookSpecificOutput: { hookEventName: 'UserPromptSubmit', additionalContext: 'Offer /sync-ai:sync.' },
     });
   });
 

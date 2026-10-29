@@ -86,16 +86,16 @@ function describePull(facts: CheckFacts, outcome: CheckOutcome, lines: Lines): v
     lines.user.push(`would pull ${plural(facts.toPull, 'file')} from the repository`);
   } else if (facts.toPull > 0) {
     const commits = facts.behind > 0 ? ` (${plural(facts.behind, 'newer commit')})` : '';
-    lines.user.push(`the repository has ${plural(facts.toPull, 'file change')}${commits} (run /sync-ai:pull)`);
-    lines.claude.push('sync-ai: the repository has newer changes than this device. Mention it to the user and offer /sync-ai:pull.');
+    lines.user.push(`the repository has ${plural(facts.toPull, 'file change')}${commits} (run /sync-ai:sync)`);
+    lines.claude.push('sync-ai: the repository has newer changes than this device. Mention it to the user and offer /sync-ai:sync.');
   }
 }
 
 function describeDeletions(count: number, lines: Lines): void {
   if (count === 0) return;
-  lines.user.push(`${plural(count, 'deletion')} pending, run /sync-ai:push to confirm`);
+  lines.user.push(`${plural(count, 'deletion')} pending, run /sync-ai:sync to confirm`);
   lines.claude.push(
-    `sync-ai: ${plural(count, 'file')} deleted locally ${count === 1 ? 'is' : 'are'} still in the repository. Mention it and offer /sync-ai:push, which asks the user to confirm deletions.`,
+    `sync-ai: ${plural(count, 'file')} deleted locally ${count === 1 ? 'is' : 'are'} still in the repository. Mention it and offer /sync-ai:sync, which asks the user to confirm deletions.`,
   );
 }
 
@@ -105,9 +105,9 @@ function describePush(facts: CheckFacts, outcome: CheckOutcome, lines: Lines): v
     case 'off': {
       const changes = facts.toPush + facts.deletions;
       if (changes === 0) return;
-      lines.user.push(`${plural(changes, 'local change')} not pushed (run /sync-ai:push)`);
+      lines.user.push(`${plural(changes, 'local change')} not pushed (run /sync-ai:sync)`);
       lines.claude.push(
-        `sync-ai: ${plural(changes, 'file')} changed locally and not pushed. Mention it to the user and offer /sync-ai:push; never push without their confirmation.`,
+        `sync-ai: ${plural(changes, 'file')} changed locally and not pushed. Mention it to the user and offer /sync-ai:sync; never push without their confirmation.`,
       );
       return;
     }
@@ -129,17 +129,17 @@ function describePush(facts: CheckFacts, outcome: CheckOutcome, lines: Lines): v
     case 'blocked':
       lines.user.push(
         `auto-push skipped, ${plural(auto.files, 'file')} contain${auto.files === 1 ? 's' : ''} possible secrets or personal data ` +
-          `(${auto.locations}); fix them or review with /sync-ai:push`,
+          `(${auto.locations}); fix them or review with /sync-ai:sync`,
       );
       lines.claude.push(
-        `sync-ai: auto-push was blocked because ${plural(auto.files, 'file')} may contain secrets, passwords or personal data (${auto.locations}). Tell the user to fix them or review with /sync-ai:push; never print the matched content.`,
+        `sync-ai: auto-push was blocked because ${plural(auto.files, 'file')} may contain secrets, passwords or personal data (${auto.locations}). Tell the user to fix them or review with /sync-ai:sync; never print the matched content.`,
       );
       describeDeletions(facts.deletions, lines);
       return;
     case 'too-many':
-      lines.user.push(`${auto.count} files changed, more than the auto-push limit of ${auto.max} (run /sync-ai:push)`);
+      lines.user.push(`${auto.count} files changed, more than the auto-push limit of ${auto.max} (run /sync-ai:sync)`);
       lines.claude.push(
-        `sync-ai: ${auto.count} files changed locally, more than the auto-push limit of ${auto.max}. Mention it and offer /sync-ai:push; never push without the user's confirmation.`,
+        `sync-ai: ${auto.count} files changed locally, more than the auto-push limit of ${auto.max}. Mention it and offer /sync-ai:sync; never push without the user's confirmation.`,
       );
       describeDeletions(facts.deletions, lines);
       return;

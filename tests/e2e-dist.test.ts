@@ -146,7 +146,7 @@ describe('built bundle between two devices', () => {
       const output = JSON.parse(result.stdout) as { systemMessage: string; hookSpecificOutput: { hookEventName: string } };
       expect(result.code).toBe(0);
       expect(result.stderr).toBe('');
-      expect(output.systemMessage).toBe('sync-ai: 1 local change not pushed (run /sync-ai:push)');
+      expect(output.systemMessage).toBe('sync-ai: 1 local change not pushed (run /sync-ai:sync)');
       expect(output.hookSpecificOutput.hookEventName).toBe('UserPromptSubmit');
       expect(sandbox.remoteHead()).toBe(head);
     });

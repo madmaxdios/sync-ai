@@ -42,8 +42,8 @@ describe('buildReport', () => {
   it('asks to push when local changes are waiting, and tells the agent not to push on its own', () => {
     const report = buildReport({ ...inSync, toPush: 3 }, apply);
 
-    expect(report?.user).toBe('sync-ai: 3 local changes not pushed (run /sync-ai:push)');
-    expect(report?.claude).toContain('offer /sync-ai:push');
+    expect(report?.user).toBe('sync-ai: 3 local changes not pushed (run /sync-ai:sync)');
+    expect(report?.claude).toContain('offer /sync-ai:sync');
     expect(report?.claude).toContain('never push without their confirmation');
   });
 
@@ -54,8 +54,8 @@ describe('buildReport', () => {
   it('only informs about repository changes when they were not pulled', () => {
     const report = buildReport({ ...inSync, event: CheckEvent.UserPromptSubmit, toPull: 2, behind: 2 }, apply);
 
-    expect(report?.user).toBe('sync-ai: the repository has 2 file changes (2 newer commits) (run /sync-ai:pull)');
-    expect(report?.claude).toContain('offer /sync-ai:pull');
+    expect(report?.user).toBe('sync-ai: the repository has 2 file changes (2 newer commits) (run /sync-ai:sync)');
+    expect(report?.claude).toContain('offer /sync-ai:sync');
   });
 
   it('reports a finished automatic pull without asking the agent to do anything', () => {
@@ -76,7 +76,7 @@ describe('buildReport', () => {
     const report = buildReport({ ...inSync, toPull: 1, toPush: 2, event: CheckEvent.UserPromptSubmit }, apply);
 
     expect(report?.user.split('\n')).toHaveLength(1);
-    expect(report?.user).toContain('(run /sync-ai:pull); 2 local changes not pushed');
+    expect(report?.user).toContain('(run /sync-ai:sync); 2 local changes not pushed');
   });
 
   it('reports the missing baseline once, and only at the start of a chat', () => {

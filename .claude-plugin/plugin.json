@@ -1,6 +1,6 @@
 {
   "name": "sync-ai",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Sync your skills, commands, agents and global instructions across devices through your own private git repository.",
   "author": {
     "name": "madmaxdios"

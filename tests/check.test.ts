@@ -61,7 +61,7 @@ describe('check', () => {
       const result = await hook('A', 'UserPromptSubmit');
 
       expect(result.code).toBe(0);
-      expect(result.output?.systemMessage).toBe('sync-ai: 1 local change not pushed (run /sync-ai:push)');
+      expect(result.output?.systemMessage).toBe('sync-ai: 1 local change not pushed (run /sync-ai:sync)');
       expect(result.output?.hookSpecificOutput?.hookEventName).toBe('UserPromptSubmit');
       expect(result.output?.hookSpecificOutput?.additionalContext).toContain('never push without their confirmation');
     });
@@ -85,6 +85,20 @@ describe('check', () => {
 
       expect(result.output?.systemMessage).toContain('2 local changes not pushed');
     });
+
+    it('lists detected additions, modifications and deletions for a manual sync', async () => {
+      sandbox.write('A', 'skills/foo/SKILL.md', 'skill foo v2\n');
+      sandbox.write('A', 'skills/new/SKILL.md', 'new\n');
+      await sandbox.list('A', 'skills/new/SKILL.md');
+      sandbox.remove('A', 'CLAUDE.md');
+
+      const result = await sandbox.run('A', ['sync']);
+
+      expect(result.output).toContain('Changes to publish (local → repository):');
+      expect(result.output).toContain('  + skills/new/SKILL.md');
+      expect(result.output).toContain('  ~ skills/foo/SKILL.md');
+      expect(result.output).toContain('  - CLAUDE.md');
+    });
   });
 
   describe('changes pushed from another device', () => {
@@ -107,9 +121,9 @@ describe('check', () => {
 
       expect(sandbox.exists('A', 'skills/bar/SKILL.md')).toBe(false);
       expect(result.output?.systemMessage).toBe(
-        'sync-ai: the repository has 1 file change (1 newer commit) (run /sync-ai:pull)',
+        'sync-ai: the repository has 1 file change (1 newer commit) (run /sync-ai:sync)',
       );
-      expect(result.output?.hookSpecificOutput?.additionalContext).toContain('offer /sync-ai:pull');
+      expect(result.output?.hookSpecificOutput?.additionalContext).toContain('offer /sync-ai:sync');
     });
 
     it('keeps backups when it replaces a file that changed in the repository', async () => {
@@ -128,7 +142,7 @@ describe('check', () => {
       const result = await hook('A', 'SessionStart');
 
       expect(result.output?.systemMessage).toBe(
-        'sync-ai: pulled 1 file from the repository; 1 local change not pushed (run /sync-ai:push)',
+        'sync-ai: pulled 1 file from the repository; 1 local change not pushed (run /sync-ai:sync)',
       );
       expect(sandbox.read('A', 'skills/bar/SKILL.md')).toBe('skill bar\n');
     });
@@ -193,7 +207,7 @@ describe('check', () => {
 
       const result = await hook('A', 'SessionStart');
 
-      expect(result.output?.systemMessage).toBe('sync-ai: 1 local change not pushed (run /sync-ai:push)');
+      expect(result.output?.systemMessage).toBe('sync-ai: 1 local change not pushed (run /sync-ai:sync)');
     });
   });
 
@@ -225,7 +239,7 @@ describe('check', () => {
 
       const result = await hook('A', 'UserPromptSubmit', { now: minutesAfter(2) });
 
-      expect(result.output?.systemMessage).toBe('sync-ai: 1 local change not pushed (run /sync-ai:push)');
+      expect(result.output?.systemMessage).toBe('sync-ai: 1 local change not pushed (run /sync-ai:sync)');
       sandbox.reconnectRemote();
     });
 
@@ -300,7 +314,7 @@ describe('check', () => {
       });
 
       expect(JSON.parse(result.stdout)).toEqual({
-        systemMessage: 'sync-ai: 1 local change not pushed (run /sync-ai:push)',
+        systemMessage: 'sync-ai: 1 local change not pushed (run /sync-ai:sync)',
       });
     });
 
@@ -333,7 +347,7 @@ describe('check', () => {
       const result = await hook('A', 'SessionStart', { args: ['--dry-run'] });
 
       expect(result.output?.systemMessage).toBe(
-        '[dry-run] sync-ai: would pull 1 file from the repository; 1 local change not pushed (run /sync-ai:push)',
+        '[dry-run] sync-ai: would pull 1 file from the repository; 1 local change not pushed (run /sync-ai:sync)',
       );
       expect(sandbox.exists('A', 'skills/bar/SKILL.md')).toBe(false);
       expect(sandbox.read('A', 'skills/foo/SKILL.md')).toBe('skill foo v2\n');
@@ -354,7 +368,11 @@ describe('check', () => {
       const result = await sandbox.run('A', ['check'], { now: () => t0 });
 
       expect(result.code).toBe(0);
-      expect(result.stdout).toBe('sync-ai: the repository has 1 file change (1 newer commit) (run /sync-ai:pull)');
+      expect(result.stdout).toBe(
+        'Changes to pull (repository → local):\n' +
+          '  + skills/bar/SKILL.md\n' +
+          'sync-ai: the repository has 1 file change (1 newer commit) (run /sync-ai:sync)',
+      );
       expect(sandbox.exists('A', 'skills/bar/SKILL.md')).toBe(false);
     });
   });

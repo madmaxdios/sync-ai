@@ -122,7 +122,7 @@ describe('automatic push inside check', () => {
 
       const result = await hook('A', { env: { AGENT_SYNC_AUTO_PUSH: '0' } });
 
-      expect(result.output?.systemMessage).toBe('sync-ai: 1 local change not pushed (run /sync-ai:push)');
+      expect(result.output?.systemMessage).toBe('sync-ai: 1 local change not pushed (run /sync-ai:sync)');
       expect(sandbox.remoteHead()).toBe(head);
     });
 
@@ -144,7 +144,7 @@ describe('automatic push inside check', () => {
 
       expect(sandbox.remoteHead()).toBe(head);
       expect(result.output?.systemMessage).toContain('21');
-      expect(result.output?.systemMessage).toContain('/sync-ai:push');
+      expect(result.output?.systemMessage).toContain('/sync-ai:sync');
     });
 
     it('honours AGENT_SYNC_AUTO_PUSH_MAX_FILES', async () => {
@@ -165,7 +165,7 @@ describe('automatic push inside check', () => {
 
       expect(sandbox.remoteHead()).toBe(head);
       expect(sandbox.remoteFiles()).toContain('claude/skills/foo/SKILL.md');
-      expect(result.output?.systemMessage).toContain('1 deletion pending, run /sync-ai:push to confirm');
+      expect(result.output?.systemMessage).toContain('1 deletion pending, run /sync-ai:sync to confirm');
     });
 
     it('pushes the edits but keeps the deletions pending', async () => {

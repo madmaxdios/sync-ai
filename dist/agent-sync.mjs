@@ -7,7 +7,7 @@ var __export = (target, all) => {
 
 // src/cli/run.ts
 import os from "node:os";
-import path13 from "node:path";
+import path14 from "node:path";
 
 // src/domain/app-error.ts
 var AppError = class extends Error {
@@ -842,10 +842,10 @@ function mergeDefs(...defs) {
 function cloneDef(schema) {
   return mergeDefs(schema._zod.def);
 }
-function getElementAtPath(obj, path14) {
-  if (!path14)
+function getElementAtPath(obj, path15) {
+  if (!path15)
     return obj;
-  return path14.reduce((acc, key) => acc?.[key], obj);
+  return path15.reduce((acc, key) => acc?.[key], obj);
 }
 function promiseAllObject(promisesObj) {
   const keys = Object.keys(promisesObj);
@@ -1185,11 +1185,11 @@ function explicitlyAborted(x, startIndex = 0) {
   }
   return false;
 }
-function prefixIssues(path14, issues) {
+function prefixIssues(path15, issues) {
   return issues.map((iss) => {
     var _a3;
     (_a3 = iss).path ?? (_a3.path = []);
-    iss.path.unshift(path14);
+    iss.path.unshift(path15);
     return iss;
   });
 }
@@ -1651,16 +1651,16 @@ function flattenError(error62, mapper = (issue2) => issue2.message) {
 }
 function formatError(error62, mapper = (issue2) => issue2.message) {
   const fieldErrors = { _errors: [] };
-  const processError = (error63, path14 = []) => {
+  const processError = (error63, path15 = []) => {
     for (const issue2 of error63.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
-        issue2.errors.map((issues) => processError({ issues }, [...path14, ...issue2.path]));
+        issue2.errors.map((issues) => processError({ issues }, [...path15, ...issue2.path]));
       } else if (issue2.code === "invalid_key") {
-        processError({ issues: issue2.issues }, [...path14, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path15, ...issue2.path]);
       } else if (issue2.code === "invalid_element") {
-        processError({ issues: issue2.issues }, [...path14, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path15, ...issue2.path]);
       } else {
-        const fullpath = [...path14, ...issue2.path];
+        const fullpath = [...path15, ...issue2.path];
         if (fullpath.length === 0) {
           fieldErrors._errors.push(mapper(issue2));
         } else {
@@ -1699,17 +1699,17 @@ function formatError(error62, mapper = (issue2) => issue2.message) {
 }
 function treeifyError(error62, mapper = (issue2) => issue2.message) {
   const result = { errors: [] };
-  const processError = (error63, path14 = []) => {
+  const processError = (error63, path15 = []) => {
     var _a3;
     for (const issue2 of error63.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
-        issue2.errors.map((issues) => processError({ issues }, [...path14, ...issue2.path]));
+        issue2.errors.map((issues) => processError({ issues }, [...path15, ...issue2.path]));
       } else if (issue2.code === "invalid_key") {
-        processError({ issues: issue2.issues }, [...path14, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path15, ...issue2.path]);
       } else if (issue2.code === "invalid_element") {
-        processError({ issues: issue2.issues }, [...path14, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path15, ...issue2.path]);
       } else {
-        const fullpath = [...path14, ...issue2.path];
+        const fullpath = [...path15, ...issue2.path];
         if (fullpath.length === 0) {
           result.errors.push(mapper(issue2));
           continue;
@@ -1748,8 +1748,8 @@ function treeifyError(error62, mapper = (issue2) => issue2.message) {
 }
 function toDotPath(_path) {
   const segs = [];
-  const path14 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
-  for (const seg of path14) {
+  const path15 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
+  for (const seg of path15) {
     if (typeof seg === "number")
       segs.push(`[${seg}]`);
     else if (typeof seg === "symbol")
@@ -18887,13 +18887,13 @@ function resolveRef(ref, ctx) {
   if (!ref.startsWith("#")) {
     throw new Error("External $ref is not supported, only local refs (#/...) are allowed");
   }
-  const path14 = ref.slice(1).split("/").filter(Boolean);
-  if (path14.length === 0) {
+  const path15 = ref.slice(1).split("/").filter(Boolean);
+  if (path15.length === 0) {
     return ctx.rootSchema;
   }
   const defsKey = ctx.version === "draft-2020-12" ? "$defs" : "definitions";
-  if (path14[0] === defsKey) {
-    const key = path14[1] === void 0 ? void 0 : decodeJSONPointerSegment(path14[1]);
+  if (path15[0] === defsKey) {
+    const key = path15[1] === void 0 ? void 0 : decodeJSONPointerSegment(path15[1]);
     if (!key || !ctx.defs[key]) {
       throw new Error(`Reference not found: ${ref}`);
     }
@@ -19786,9 +19786,39 @@ function buildClaudeConfig({ env, homeDir }) {
   };
 }
 
+// src/agents/codex.ts
+import path2 from "node:path";
+function buildCodexConfig({ env, homeDir }) {
+  return {
+    name: "codex",
+    home: env.CODEX_CONFIG_DIR || path2.join(homeDir, ".codex"),
+    allow: ["AGENTS.md", "skills"],
+    optIn: ["skills"],
+    deny: [
+      "auth.json",
+      "config.toml",
+      "config.local.toml",
+      "sessions",
+      "history.jsonl",
+      "state.sqlite",
+      "databases",
+      "logs",
+      "cache",
+      "plugins",
+      "*.backup-*",
+      "*.bak",
+      "*.bak-*",
+      "*.tmp",
+      ".git",
+      ".DS_Store"
+    ]
+  };
+}
+
 // src/agents/registry.ts
 var AGENT_BUILDERS = /* @__PURE__ */ new Map([
-  ["claude", buildClaudeConfig]
+  ["claude", buildClaudeConfig],
+  ["codex", buildCodexConfig]
 ]);
 function resolveAgent(name, environment) {
   if (!AGENT_NAME_PATTERN.test(name)) throw new AppError(`invalid agent name: ${name}`);
@@ -19800,7 +19830,7 @@ function resolveAgent(name, environment) {
 }
 
 // src/commands/check.ts
-import path9 from "node:path";
+import path10 from "node:path";
 
 // src/domain/check-decision.ts
 function shouldAutoPull(facts) {
@@ -19839,15 +19869,15 @@ function describePull(facts, outcome2, lines) {
     lines.user.push(`would pull ${plural2(facts.toPull, "file")} from the repository`);
   } else if (facts.toPull > 0) {
     const commits = facts.behind > 0 ? ` (${plural2(facts.behind, "newer commit")})` : "";
-    lines.user.push(`the repository has ${plural2(facts.toPull, "file change")}${commits} (run /sync-ai:pull)`);
-    lines.claude.push("sync-ai: the repository has newer changes than this device. Mention it to the user and offer /sync-ai:pull.");
+    lines.user.push(`the repository has ${plural2(facts.toPull, "file change")}${commits} (run /sync-ai:sync)`);
+    lines.claude.push("sync-ai: the repository has newer changes than this device. Mention it to the user and offer /sync-ai:sync.");
   }
 }
 function describeDeletions(count, lines) {
   if (count === 0) return;
-  lines.user.push(`${plural2(count, "deletion")} pending, run /sync-ai:push to confirm`);
+  lines.user.push(`${plural2(count, "deletion")} pending, run /sync-ai:sync to confirm`);
   lines.claude.push(
-    `sync-ai: ${plural2(count, "file")} deleted locally ${count === 1 ? "is" : "are"} still in the repository. Mention it and offer /sync-ai:push, which asks the user to confirm deletions.`
+    `sync-ai: ${plural2(count, "file")} deleted locally ${count === 1 ? "is" : "are"} still in the repository. Mention it and offer /sync-ai:sync, which asks the user to confirm deletions.`
   );
 }
 function describePush(facts, outcome2, lines) {
@@ -19856,9 +19886,9 @@ function describePush(facts, outcome2, lines) {
     case "off": {
       const changes = facts.toPush + facts.deletions;
       if (changes === 0) return;
-      lines.user.push(`${plural2(changes, "local change")} not pushed (run /sync-ai:push)`);
+      lines.user.push(`${plural2(changes, "local change")} not pushed (run /sync-ai:sync)`);
       lines.claude.push(
-        `sync-ai: ${plural2(changes, "file")} changed locally and not pushed. Mention it to the user and offer /sync-ai:push; never push without their confirmation.`
+        `sync-ai: ${plural2(changes, "file")} changed locally and not pushed. Mention it to the user and offer /sync-ai:sync; never push without their confirmation.`
       );
       return;
     }
@@ -19877,17 +19907,17 @@ function describePush(facts, outcome2, lines) {
       return;
     case "blocked":
       lines.user.push(
-        `auto-push skipped, ${plural2(auto.files, "file")} contain${auto.files === 1 ? "s" : ""} possible secrets or personal data (${auto.locations}); fix them or review with /sync-ai:push`
+        `auto-push skipped, ${plural2(auto.files, "file")} contain${auto.files === 1 ? "s" : ""} possible secrets or personal data (${auto.locations}); fix them or review with /sync-ai:sync`
       );
       lines.claude.push(
-        `sync-ai: auto-push was blocked because ${plural2(auto.files, "file")} may contain secrets, passwords or personal data (${auto.locations}). Tell the user to fix them or review with /sync-ai:push; never print the matched content.`
+        `sync-ai: auto-push was blocked because ${plural2(auto.files, "file")} may contain secrets, passwords or personal data (${auto.locations}). Tell the user to fix them or review with /sync-ai:sync; never print the matched content.`
       );
       describeDeletions(facts.deletions, lines);
       return;
     case "too-many":
-      lines.user.push(`${auto.count} files changed, more than the auto-push limit of ${auto.max} (run /sync-ai:push)`);
+      lines.user.push(`${auto.count} files changed, more than the auto-push limit of ${auto.max} (run /sync-ai:sync)`);
       lines.claude.push(
-        `sync-ai: ${auto.count} files changed locally, more than the auto-push limit of ${auto.max}. Mention it and offer /sync-ai:push; never push without the user's confirmation.`
+        `sync-ai: ${auto.count} files changed locally, more than the auto-push limit of ${auto.max}. Mention it and offer /sync-ai:sync; never push without the user's confirmation.`
       );
       describeDeletions(facts.deletions, lines);
       return;
@@ -20009,6 +20039,23 @@ function formatHookOutput(input2, report) {
   return JSON.stringify(output2);
 }
 
+// src/domain/report.ts
+function formatList(prefix, items) {
+  return items.map((item) => `  ${prefix} ${item}`);
+}
+function describeRelation(ahead, behind) {
+  if (ahead === 0 && behind === 0) return "up to date";
+  if (behind === 0) return `${ahead} commit(s) to publish from the clone`;
+  if (ahead === 0) return `${behind} new commit(s) on the remote (run 'pull')`;
+  return `diverged (${ahead} to publish, ${behind} new on the remote)`;
+}
+function formatStamp(date5) {
+  const pad = (value) => String(value).padStart(2, "0");
+  const day = `${date5.getFullYear()}${pad(date5.getMonth() + 1)}${pad(date5.getDate())}`;
+  const time3 = `${pad(date5.getHours())}${pad(date5.getMinutes())}${pad(date5.getSeconds())}`;
+  return `${day}-${time3}`;
+}
+
 // src/domain/sync-items.ts
 var ITEM_KINDS = ["skill", "command", "agent"];
 var ITEM_FOLDERS = {
@@ -20101,11 +20148,11 @@ function withSelection(state, agent, selection) {
 
 // src/infra/check-cache-store.ts
 import fs from "node:fs/promises";
-import path2 from "node:path";
+import path3 from "node:path";
 var CACHE_FILE = "check-cache.json";
 async function loadCheckCache(dataHome) {
   try {
-    const content = await fs.readFile(path2.join(dataHome, CACHE_FILE), "utf8");
+    const content = await fs.readFile(path3.join(dataHome, CACHE_FILE), "utf8");
     return parseCache(content) ?? emptyCache();
   } catch {
     return emptyCache();
@@ -20113,7 +20160,7 @@ async function loadCheckCache(dataHome) {
 }
 async function saveCheckCache(dataHome, cache) {
   await fs.mkdir(dataHome, { recursive: true });
-  const target = path2.join(dataHome, CACHE_FILE);
+  const target = path3.join(dataHome, CACHE_FILE);
   const temporary = `${target}.tmp`;
   await fs.writeFile(temporary, serializeCache(cache));
   await fs.rename(temporary, target);
@@ -20127,9 +20174,9 @@ function startDeadline(budgetMs) {
 
 // src/infra/file-system.ts
 import fs2 from "node:fs/promises";
-import path3 from "node:path";
+import path4 from "node:path";
 function toNativePath(base, rel) {
-  return path3.join(base, ...rel.split("/"));
+  return path4.join(base, ...rel.split("/"));
 }
 async function pathExists(target) {
   try {
@@ -20147,7 +20194,7 @@ async function isDirectory(target) {
   }
 }
 async function copyPreserving(source, destination) {
-  await fs2.mkdir(path3.dirname(destination), { recursive: true });
+  await fs2.mkdir(path4.dirname(destination), { recursive: true });
   await fs2.copyFile(source, destination);
   const stats = await fs2.stat(source);
   await fs2.utimes(destination, stats.atime, stats.mtime);
@@ -20163,7 +20210,7 @@ async function pruneEmptyDirs(root) {
     return;
   }
   for (const entry of entries) {
-    if (entry.isDirectory()) await pruneEmptyDirs(path3.join(root, entry.name));
+    if (entry.isDirectory()) await pruneEmptyDirs(path4.join(root, entry.name));
   }
   if ((await fs2.readdir(root)).length === 0) await fs2.rmdir(root);
 }
@@ -20209,12 +20256,12 @@ function createConsoleIo(isAnswer) {
 
 // src/infra/state-store.ts
 import fs3 from "node:fs/promises";
-import path4 from "node:path";
+import path5 from "node:path";
 var STATE_FILE = "state.json";
 async function loadState(dataHome) {
   let content;
   try {
-    content = await fs3.readFile(path4.join(dataHome, STATE_FILE), "utf8");
+    content = await fs3.readFile(path5.join(dataHome, STATE_FILE), "utf8");
   } catch {
     return { state: emptyState(), invalid: false };
   }
@@ -20223,7 +20270,7 @@ async function loadState(dataHome) {
 }
 async function saveState(dataHome, state) {
   await fs3.mkdir(dataHome, { recursive: true });
-  const target = path4.join(dataHome, STATE_FILE);
+  const target = path5.join(dataHome, STATE_FILE);
   const temporary = `${target}.tmp`;
   await fs3.writeFile(temporary, serializeState(state));
   await fs3.rename(temporary, target);
@@ -20253,25 +20300,8 @@ function decideAutoPush(facts) {
   return { action: "push" };
 }
 
-// src/domain/report.ts
-function formatList(prefix, items) {
-  return items.map((item) => `  ${prefix} ${item}`);
-}
-function describeRelation(ahead, behind) {
-  if (ahead === 0 && behind === 0) return "up to date";
-  if (behind === 0) return `${ahead} commit(s) to publish from the clone`;
-  if (ahead === 0) return `${behind} new commit(s) on the remote (run 'pull')`;
-  return `diverged (${ahead} to publish, ${behind} new on the remote)`;
-}
-function formatStamp(date5) {
-  const pad = (value) => String(value).padStart(2, "0");
-  const day = `${date5.getFullYear()}${pad(date5.getMonth() + 1)}${pad(date5.getDate())}`;
-  const time3 = `${pad(date5.getHours())}${pad(date5.getMinutes())}${pad(date5.getSeconds())}`;
-  return `${day}-${time3}`;
-}
-
 // src/commands/local-tree.ts
-import path5 from "node:path";
+import path6 from "node:path";
 
 // src/domain/path-filter.ts
 var REGEXP_SPECIALS = /[.+^${}()|[\]\\]/g;
@@ -20318,7 +20348,7 @@ async function listTree(base, allow, isDenied) {
 
 // src/commands/local-tree.ts
 function agentRepoDir(context) {
-  return path5.join(context.repoDir, context.agent.name);
+  return path6.join(context.repoDir, context.agent.name);
 }
 function listLocalFiles(context) {
   const { home, allow, deny } = context.agent;
@@ -20329,7 +20359,7 @@ function listRepoFiles(context) {
   return listTree(agentRepoDir(context), allow, createDenyMatcher(deny));
 }
 async function requireRepo(context) {
-  if (await isDirectory(path5.join(context.repoDir, ".git"))) return;
+  if (await isDirectory(path6.join(context.repoDir, ".git"))) return;
   throw new AppError(
     `no repository initialized at ${context.repoDir}. Run first: init [repo-url]`
   );
@@ -20374,9 +20404,9 @@ function parseTree(output2, prefix) {
     const tab = line.indexOf("	");
     if (tab < 0) continue;
     const [mode, type, sha] = line.slice(0, tab).split(" ");
-    const path14 = line.slice(tab + 1);
-    if (type !== "blob" || !sha || !path14.startsWith(prefix)) continue;
-    entries.set(path14.slice(prefix.length), { sha, executable: mode === "100755" });
+    const path15 = line.slice(tab + 1);
+    if (type !== "blob" || !sha || !path15.startsWith(prefix)) continue;
+    entries.set(path15.slice(prefix.length), { sha, executable: mode === "100755" });
   }
   return entries;
 }
@@ -20616,11 +20646,11 @@ function scanText(content, options = {}) {
 
 // src/infra/scan-words.ts
 import fs5 from "node:fs/promises";
-import path6 from "node:path";
+import path7 from "node:path";
 var SCAN_WORDS_FILE = "scan-words.txt";
 async function loadScanWords(dataHome) {
   try {
-    const content = await fs5.readFile(path6.join(dataHome, SCAN_WORDS_FILE), "utf8");
+    const content = await fs5.readFile(path7.join(dataHome, SCAN_WORDS_FILE), "utf8");
     return content.split(/\r?\n/).map((line) => line.trim()).filter((line) => line !== "" && !line.startsWith("#"));
   } catch {
     return [];
@@ -20971,7 +21001,7 @@ async function countAhead(git, branch) {
 
 // src/commands/apply-repo.ts
 import fs9 from "node:fs/promises";
-import path7 from "node:path";
+import path8 from "node:path";
 async function backUp(context, destination) {
   if (!await pathExists(destination)) return;
   await copyPreserving(destination, `${destination}.backup-${formatStamp(context.now())}`);
@@ -20984,7 +21014,7 @@ async function installFromSnapshot(context, snapshot, rels4) {
     if (!content) throw new AppError(`the repository object for ${rel} is missing from the clone`);
     const destination = toNativePath(context.agent.home, rel);
     await backUp(context, destination);
-    await fs9.mkdir(path7.dirname(destination), { recursive: true });
+    await fs9.mkdir(path8.dirname(destination), { recursive: true });
     await fs9.writeFile(destination, content, { mode: snapshot.executable.has(rel) ? 493 : 420 });
   }
 }
@@ -20996,7 +21026,7 @@ async function removeLocalWithBackup(context, rel) {
 
 // src/infra/conflict-store.ts
 import fs10 from "node:fs/promises";
-import path8 from "node:path";
+import path9 from "node:path";
 var MANIFEST_FILE = "manifest.json";
 var manifestSchema = external_exports.object({
   version: external_exports.literal(1),
@@ -21019,19 +21049,19 @@ var ConflictStore = class {
   dataHome;
   agent;
   get directory() {
-    return path8.join(this.dataHome, "conflicts", this.agent);
+    return path9.join(this.dataHome, "conflicts", this.agent);
   }
   copyPath(rel, side) {
     const target = toNativePath(this.directory, `${rel}.${side}`);
-    const relative = path8.relative(this.directory, target);
-    if (relative.startsWith("..") || path8.isAbsolute(relative)) {
+    const relative = path9.relative(this.directory, target);
+    if (relative.startsWith("..") || path9.isAbsolute(relative)) {
       throw new AppError(`refusing to store a conflict copy outside ${this.directory}: ${rel}`);
     }
     return target;
   }
   async load() {
     try {
-      const content = await fs10.readFile(path8.join(this.directory, MANIFEST_FILE), "utf8");
+      const content = await fs10.readFile(path9.join(this.directory, MANIFEST_FILE), "utf8");
       const parsed = manifestSchema.safeParse(JSON.parse(content));
       if (parsed.success) return parsed.data;
     } catch {
@@ -21047,7 +21077,7 @@ var ConflictStore = class {
         await removeFile(target);
         continue;
       }
-      await fs10.mkdir(path8.dirname(target), { recursive: true });
+      await fs10.mkdir(path9.dirname(target), { recursive: true });
       await fs10.writeFile(target, content);
     }
     return {
@@ -21060,7 +21090,7 @@ var ConflictStore = class {
   async save(manifest) {
     await fs10.mkdir(this.directory, { recursive: true });
     await fs10.writeFile(
-      path8.join(this.directory, MANIFEST_FILE),
+      path9.join(this.directory, MANIFEST_FILE),
       `${JSON.stringify(manifest, null, 2)}
 `
     );
@@ -21073,7 +21103,7 @@ var ConflictStore = class {
 };
 async function pruneEmptyDirsKeepingRoot(root) {
   for (const entry of await fs10.readdir(root, { withFileTypes: true })) {
-    if (entry.isDirectory()) await pruneEmptyDirs(path8.join(root, entry.name));
+    if (entry.isDirectory()) await pruneEmptyDirs(path9.join(root, entry.name));
   }
 }
 
@@ -21206,17 +21236,58 @@ async function runPull(context) {
 // src/commands/check.ts
 var CHECK_BUDGET_MS = 4e3;
 var OVERALL_BUDGET_MS = 7e3;
-var NO_FINDINGS = { pushFiles: [], deletions: 0, toPull: 0, conflicts: 0 };
+var NO_FINDINGS = {
+  pushFiles: [],
+  pushChanges: [],
+  deletions: 0,
+  toPull: 0,
+  pullChanges: [],
+  conflicts: 0,
+  conflictFiles: []
+};
 var AUTO_PUSH_OFF = { kind: "off" };
 async function compare(context, state, ref) {
   const snapshot = await readRepoSnapshot(context, ref);
   const plan = await buildPlan(context, snapshot, state);
+  const pushChanges = [
+    ...entriesIn(plan, "new-local" /* NewLocal */).map((entry) => ({ prefix: "+", rel: entry.rel })),
+    ...entriesIn(plan, "local-changed" /* LocalChanged */).map((entry) => ({ prefix: "~", rel: entry.rel })),
+    ...entriesIn(plan, "local-deleted" /* LocalDeleted */).map((entry) => ({ prefix: "-", rel: entry.rel }))
+  ];
+  const pullChanges = [
+    ...entriesIn(plan, "new-repo" /* NewRepo */).map((entry) => ({ prefix: "+", rel: entry.rel })),
+    ...entriesIn(plan, "repo-changed" /* RepoChanged */).map((entry) => ({ prefix: "~", rel: entry.rel })),
+    ...entriesIn(plan, "repo-deleted" /* RepoDeleted */).map((entry) => ({ prefix: "-", rel: entry.rel }))
+  ];
+  const conflictFiles = entriesIn(plan, "conflict" /* Conflict */).map((entry) => entry.rel);
   return {
     pushFiles: entriesIn(plan, "new-local" /* NewLocal */, "local-changed" /* LocalChanged */).map((entry) => entry.rel),
-    deletions: entriesIn(plan, "local-deleted" /* LocalDeleted */).length,
+    pushChanges,
+    deletions: pushChanges.filter((entry) => entry.prefix === "-").length,
     toPull: entriesIn(plan, "new-repo" /* NewRepo */, "repo-changed" /* RepoChanged */).length,
-    conflicts: entriesIn(plan, "conflict" /* Conflict */).length
+    pullChanges,
+    conflicts: conflictFiles.length,
+    conflictFiles
   };
+}
+function printDetectedChanges(context, findings) {
+  const { io } = context;
+  if (findings.pushChanges.length > 0) {
+    io.info("Changes to publish (local \u2192 repository):");
+    for (const entry of findings.pushChanges) {
+      for (const line of formatList(entry.prefix, [entry.rel])) io.info(line);
+    }
+  }
+  if (findings.pullChanges.length > 0) {
+    io.info("Changes to pull (repository \u2192 local):");
+    for (const entry of findings.pullChanges) {
+      for (const line of formatList(entry.prefix, [entry.rel])) io.info(line);
+    }
+  }
+  if (findings.conflictFiles.length > 0) {
+    io.info("Conflicts (changed on both sides):");
+    for (const line of formatList("!", findings.conflictFiles)) io.info(line);
+  }
 }
 async function pullQuietly(context, files) {
   try {
@@ -21238,7 +21309,7 @@ async function check2(context) {
   const { agent, dataHome, repoGit } = context;
   const manual = !context.hook;
   const input2 = manual ? manualInput() : parseHookInput(await context.readStdin());
-  if (!await isDirectory(path9.join(context.repoDir, ".git"))) return;
+  if (!await isDirectory(path10.join(context.repoDir, ".git"))) return;
   const probeDeadline = startDeadline(CHECK_BUDGET_MS);
   const overallDeadline = startDeadline(OVERALL_BUDGET_MS);
   const now = context.now();
@@ -21271,6 +21342,7 @@ async function check2(context) {
     findings = await compare(context, state.state, "HEAD");
   }
   let autoPush = AUTO_PUSH_OFF;
+  if (manual) printDetectedChanges(context, findings);
   if (hasBaseline) {
     const run = await runAutoPush(context, {
       event: input2.event,
@@ -21358,7 +21430,7 @@ function runRemove(context) {
 }
 
 // src/commands/init.ts
-import path11 from "node:path";
+import path12 from "node:path";
 
 // src/commands/clone-repo.ts
 import fs11 from "node:fs/promises";
@@ -21413,7 +21485,7 @@ async function cloneRepository(context, url2, options = {}) {
 }
 
 // src/commands/init-with-github.ts
-import path10 from "node:path";
+import path11 from "node:path";
 
 // src/domain/repo-name.ts
 var DEFAULT_REPO_NAME = "sync-ai-data";
@@ -21485,7 +21557,7 @@ async function requireAuthenticatedLogin(gh) {
 }
 async function reportExistingClone(context) {
   const { repoDir, repoGit, io } = context;
-  if (!await isDirectory(path10.join(repoDir, ".git"))) return false;
+  if (!await isDirectory(path11.join(repoDir, ".git"))) return false;
   const origin = await repoGit.run(["remote", "get-url", "origin"]);
   const where = origin.code === 0 ? ` (origin: ${origin.stdout.trim()})` : "";
   io.info(`Already initialized: ${repoDir}${where}`);
@@ -21544,7 +21616,7 @@ async function runInit(context) {
   if (context.repoName !== void 0) {
     throw new UsageError("--name only applies when init is run without a URL");
   }
-  if (await isDirectory(path11.join(repoDir, ".git"))) {
+  if (await isDirectory(path12.join(repoDir, ".git"))) {
     const existing = await repoGit.run(["remote", "get-url", "origin"]);
     const current = existing.code === 0 ? existing.stdout.trim() : "";
     if (current === url2) {
@@ -21921,14 +21993,14 @@ async function runStatus(context) {
 }
 
 // src/infra/data-home.ts
-import path12 from "node:path";
+import path13 from "node:path";
 function resolveDataHome(env, homeDir, platform) {
   if (env.AGENT_SYNC_HOME) return env.AGENT_SYNC_HOME;
   if (platform === "win32") {
-    const localAppData = env.LOCALAPPDATA || path12.join(homeDir, "AppData", "Local");
-    return path12.join(localAppData, "agent-sync");
+    const localAppData = env.LOCALAPPDATA || path13.join(homeDir, "AppData", "Local");
+    return path13.join(localAppData, "agent-sync");
   }
-  return path12.join(homeDir, ".local", "share", "agent-sync");
+  return path13.join(homeDir, ".local", "share", "agent-sync");
 }
 
 // src/infra/gh.ts
@@ -22027,7 +22099,7 @@ function readStdin(timeoutMs) {
 }
 
 // src/cli/command-name.ts
-var commandNameSchema = external_exports.enum(["init", "pull", "push", "status", "resolve", "check", "add", "remove"]);
+var commandNameSchema = external_exports.enum(["sync", "init", "pull", "push", "status", "resolve", "check", "add", "remove"]);
 
 // src/cli/resolution.ts
 var resolutionSchema = external_exports.enum(["take-local", "take-repo", "auto", "editor"]);
@@ -22164,6 +22236,7 @@ function parseArgs(argv) {
 var USAGE2 = `Usage: agent-sync [--agent NAME] [--yes] [--dry-run] <command>
 
 Commands:
+  sync         Run the safe automatic sync flow (no arguments)
   init [url]   Clone your PRIVATE configuration repository; without a URL, use the
                GitHub CLI (gh): create it, or clone it and install its files if it
                already exists (setting up another device)
@@ -22223,6 +22296,7 @@ function defaultRuntime(io) {
   };
 }
 var COMMANDS = {
+  sync: runCheck,
   init: runInit,
   pull: runPull,
   push: runPush,
@@ -22244,7 +22318,7 @@ async function execute(argv, runtime) {
   const command = commandNameSchema.safeParse(options.command);
   if (!command.success) throw new UsageError(`unknown command: ${options.command}`);
   const dataHome = resolveDataHome(runtime.env, runtime.homeDir, runtime.platform);
-  const repoDir = path13.join(dataHome, "repo");
+  const repoDir = path14.join(dataHome, "repo");
   const git = new Git(runtime.env);
   return COMMANDS[command.data]({
     agent,

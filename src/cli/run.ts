@@ -61,6 +61,7 @@ export function defaultRuntime(io: Io): Runtime {
 }
 
 const COMMANDS: Record<CommandName, (context: CommandContext) => Promise<ExitCode>> = {
+  sync: runCheck,
   init: runInit,
   pull: runPull,
   push: runPush,
