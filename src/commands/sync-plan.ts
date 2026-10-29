@@ -2,7 +2,8 @@ import fs from 'node:fs/promises';
 import { classifyFile } from '../domain/classify-file';
 import { FileState } from '../domain/file-state';
 import { gitBlobId } from '../domain/git-blob';
-import { basesOf, setBase, type SyncState } from '../domain/sync-state';
+import { basesOf, selectionOf, setBase, type SyncState } from '../domain/sync-state';
+import { effectiveItems, isSynced, itemsOf } from '../domain/sync-items';
 import { toNativePath } from '../infra/file-system';
 import type { CommandContext } from './context';
 import { listLocalFiles } from './local-tree';
@@ -26,6 +27,8 @@ export interface ConflictVersions {
 export interface SyncPlan {
   readonly entries: readonly PlanEntry[];
   readonly snapshot: RepoSnapshot;
+  /** Local items (`skills/foo`, `commands/bar.md`) that are not synced because nobody listed them. */
+  readonly unlisted: readonly string[];
 }
 
 export function entriesIn(plan: SyncPlan, ...states: readonly FileState[]): PlanEntry[] {
@@ -39,6 +42,10 @@ async function readLocal(context: CommandContext, rel: string): Promise<Buffer> 
 /**
  * Classifies every synced path by comparing the local file, the repository snapshot and the
  * base recorded at the last sync. Contents are only read from git for files that differ.
+ *
+ * Only listed items take part: the ones added by hand, plus every item the repository has
+ * (so a local item with the same name as a repository item is compared, and conflicts when
+ * they differ, instead of being overwritten) minus the ones the user stopped syncing.
  */
 export async function buildPlan(
   context: CommandContext,
@@ -46,13 +53,24 @@ export async function buildPlan(
   state: SyncState,
 ): Promise<SyncPlan> {
   const bases = basesOf(state, context.agent.name);
-  const localFiles = new Set(await listLocalFiles(context));
-  const paths = new Set([...localFiles, ...snapshot.blobs.keys(), ...Object.keys(bases)]);
+  const { optIn } = context.agent;
+  const effective = effectiveItems(
+    selectionOf(state, context.agent.name),
+    itemsOf(snapshot.blobs.keys(), optIn),
+    itemsOf(Object.keys(bases), optIn),
+  );
+  const synced = (rel: string): boolean => isSynced(rel, optIn, effective);
+
+  const everyLocal = await listLocalFiles(context);
+  const localFiles = new Set(everyLocal.filter(synced));
+  const unlisted = [...itemsOf(everyLocal.filter((rel) => !synced(rel)), optIn)].sort();
+  const repoBlobs = new Map([...snapshot.blobs].filter(([rel]) => synced(rel)));
+  const paths = new Set([...localFiles, ...repoBlobs.keys(), ...Object.keys(bases)]);
 
   const entries: PlanEntry[] = [];
   for (const rel of [...paths].sort()) {
     const local = localFiles.has(rel) ? await readLocal(context, rel) : undefined;
-    const repoBlob = snapshot.blobs.get(rel);
+    const repoBlob = repoBlobs.get(rel);
     if (local && repoBlob && gitBlobId(local) === repoBlob) {
       entries.push({ rel, state: FileState.InSync, repoBlob, versions: undefined });
       continue;
@@ -65,7 +83,7 @@ export async function buildPlan(
     const versions = fileState === FileState.Conflict ? { local, repo, base } : undefined;
     entries.push({ rel, state: fileState, repoBlob, versions });
   }
-  return { entries, snapshot };
+  return { entries, snapshot, unlisted };
 }
 
 /** Records the repository version as the new base of every path in sync (and drops stale ones). */

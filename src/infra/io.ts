@@ -7,6 +7,13 @@ export interface Io {
   confirm(question: string): Promise<boolean>;
 }
 
+/** An Io that says nothing and never confirms: for work done on behalf of a hook. */
+export const SILENT_IO: Io = {
+  info: () => undefined,
+  warn: () => undefined,
+  confirm: () => Promise.resolve(false),
+};
+
 function askQuestion(question: string): Promise<string | null> {
   return new Promise((resolve) => {
     const rl = readline.createInterface({ input: process.stdin, output: process.stdout });

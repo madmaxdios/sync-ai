@@ -15,6 +15,11 @@ export interface BinaryProcessResult {
 
 const MAX_OUTPUT_BYTES = 64 * 1024 * 1024;
 
+export interface ProcessOptions {
+  /** Kills the process after this many milliseconds (it then resolves with a non-zero code). */
+  readonly timeoutMs?: number;
+}
+
 /**
  * Runs an executable without a shell. Resolves on non-zero exit codes too and
  * resolves with `undefined` when the executable does not exist.
@@ -23,12 +28,19 @@ export function runProcess(
   file: string,
   args: readonly string[],
   env: Env,
+  options: ProcessOptions = {},
 ): Promise<ProcessResult | undefined> {
   return new Promise((resolve) => {
     execFile(
       file,
       [...args],
-      { env: { ...env }, encoding: 'utf8', maxBuffer: MAX_OUTPUT_BYTES, windowsHide: true },
+      {
+        env: { ...env },
+        encoding: 'utf8',
+        maxBuffer: MAX_OUTPUT_BYTES,
+        windowsHide: true,
+        ...(options.timeoutMs === undefined ? {} : { timeout: options.timeoutMs }),
+      },
       (error: ExecFileException | null, stdout, stderr) => {
         if (!error) {
           resolve({ code: 0, stdout, stderr });

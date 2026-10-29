@@ -1,42 +1,28 @@
-export interface SecretFinding {
+import type { ScanCategory } from './scan-category';
+import { SCAN_RULES, type ScanOptions } from './scan-rules';
+
+export type { ScanOptions } from './scan-rules';
+
+/** A line carrying this marker is never reported (for example a documented example value). */
+export const ALLOW_MARKER = 'sync-ai:allow';
+
+export interface ScanFinding {
+  readonly category: ScanCategory;
   readonly label: string;
+  /** 1-based line numbers. */
   readonly lines: readonly number[];
 }
 
-interface SecretPattern {
-  readonly label: string;
-  readonly pattern: RegExp;
-}
-
-// Matched contents are never reported, only the pattern label and line numbers.
-const SECRET_PATTERNS: readonly SecretPattern[] = [
-  { label: 'private key', pattern: /-----BEGIN [A-Z ]*PRIVATE KEY-----/ },
-  {
-    label: 'GitHub token',
-    pattern: /(gh[pousr]_[A-Za-z0-9]{36,}|github_pat_[A-Za-z0-9_]{20,})/,
-  },
-  { label: 'sk- key', pattern: /sk-[A-Za-z0-9_-]{20,}/ },
-  { label: 'AWS key', pattern: /(AKIA|ASIA)[0-9A-Z]{16}/ },
-  {
-    label: 'password assignment',
-    pattern: /pass(word|wd)\s*=\s*["']?[^\s"'$<{(]{4,}/i,
-  },
-  {
-    label: 'secret assignment',
-    pattern: /(api[_-]?key|secret|token)\s*=\s*["']?[A-Za-z0-9/+_.-]{16,}/i,
-  },
-];
-
-/** Returns one finding per matching pattern, with 1-based line numbers. */
-export function scanText(content: string): SecretFinding[] {
-  const textLines = content.split('\n');
-  const findings: SecretFinding[] = [];
-  for (const { label, pattern } of SECRET_PATTERNS) {
+/** Returns one finding per rule that matches, with the lines it matches. Contents are never returned. */
+export function scanText(content: string, options: ScanOptions = {}): ScanFinding[] {
+  const textLines = content.split('\n').map((line) => (line.includes(ALLOW_MARKER) ? undefined : line));
+  const findings: ScanFinding[] = [];
+  for (const { category, label, matches } of SCAN_RULES) {
     const lines: number[] = [];
     textLines.forEach((line, index) => {
-      if (pattern.test(line)) lines.push(index + 1);
+      if (line !== undefined && matches(line, options)) lines.push(index + 1);
     });
-    if (lines.length > 0) findings.push({ label, lines });
+    if (lines.length > 0) findings.push({ category, label, lines });
   }
   return findings;
 }

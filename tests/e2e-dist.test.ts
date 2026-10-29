@@ -40,7 +40,12 @@ describe('built bundle between two devices', () => {
     it('A init and push exit 0', async () => {
       expect((await cli('A', 'init', sandbox.remote)).code).toBe(0);
       expect((await cli('A', 'push')).code).toBe(0);
-      expect(sandbox.remoteFiles()).toContain('claude/CLAUDE.md');
+      expect(sandbox.remoteFiles()).toEqual(['claude/CLAUDE.md']);
+      expect((await cli('A', 'add', 'skill', 'foo')).code).toBe(0);
+      expect((await cli('A', 'add', 'command', 'hello.md')).code).toBe(0);
+      expect((await cli('A', 'add', 'agent', 'a.md')).code).toBe(0);
+      expect((await cli('A', 'push')).code).toBe(0);
+      expect(sandbox.remoteFiles()).toContain('claude/skills/foo/SKILL.md');
     });
 
     it('B init and pull bring the files', async () => {
@@ -106,6 +111,7 @@ describe('built bundle between two devices', () => {
   describe('secret scan', () => {
     it('push exits 4 and the remote stays untouched', async () => {
       sandbox.write('B', 'commands/leak.md', `${PRIVATE_KEY_HEADER}\nnot-a-real-key\n`);
+      expect((await cli('B', 'add', 'command', 'leak.md')).code).toBe(0);
       const head = sandbox.remoteHead();
 
       const result = await cli('B', 'push');
@@ -113,6 +119,46 @@ describe('built bundle between two devices', () => {
       expect(result.code).toBe(4);
       expect(sandbox.remoteHead()).toBe(head);
       expect(result.stdout + result.stderr).not.toContain('not-a-real-key');
+    });
+  });
+
+  describe('check, the hook that tells whether this device is in sync', () => {
+    const hookInput = (event: string): string => JSON.stringify({ hook_event_name: event, session_id: 'e2e' });
+
+    it('is silent and exits 0 when the device is in sync', async () => {
+      const result = await sandbox.runBundle(bundle, 'A', ['check', '--hook'], { stdin: hookInput('SessionStart') });
+
+      expect(result.code).toBe(0);
+      expect(result.stdout).toBe('');
+      expect(result.stderr).toBe('');
+    });
+
+    it('prints one hook JSON object for a local change and never pushes it', async () => {
+      sandbox.write('A', 'skills/zed/SKILL.md', 'zed\n');
+      expect((await cli('A', 'add', 'skill', 'zed')).code).toBe(0);
+      const head = sandbox.remoteHead();
+
+      const result = await sandbox.runBundle(bundle, 'A', ['check', '--hook'], {
+        stdin: hookInput('UserPromptSubmit'),
+        env: { AGENT_SYNC_AUTO_PUSH: '0' },
+      });
+
+      const output = JSON.parse(result.stdout) as { systemMessage: string; hookSpecificOutput: { hookEventName: string } };
+      expect(result.code).toBe(0);
+      expect(result.stderr).toBe('');
+      expect(output.systemMessage).toBe('sync-ai: 1 local change not pushed (run /sync-ai:push)');
+      expect(output.hookSpecificOutput.hookEventName).toBe('UserPromptSubmit');
+      expect(sandbox.remoteHead()).toBe(head);
+    });
+
+    it('stays quiet with AGENT_SYNC_CHECK=0', async () => {
+      const result = await sandbox.runBundle(bundle, 'A', ['check', '--hook'], {
+        stdin: hookInput('SessionStart'),
+        env: { AGENT_SYNC_CHECK: '0' },
+      });
+
+      expect(result.code).toBe(0);
+      expect(result.stdout).toBe('');
     });
   });
 });

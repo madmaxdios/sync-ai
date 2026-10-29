@@ -6,7 +6,7 @@ describe('pull conflict handling', () => {
   let sandbox: Sandbox;
 
   beforeEach(async () => {
-    sandbox = new Sandbox();
+    sandbox = new Sandbox({ autoList: true });
     sandbox.write('A', 'CLAUDE.md', 'shared v1\n');
     await sandbox.run('A', ['init', sandbox.remote]);
     await sandbox.run('A', ['push']);
@@ -93,6 +93,7 @@ describe('pull conflict handling', () => {
     sandbox.write('A', 'agents/new.md', 'new agent\n');
     await sandbox.run('A', ['push']);
     sandbox.write('B', 'commands/mine.md', 'only here\n');
+    await sandbox.list('B', 'commands/mine.md');
 
     const result = await sandbox.run('B', ['status']);
 

@@ -38,6 +38,8 @@ describe('agent-sync between two devices', () => {
     });
 
     it('push exits 0', async () => {
+      // Only listed items travel, so the skills, commands and agents are listed first.
+      await sandbox.listAll('A');
       const result = await sandbox.run('A', ['push']);
       expect(result.code).toBe(0);
     });
@@ -151,6 +153,7 @@ describe('agent-sync between two devices', () => {
   describe('secret scan', () => {
     it('push with secrets exits 4, keeps the remote untouched and never prints the secret', async () => {
       sandbox.write('A', 'skills/bad/SKILL.md', `${PRIVATE_KEY_HEADER}\npassword=hunter2secret\n`);
+      await sandbox.list('A', 'skills/bad/SKILL.md');
       const before = sandbox.remoteHead();
       const result = await sandbox.run('A', ['push']);
 

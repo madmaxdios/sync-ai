@@ -1,6 +1,6 @@
 import type { Env } from '../agents/agent-config';
 import { AppError } from '../domain/app-error';
-import { runProcess, runProcessBinary, type ProcessResult } from './run-process';
+import { runProcess, runProcessBinary, type ProcessOptions, type ProcessResult } from './run-process';
 
 export type GitResult = ProcessResult;
 
@@ -8,18 +8,27 @@ export class Git {
   constructor(
     private readonly env: Env,
     private readonly prefix: readonly string[] = [],
+    /** Applied to every call that does not set its own timeout. */
+    private readonly defaultTimeoutMs?: number,
   ) {}
 
   /** Returns a Git bound to a repository directory (`git -C <dir> ...`). */
   withRepo(repoDir: string): Git {
-    return new Git(this.env, ['-C', repoDir]);
+    return new Git(this.env, ['-C', repoDir], this.defaultTimeoutMs);
+  }
+
+  /** Returns a Git whose calls are killed after `timeoutMs` unless they set their own limit. */
+  withTimeout(timeoutMs: number): Git {
+    return new Git(this.env, this.prefix, timeoutMs);
   }
 
   /** Runs git without a shell. Resolves on non-zero exit codes too. */
-  async run(args: readonly string[]): Promise<GitResult> {
+  async run(args: readonly string[], options: ProcessOptions = {}): Promise<GitResult> {
     // Never block on a credentials prompt: this runs inside a non-interactive slash command.
     const env = { ...this.env, GIT_TERMINAL_PROMPT: '0' };
-    const result = await runProcess('git', [...this.prefix, ...args], env);
+    const timeoutMs = options.timeoutMs ?? this.defaultTimeoutMs;
+    const limits = timeoutMs === undefined ? options : { ...options, timeoutMs };
+    const result = await runProcess('git', [...this.prefix, ...args], env, limits);
     if (!result) throw new AppError('git is not installed or not found in PATH');
     return result;
   }

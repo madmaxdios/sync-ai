@@ -140,7 +140,7 @@ describe.skipIf(process.platform === 'win32')('init without a URL when the repos
   let gh: FakeGh;
 
   beforeEach(() => {
-    sandbox = new Sandbox();
+    sandbox = new Sandbox({ autoList: true });
     gh = new FakeGh();
   });
 

@@ -14,7 +14,7 @@ describe('three-way conflict handling', () => {
   let sandbox: Sandbox;
 
   beforeEach(async () => {
-    sandbox = new Sandbox();
+    sandbox = new Sandbox({ autoList: true });
     sandbox.write('A', 'CLAUDE.md', 'shared v1\n');
     sandbox.write('A', 'commands/notes.md', MULTI_LINE);
     sandbox.write('A', 'agents/a.md', 'agent a\n');
@@ -107,7 +107,7 @@ describe('three-way conflict handling', () => {
     });
 
     it('treats a differing local file on a device without a base as a conflict', async () => {
-      const fresh = new Sandbox();
+      const fresh = new Sandbox({ autoList: true });
       try {
         fresh.write('A', 'CLAUDE.md', 'from A\n');
         await fresh.run('A', ['init', fresh.remote]);

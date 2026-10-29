@@ -36,9 +36,11 @@ action:
 | --- | --- |
 | `/sync-ai:init` | With `gh`: creates a **private** GitHub repository (`sync-ai-data`) and clones it into `~/.local/share/agent-sync/repo`, or clones and installs it if it already exists (second device) |
 | `/sync-ai:init <url>` | Clones a **private** repository you already have |
-| `/sync-ai:push` | Scans for secrets, copies the allowed files, commits and pushes |
+| `/sync-ai:add <skill\|command\|agent> <name>` | Starts syncing one of your skills, commands or agents (see [What is synced](#what-is-synced)) |
+| `/sync-ai:remove <skill\|command\|agent> <name>` | Stops syncing it on this machine; nothing is deleted |
+| `/sync-ai:push` | Scans for secrets, passwords and personal data, copies the listed files, commits and pushes |
 | `/sync-ai:pull` | Fetches changes (`git pull --ff-only`) and installs the files changed in the repository into `~/.claude`; files changed on both sides become [conflicts](#conflicts) |
-| `/sync-ai:status` | Shows, file by file, what is waiting to be pushed or pulled and which files are in conflict |
+| `/sync-ai:status` | Shows, file by file, what is waiting to be pushed or pulled and which files are in conflict. `status --all` also lists the items that are not synced. A hook runs the same comparison on its own, see [Staying in sync automatically](#staying-in-sync-automatically) |
 | `/sync-ai:resolve` | Lists the conflicts, or settles one: `resolve <path> --take-local \| --take-repo \| --auto \| --editor` |
 
 ## Updating
@@ -58,6 +60,55 @@ update the plugin:
 ```bash
 claude plugin marketplace update sync-ai && claude plugin update sync-ai@sync-ai
 ```
+
+## Staying in sync automatically
+
+The plugin registers two hooks (`hooks/hooks.json`) that run `agent-sync check --hook`:
+
+| When | What `check` does |
+| --- | --- |
+| A chat starts, resumes or is cleared (`SessionStart`) | Always asks the remote whether it has new commits. If the repository has changes this device does not have, it **pulls them**, but only when this device has a sync baseline (`state.json`) and there are no conflicts. Then it tells you what it did |
+| You send a prompt (`UserPromptSubmit`) | Compares your local files with the last sync (offline and instant). It contacts the remote **at most every 10 minutes**. It never pulls; it may [push automatically](#automatic-push) |
+
+What you see, as one short line in the chat:
+
+- `sync-ai: pulled 2 files from the repository`: done automatically at the start of a chat, with the usual `.backup-*` copies.
+- `sync-ai: pushed 2 files (commit abc1234)`: the [automatic push](#automatic-push) published your quiet, clean changes.
+- `sync-ai: 3 local changes not pushed (run /sync-ai:push)`: shown when the automatic push is off or cannot run (conflicts, the repository has news). Claude also gets a short note and will offer the push, never pushing without your confirmation.
+- `sync-ai: 1 deletion pending, run /sync-ai:push to confirm`: deletions are never automatic.
+- `sync-ai: auto-push skipped, 1 file contains possible secrets or personal data (commands/x.md:3); fix them or review with /sync-ai:push`: only the places are named, never the content. Items that are not on your list are never mentioned in these messages.
+- `sync-ai: the repository has 1 file change (1 newer commit) (run /sync-ai:pull)`: shown when a prompt is sent, because files are only pulled when a chat starts.
+- `sync-ai: 1 conflict, run /sync-ai:resolve`: nothing is overwritten.
+- `sync-ai: this device has no sync baseline yet ...`: once per chat. Without `state.json` the tool cannot tell "I deleted this on purpose" from "this is new", so it never pulls on its own. Run `/sync-ai:status` and a first `pull` or `push` to create it.
+
+When everything is in sync it prints nothing and costs no tokens. The same message is not repeated on every prompt: it is announced again only when the situation changes, after 30 minutes, or in another chat.
+
+`check` never blocks and never asks questions: it always exits 0, stays silent when it is offline or the data repository does not exist, and keeps its network work inside about 4 seconds (`git ls-remote` first, a quiet `git fetch` only when the remote moved).
+
+| Variable | Effect |
+| --- | --- |
+| `AGENT_SYNC_CHECK=0` | Turns the check off completely |
+| `AGENT_SYNC_CHECK_INTERVAL_MINUTES` | Minutes between remote checks while you type prompts (default 10; `0` checks on every prompt) |
+| `AGENT_SYNC_AUTO_PUSH=0` | Turns the automatic push off (the hook only informs) |
+| `AGENT_SYNC_AUTO_PUSH_QUIET_MINUTES` | Minutes a file must stay unedited before it is pushed (default 5) |
+| `AGENT_SYNC_AUTO_PUSH_MAX_FILES` | Most files one automatic push may publish (default 20) |
+
+Run it by hand with `agent-sync --agent claude check` (it also prints `sync-ai: in sync.` unless you add `--quiet`), or with `--dry-run` to see what it would do. The throttle and the repeated-message memory live in `check-cache.json` in the data directory, next to `state.json`.
+
+To turn the hooks off without uninstalling the plugin, set `AGENT_SYNC_CHECK=0` in the `env` block of your `settings.json`.
+
+### Automatic push
+
+`check` publishes your changes by itself, but only when **all** of this holds:
+
+- the change is in an item on your list (see [What is synced](#what-is-synced)) or is `CLAUDE.md`;
+- every changed file has been unedited for at least 5 minutes;
+- at most 20 files changed (more than that is left for `/sync-ai:push`);
+- the [scan](#security) finds nothing in any of them (one finding blocks the whole push, which is reported once);
+- there are no conflicts and the repository has nothing newer than this device (it pulls first, at the start of a chat);
+- this device has a sync baseline.
+
+It **never deletes** anything: deleted files are reported as pending and need `/sync-ai:push` and your confirmation. If the push fails (offline, rejected) it stays silent and tries again after the check interval. `--dry-run` only says what it would push.
 
 ## Upgrading from `agent-sync`
 
@@ -119,10 +170,12 @@ Inside your repository the files are stored under `claude/<path>`.
 
 Only this allowlist from `~/.claude`:
 
-- `CLAUDE.md`
-- `skills/`
-- `commands/`
-- `agents/`
+- `CLAUDE.md`, always.
+- Skills, commands and agents **that you add**. Having a file in `skills/`, `commands/` or `agents/` is not enough: nothing is published until you run `/sync-ai:add skill git` (or `command deploy`, `agent reviewer`). An item that already exists in the repository is synced on every device without adding it.
+
+`/sync-ai:remove` stops syncing an item on this machine without deleting any file, here or in the repository. `/sync-ai:status` shows the items that are not synced as one line (`2 items not synced`); `status --all` lists them.
+
+A local item with the same name as a repository item that this device never synced is treated as a **conflict**, never overwritten. The list lives in `state.json`; devices whose state predates the list keep syncing what the repository already has.
 
 ## What is never synced
 
@@ -200,10 +253,22 @@ backup).
 
 - Use a **private** repository: your skills and instructions may contain
   sensitive information.
-- Before every `push`, the allowed files are scanned for private keys, GitHub
-  tokens, `sk-` keys, AWS keys and `password=`, `api_key=` or `token=`
-  assignments. If anything is found, the push is cancelled (exit code 4) and
-  only the file and line are shown, never the content.
+- Before every `push` (and every automatic push) the files that would be
+  published are scanned in three categories, and the push is cancelled (exit
+  code 4) if anything is found. Only `path:line  category (label)` is shown,
+  never the content:
+  - `secret`: private keys, GitHub, Slack, npm and Google tokens, `sk-` and AWS
+    keys, JSON web tokens, `Authorization` headers and `secret`, `token` or
+    `api_key` assignments with a real-looking value.
+  - `password`: `password`/`passwd`/`pwd` assignments with a real-looking
+    value, and credentials inside URLs (`scheme://user:pass@host`).
+  - `user-or-personal-data`: email addresses, home directory paths
+    (`/home/name`, `C:\Users\name`), the OS user name of this device,
+    `username:`/`login:` assignments and the words of `scan-words.txt`.
+  Placeholders (`$TOKEN`, `<password>`, `you@example.com`, `/home/user`) are
+  ignored. To accept a line on purpose, put `sync-ai:allow` on it. To catch
+  your own names, put one word per line in `scan-words.txt` in the data
+  directory (`#` starts a comment); they match as whole words, ignoring case.
 - The scan is a basic safety net, not a substitute for reviewing what you
   publish. It can produce false positives (for example code samples in
   documentation) and does not detect every kind of secret.
@@ -232,14 +297,14 @@ Run `npm run build` and commit `dist/` together with any change to `src/`.
 Structure of `src/`:
 
 - `cli/`: argument parsing (Zod) and command dispatch.
-- `commands/`: `init` (including the `gh` flow), `pull`, `push`, `status` and `resolve`.
-- `domain/`: pure functions (deny list, secret scanner, three-way file classification).
+- `commands/`: `init` (including the `gh` flow), `pull`, `push`, `status`, `resolve` and `check` (the hook command, with its remote probe in `check-remote.ts`).
+- `domain/`: pure functions (deny list, secret scanner, three-way file classification, and the `check` decision, message, throttle and hook JSON).
 - `agents/`: typed configuration for each agent, validated with Zod.
-- `infra/`: git (no shell), file system, sync state, conflict copies and input/output.
+- `infra/`: git (no shell, optional timeout), file system, sync state, `check` cache, conflict copies, time budget and input/output.
 
 ## Publishing
 
-This directory is developed inside the private `dotfiles` repository and is
+This directory is developed inside the private `madmax-config` repository and is
 published to `madmaxdios/sync-ai` (public) when you create a tag:
 
 ```bash

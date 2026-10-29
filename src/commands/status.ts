@@ -47,6 +47,18 @@ function printPlan(context: CommandContext, plan: SyncPlan): number {
   return toPush.length + toPull.length + conflicts.length + removed.length;
 }
 
+/** Items nobody listed are counted on one line; `--all` names them. */
+function printUnlisted(context: CommandContext, plan: SyncPlan): void {
+  const { unlisted } = plan;
+  if (unlisted.length === 0) return;
+  if (!context.all) {
+    context.io.info(`${unlisted.length} item${unlisted.length === 1 ? '' : 's'} not synced; run status --all to list them`);
+    return;
+  }
+  context.io.info('Not synced (list one with: add <skill|command|agent> <name>):');
+  for (const line of formatList('·', unlisted)) context.io.info(line);
+}
+
 export async function runStatus(context: CommandContext): Promise<ExitCode> {
   const { agent, io, repoDir } = context;
   await requireRepo(context);
@@ -68,12 +80,9 @@ export async function runStatus(context: CommandContext): Promise<ExitCode> {
   const snapshot = await readRepoSnapshot(context, comparisonRef(remote));
   const plan = await buildPlan(context, snapshot, loaded.state);
 
-  if (printPlan(context, plan) === 0) {
-    io.info('Local and repository: no differences.');
-    return ExitCode.Ok;
-  }
-  if (entriesIn(plan, FileState.Conflict).length > 0) {
-    io.info("Next step: run 'resolve' to review the conflicts.");
-  }
+  const differences = printPlan(context, plan);
+  if (differences === 0) io.info('Local and repository: no differences.');
+  else if (entriesIn(plan, FileState.Conflict).length > 0) io.info("Next step: run 'resolve' to review the conflicts.");
+  printUnlisted(context, plan);
   return ExitCode.Ok;
 }

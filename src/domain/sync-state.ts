@@ -1,10 +1,15 @@
 import { z } from 'zod';
 
+import { emptySelection, type Selection } from './sync-items';
+
 const bases = z.record(z.string(), z.string());
+
+const selectionSchema = z.object({ listed: z.array(z.string()), unlisted: z.array(z.string()) });
 
 const stateSchema = z.object({
   version: z.literal(1),
-  agents: z.record(z.string(), z.object({ bases })),
+  // `synced` was added later: states written before it are still valid and mean "no hand-made changes".
+  agents: z.record(z.string(), z.object({ bases, synced: selectionSchema.optional() })),
 });
 
 /**
@@ -45,5 +50,15 @@ export function setBase(
   const next = { ...basesOf(state, agent) };
   if (blob === undefined) delete next[rel];
   else next[rel] = blob;
-  return { ...state, agents: { ...state.agents, [agent]: { bases: next } } };
+  return { ...state, agents: { ...state.agents, [agent]: { ...state.agents[agent], bases: next } } };
+}
+
+export function selectionOf(state: SyncState, agent: string): Selection {
+  return state.agents[agent]?.synced ?? emptySelection();
+}
+
+export function withSelection(state: SyncState, agent: string, selection: Selection): SyncState {
+  const current = state.agents[agent];
+  const synced = { listed: [...selection.listed], unlisted: [...selection.unlisted] };
+  return { ...state, agents: { ...state.agents, [agent]: { bases: current?.bases ?? {}, synced } } };
 }

@@ -9,19 +9,44 @@ import type { CommandContext } from './context';
 import { agentRepoDir, listLocalFiles, requireRepo } from './local-tree';
 import { refreshRemote, requireReachable } from './remote-state';
 import { readRepoSnapshot } from './repo-snapshot';
-import { scanFilesForSecrets } from './scan-secrets';
+import { filesWithFindings, printFindings, scanFilesToPublish, type PathFinding } from './scan-secrets';
 import { buildPlan, entriesIn, recordInSyncBases, type PlanEntry, type SyncPlan } from './sync-plan';
 
 function rels(entries: readonly PlanEntry[]): string[] {
   return entries.map((entry) => entry.rel);
 }
 
-function printPushPreview(context: CommandContext, plan: SyncPlan): void {
+export interface PushOptions {
+  /** False for the automatic push: local deletions are only counted, never published. */
+  readonly allowDeletions: boolean;
+}
+
+export interface PushResult {
+  readonly code: ExitCode;
+  /** Files copied into the repository (and deleted from it) by this push. */
+  readonly published: readonly string[];
+  /** Local deletions that were not published (only when deletions are not allowed). */
+  readonly deletionsPending: number;
+  /** Short id of the commit the repository ends up at, when something was published. */
+  readonly commit: string | undefined;
+  /** What the scanner refused to publish (exit code 4). */
+  readonly findings: readonly PathFinding[];
+}
+
+function outcome(code: ExitCode, parts: Partial<Omit<PushResult, 'code'>> = {}): PushResult {
+  return { code, published: [], deletionsPending: 0, commit: undefined, findings: [], ...parts };
+}
+
+function plural(count: number, word: string): string {
+  return `${count} ${word}${count === 1 ? '' : 's'}`;
+}
+
+function printPushPreview(context: CommandContext, plan: SyncPlan, toDelete: readonly string[]): void {
   context.io.info('[dry-run] Changes that would be published (local → repository):');
   const lines = [
     ...formatList('+', rels(entriesIn(plan, FileState.NewLocal))),
     ...formatList('~', rels(entriesIn(plan, FileState.LocalChanged))),
-    ...formatList('-', rels(entriesIn(plan, FileState.LocalDeleted))),
+    ...formatList('-', toDelete),
   ];
   for (const line of lines) context.io.info(line);
   if (lines.length === 0) context.io.info('  (none)');
@@ -77,21 +102,15 @@ function refuseConflicts(context: CommandContext, conflicts: readonly PlanEntry[
   return ExitCode.Conflicts;
 }
 
-export async function runPush(context: CommandContext): Promise<ExitCode> {
+/** Publishes the listed local changes. A refused push returns its exit code instead of throwing. */
+export async function executePush(context: CommandContext, options: PushOptions): Promise<PushResult> {
   const { agent, io, repoGit, dataHome } = context;
   await requireRepo(context);
   if (!(await isDirectory(agent.home))) throw new AppError(`${agent.home} does not exist`);
 
-  const files = await listLocalFiles(context);
-  if (files.length === 0) {
+  const everyFile = await listLocalFiles(context);
+  if (everyFile.length === 0) {
     throw new AppError(`no files to sync in ${agent.home}`);
-  }
-
-  io.info(`Scanning ${files.length} file(s) for secrets...`);
-  if ((await scanFilesForSecrets(context, files)) > 0) {
-    io.warn('Push cancelled: possible secrets detected (their contents are not shown).');
-    io.warn('Remove them or move them out of the synced configuration, then try again.');
-    return ExitCode.SecretsDetected;
   }
 
   const remote = requireReachable(await refreshRemote(repoGit));
@@ -105,7 +124,7 @@ export async function runPush(context: CommandContext): Promise<ExitCode> {
   const plan = await buildPlan(context, await readRepoSnapshot(context, 'HEAD'), loaded.state);
 
   const conflicts = entriesIn(plan, FileState.Conflict);
-  if (conflicts.length > 0) return refuseConflicts(context, conflicts);
+  if (conflicts.length > 0) return outcome(refuseConflicts(context, conflicts));
 
   const stale = entriesIn(plan, FileState.RepoChanged);
   if (stale.length > 0) {
@@ -116,16 +135,33 @@ export async function runPush(context: CommandContext): Promise<ExitCode> {
   }
 
   const toCopy = rels(entriesIn(plan, FileState.LocalChanged, FileState.NewLocal));
-  const toDelete = rels(entriesIn(plan, FileState.LocalDeleted));
+  const allDeletions = rels(entriesIn(plan, FileState.LocalDeleted));
+  const toDelete = options.allowDeletions ? allDeletions : [];
+  const deletionsPending = options.allowDeletions ? 0 : allDeletions.length;
   const removedUpstream = entriesIn(plan, FileState.RepoDeleted);
   if (removedUpstream.length > 0) {
     io.info('Not re-publishing files that were removed from the repository (local copies kept):');
     for (const line of formatList('-', rels(removedUpstream))) io.info(line);
   }
+  if (plan.unlisted.length > 0) {
+    io.info(`${plural(plan.unlisted.length, 'item')} not synced and not published (see 'status --all'; list one with 'add').`);
+  }
+
+  io.info(`Scanning ${plural(toCopy.length, 'file')} for secrets, passwords and personal data...`);
+  const findings = await scanFilesToPublish(context, toCopy);
+  if (findings.length > 0) {
+    io.warn(
+      `Push cancelled: ${plural(filesWithFindings(findings), 'file')} may contain secrets, passwords or personal data ` +
+        '(the contents are not shown):',
+    );
+    printFindings(io, findings);
+    io.warn('Remove them, or add the marker sync-ai:allow to a line that is a harmless example, then try again.');
+    return outcome(ExitCode.SecretsDetected, { findings, deletionsPending });
+  }
 
   if (context.dryRun) {
-    printPushPreview(context, plan);
-    return ExitCode.Ok;
+    printPushPreview(context, plan, toDelete);
+    return outcome(ExitCode.Ok, { deletionsPending });
   }
 
   await applyToRepo(context, toCopy, toDelete);
@@ -135,7 +171,7 @@ export async function runPush(context: CommandContext): Promise<ExitCode> {
     if (remote.ahead === 0) {
       io.info('No changes to publish.');
       await refreshBases(context, loaded.state);
-      return ExitCode.Ok;
+      return outcome(ExitCode.Ok, { deletionsPending });
     }
     io.info(`No new changes; publishing ${remote.ahead} pending commit(s).`);
   } else {
@@ -146,6 +182,11 @@ export async function runPush(context: CommandContext): Promise<ExitCode> {
 
   await repoGit.must(['push', '--quiet', '-u', 'origin', 'HEAD']);
   await refreshBases(context, loaded.state);
+  const commit = (await repoGit.must(['rev-parse', '--short', 'HEAD'])).trim();
   io.info('Published.');
-  return ExitCode.Ok;
+  return outcome(ExitCode.Ok, { published: [...toCopy, ...toDelete], commit, deletionsPending });
+}
+
+export async function runPush(context: CommandContext): Promise<ExitCode> {
+  return (await executePush(context, { allowDeletions: true })).code;
 }

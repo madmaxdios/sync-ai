@@ -22,6 +22,17 @@ export interface RunOptions {
   readonly agent?: string;
   /** Environment overrides for the run (e.g. a fake `gh` on PATH). */
   readonly env?: Readonly<Record<string, string | undefined>>;
+  /** What the agent would write to a hook's stdin (defaults to nothing). */
+  readonly stdin?: string;
+  /** The clock of the run (defaults to the real one); lets tests move time forward. */
+  readonly now?: () => Date;
+  /** The OS user name the scanner keeps out of published files (defaults to a harmless one). */
+  readonly username?: string;
+}
+
+export interface BundleOptions {
+  readonly stdin?: string;
+  readonly env?: Readonly<Record<string, string | undefined>>;
 }
 
 export interface ExternalRunResult {
@@ -31,6 +42,14 @@ export interface ExternalRunResult {
 }
 
 export type Device = 'A' | 'B';
+
+export interface SandboxOptions {
+  /**
+   * Lists every skill, command and agent of the device right before each `push`, as if the user
+   * had added them all. Suites that are not about the opt-in list use it; the others leave it off.
+   */
+  readonly autoList?: boolean;
+}
 
 /**
  * Two fake devices (A and B) sharing one bare git repository. HOME and
@@ -42,7 +61,7 @@ export class Sandbox {
   readonly remote = path.join(this.root, 'remote.git');
   private readonly gitConfig = path.join(this.root, 'gitconfig');
 
-  constructor() {
+  constructor(private readonly options: SandboxOptions = {}) {
     fs.writeFileSync(this.gitConfig, '[init]\n\tdefaultBranch = main\n');
     this.git(['init', '-q', '--bare', this.remote]);
     for (const device of ['A', 'B'] as const) {
@@ -65,6 +84,30 @@ export class Sandbox {
 
   dataHome(device: Device): string {
     return path.join(this.root, `data${device}`);
+  }
+
+  /** A file of the device's data directory (state.json, check-cache.json...), or undefined. */
+  dataFile(device: Device, name: string): string | undefined {
+    const target = path.join(this.dataHome(device), name);
+    return fs.existsSync(target) ? fs.readFileSync(target, 'utf8') : undefined;
+  }
+
+  writeDataFile(device: Device, name: string, content: string): void {
+    fs.mkdirSync(this.dataHome(device), { recursive: true });
+    fs.writeFileSync(path.join(this.dataHome(device), name), content);
+  }
+
+  removeDataFile(device: Device, name: string): void {
+    fs.rmSync(path.join(this.dataHome(device), name), { force: true });
+  }
+
+  /** Makes the shared remote unreachable (as if the network were down) until restored. */
+  disconnectRemote(): void {
+    fs.renameSync(this.remote, `${this.remote}.offline`);
+  }
+
+  reconnectRemote(): void {
+    if (fs.existsSync(`${this.remote}.offline`)) fs.renameSync(`${this.remote}.offline`, this.remote);
   }
 
   write(device: Device, rel: string, content: string): void {
@@ -95,7 +138,30 @@ export class Sandbox {
       .map((name) => path.join(path.dirname(target), name));
   }
 
+  /** Lists the skill, command or agent that contains `rel` (what `add` does); other paths are ignored. */
+  async list(device: Device, rel: string): Promise<void> {
+    const [folder, unit] = rel.split('/');
+    const kind = folder === 'skills' ? 'skill' : folder === 'commands' ? 'command' : folder === 'agents' ? 'agent' : undefined;
+    if (kind === undefined || unit === undefined) return;
+    const name = kind === 'skill' ? unit : unit.replace(/\.md$/, '');
+    const result = await this.run(device, ['add', kind, name]);
+    if (result.code !== 0) throw new Error(`could not list ${rel}: ${result.stderr}`);
+  }
+
+  /** Lists every skill, command and agent that exists on the device. */
+  async listAll(device: Device): Promise<void> {
+    for (const folder of ['skills', 'commands', 'agents']) {
+      const dir = path.join(this.agentHome(device), folder);
+      if (!fs.existsSync(dir)) continue;
+      for (const unit of fs.readdirSync(dir)) {
+        if (unit === 'synced' || unit.includes('.backup-')) continue;
+        await this.list(device, `${folder}/${unit}`);
+      }
+    }
+  }
+
   async run(device: Device, args: readonly string[], options: RunOptions = {}): Promise<RunResult> {
+    if (this.options.autoList && args[0] === 'push') await this.listAll(device);
     const entries: { stream: 'out' | 'err'; text: string }[] = [];
     const questions: string[] = [];
     const io: Io = {
@@ -112,7 +178,9 @@ export class Sandbox {
       platform: process.platform,
       hostname: `device-${device}.local`,
       io,
-      now: () => new Date(),
+      now: options.now ?? (() => new Date()),
+      username: options.username ?? 'sandbox-user',
+      readStdin: () => Promise.resolve(options.stdin ?? ''),
     });
     const join = (stream?: 'out' | 'err'): string =>
       entries
@@ -124,15 +192,22 @@ export class Sandbox {
 
   /**
    * Runs a built bundle as a real external process (no shell) with the device's isolated
-   * environment. stdin is closed, so prompts behave like a non-interactive session.
+   * environment. stdin is closed after `options.stdin`, so prompts behave like a non-interactive session.
    */
-  runBundle(bundlePath: string, device: Device, args: readonly string[]): Promise<ExternalRunResult> {
+  runBundle(
+    bundlePath: string,
+    device: Device,
+    args: readonly string[],
+    options: BundleOptions = {},
+  ): Promise<ExternalRunResult> {
     return new Promise((resolve, reject) => {
       const child = spawn(process.execPath, [bundlePath, '--agent', 'claude', ...args], {
-        env: this.env(device),
-        stdio: ['ignore', 'pipe', 'pipe'],
+        env: { ...this.env(device), ...options.env },
+        stdio: ['pipe', 'pipe', 'pipe'],
         windowsHide: true,
       });
+      // stdin is always closed right away (empty unless given), like a non-interactive session.
+      child.stdin.end(options.stdin ?? '');
       let stdout = '';
       let stderr = '';
       child.stdout.setEncoding('utf8').on('data', (chunk: string) => (stdout += chunk));

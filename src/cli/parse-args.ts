@@ -8,9 +8,13 @@ export const cliOptionsSchema = z.object({
   dryRun: z.boolean(),
   command: z.string().optional(),
   argument: z.string().optional(),
+  argument2: z.string().optional(),
   name: z.string().optional(),
   resolution: resolutionSchema.optional(),
   editor: editorChoiceSchema.optional(),
+  hook: z.boolean(),
+  quiet: z.boolean(),
+  all: z.boolean(),
 });
 
 export type CliOptions = z.infer<typeof cliOptionsSchema>;
@@ -27,6 +31,9 @@ const RESOLUTION_FLAGS = new Map<string, Resolution>([
   ['--auto', 'auto'],
 ]);
 
+/** Commands that take two positional arguments after their name. */
+const TWO_ARGUMENT_COMMANDS = new Set(['add', 'remove']);
+
 const RESOLUTION_CHOICES = '--take-local, --take-repo, --auto or --editor';
 
 /** Parses arguments in order, like the original shell script. */
@@ -34,11 +41,13 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
   let agent = DEFAULT_AGENT;
   let assumeYes = false;
   let dryRun = false;
-  let command: string | undefined;
-  let argument: string | undefined;
+  const positional: string[] = [];
   let name: string | undefined;
   let resolution: Resolution | undefined;
   let editor: EditorChoice | undefined;
+  let hook = false;
+  let quiet = false;
+  let all = false;
 
   const choose = (value: Resolution): void => {
     if (resolution !== undefined && resolution !== value) {
@@ -96,20 +105,43 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
       dryRun = true;
       continue;
     }
+    if (arg === '--hook') {
+      hook = true;
+      continue;
+    }
+    if (arg === '--quiet') {
+      quiet = true;
+      continue;
+    }
+    if (arg === '--all') {
+      all = true;
+      continue;
+    }
     if (arg === '-h' || arg === '--help') return { kind: 'help' };
     if (arg.startsWith('-')) throw new UsageError(`unknown option: ${arg}`);
-
-    if (!command) {
-      command = arg;
-      continue;
-    }
-    if (!argument) {
-      argument = arg;
-      continue;
-    }
-    throw new UsageError(`unexpected argument: ${arg}`);
+    positional.push(arg);
   }
 
-  const options = cliOptionsSchema.parse({ agent, assumeYes, dryRun, command, argument, name, resolution, editor });
+  const [command, argument, argument2, ...extra] = positional;
+  const allowed = command !== undefined && TWO_ARGUMENT_COMMANDS.has(command) ? 2 : 1;
+  const surplus = positional.slice(1 + allowed);
+  if (surplus.length > 0 || (allowed === 1 && argument2 !== undefined)) {
+    throw new UsageError(`unexpected argument: ${allowed === 1 ? argument2 : extra[0]}`);
+  }
+
+  const options = cliOptionsSchema.parse({
+    agent,
+    assumeYes,
+    dryRun,
+    command,
+    argument,
+    argument2,
+    name,
+    resolution,
+    editor,
+    hook,
+    quiet,
+    all,
+  });
   return { kind: 'run', options };
 }
