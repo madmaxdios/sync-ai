@@ -7,7 +7,7 @@ describe('codex agent', () => {
     const config = resolveAgent('codex', { env: {}, homeDir: '/home/test' });
     expect(config.name).toBe('codex');
     expect(config.home).toBe(path.join('/home/test', '.codex'));
-    expect(config.allow).toEqual(['AGENTS.md', 'skills']);
+    expect(config.allow).toEqual(['AGENTS.md', 'skills', '.sync-ai-plugins.json']);
     expect(config.optIn).toEqual(['skills']);
     expect(config.deny).toEqual(expect.arrayContaining(['auth.json', 'config.toml', 'sessions', 'databases']));
   });

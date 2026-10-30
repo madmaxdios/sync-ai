@@ -5,7 +5,7 @@ export function buildCodexConfig({ env, homeDir }: AgentEnvironment): AgentConfi
   return {
     name: 'codex',
     home: env.CODEX_CONFIG_DIR || path.join(homeDir, '.codex'),
-    allow: ['AGENTS.md', 'skills'],
+    allow: ['AGENTS.md', 'skills', '.sync-ai-plugins.json'],
     optIn: ['skills'],
     deny: [
       'auth.json',

@@ -10,6 +10,7 @@ import { agentRepoDir, listLocalFiles, requireRepo } from './local-tree';
 import { refreshRemote, requireReachable } from './remote-state';
 import { readRepoSnapshot } from './repo-snapshot';
 import { filesWithFindings, printFindings, scanFilesToPublish, type PathFinding } from './scan-secrets';
+import { ensurePluginManifest } from './plugins';
 import { buildPlan, entriesIn, recordInSyncBases, type PlanEntry, type SyncPlan } from './sync-plan';
 
 function rels(entries: readonly PlanEntry[]): string[] {
@@ -107,6 +108,8 @@ export async function executePush(context: CommandContext, options: PushOptions)
   const { agent, io, repoGit, dataHome } = context;
   await requireRepo(context);
   if (!(await isDirectory(agent.home))) throw new AppError(`${agent.home} does not exist`);
+
+  await ensurePluginManifest(context);
 
   const everyFile = await listLocalFiles(context);
   if (everyFile.length === 0) {

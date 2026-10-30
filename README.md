@@ -32,13 +32,16 @@ For Codex, add this repository's `.agents/plugins/marketplace.json`, install
 
 ## Usage
 
-The plugin exposes three commands, all without arguments:
+The plugin exposes these commands:
 
 | Command | What it does |
 | --- | --- |
 | `/sync-ai:sync` | Runs the safe automatic sync flow |
 | `/sync-ai:status` | Shows local, remote and conflict changes |
 | `/sync-ai:resolve` | Lists open conflicts without overwriting files |
+| `/sync-ai:skill-add <text>` | Suggests the best existing skill for the text, asks which one to use, and then adds it |
+
+Codex also exposes the same workflow as `$skill-add <text>`.
 
 ## Updating
 
@@ -284,7 +287,7 @@ Run `npm run build` and commit `dist/` together with any change to `src/`.
 Structure of `src/`:
 
 - `cli/`: argument parsing (Zod) and command dispatch.
-- `commands/`: the core operations (`init`, `pull`, `push`, `status`, `resolve`) and `check` (the hook command, with its remote probe in `check-remote.ts`). Claude exposes them through the single `/sync-ai:sync` command.
+- `commands/`: the core operations (`init`, `pull`, `push`, `status`, `resolve`) and `check` (the hook command, with its remote probe in `check-remote.ts`). Claude also exposes the model-guided `/sync-ai:skill-add` command.
 - `domain/`: pure functions (deny list, secret scanner, three-way file classification, and the `check` decision, message, throttle and hook JSON).
 - `agents/`: typed configuration for each agent, validated with Zod.
 - `infra/`: git (no shell, optional timeout), file system, sync state, `check` cache, conflict copies, time budget and input/output.

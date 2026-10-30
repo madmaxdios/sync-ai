@@ -10,6 +10,7 @@ import { requireRepo } from './local-tree';
 import { refreshRemote, requireReachable } from './remote-state';
 import { readRepoSnapshot } from './repo-snapshot';
 import { buildPlan, entriesIn, recordInSyncBases, type PlanEntry, type SyncPlan } from './sync-plan';
+import { installPluginManifest } from './plugins';
 
 function rels(entries: readonly PlanEntry[]): string[] {
   return entries.map((entry) => entry.rel);
@@ -111,6 +112,7 @@ export async function runPull(context: CommandContext): Promise<ExitCode> {
   }
 
   await installFromSnapshot(context, snapshot, rels(toInstall));
+  if (!context.dryRun && !context.hook) await installPluginManifest(context);
 
   // --yes only ever settles conflicts, and always in favor of the repository.
   const settled: PlanEntry[] = [];

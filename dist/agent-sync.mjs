@@ -7,7 +7,7 @@ var __export = (target, all) => {
 
 // src/cli/run.ts
 import os from "node:os";
-import path14 from "node:path";
+import path15 from "node:path";
 
 // src/domain/app-error.ts
 var AppError = class extends Error {
@@ -842,10 +842,10 @@ function mergeDefs(...defs) {
 function cloneDef(schema) {
   return mergeDefs(schema._zod.def);
 }
-function getElementAtPath(obj, path15) {
-  if (!path15)
+function getElementAtPath(obj, path16) {
+  if (!path16)
     return obj;
-  return path15.reduce((acc, key) => acc?.[key], obj);
+  return path16.reduce((acc, key) => acc?.[key], obj);
 }
 function promiseAllObject(promisesObj) {
   const keys = Object.keys(promisesObj);
@@ -1185,11 +1185,11 @@ function explicitlyAborted(x, startIndex = 0) {
   }
   return false;
 }
-function prefixIssues(path15, issues) {
+function prefixIssues(path16, issues) {
   return issues.map((iss) => {
     var _a3;
     (_a3 = iss).path ?? (_a3.path = []);
-    iss.path.unshift(path15);
+    iss.path.unshift(path16);
     return iss;
   });
 }
@@ -1651,16 +1651,16 @@ function flattenError(error62, mapper = (issue2) => issue2.message) {
 }
 function formatError(error62, mapper = (issue2) => issue2.message) {
   const fieldErrors = { _errors: [] };
-  const processError = (error63, path15 = []) => {
+  const processError = (error63, path16 = []) => {
     for (const issue2 of error63.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
-        issue2.errors.map((issues) => processError({ issues }, [...path15, ...issue2.path]));
+        issue2.errors.map((issues) => processError({ issues }, [...path16, ...issue2.path]));
       } else if (issue2.code === "invalid_key") {
-        processError({ issues: issue2.issues }, [...path15, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path16, ...issue2.path]);
       } else if (issue2.code === "invalid_element") {
-        processError({ issues: issue2.issues }, [...path15, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path16, ...issue2.path]);
       } else {
-        const fullpath = [...path15, ...issue2.path];
+        const fullpath = [...path16, ...issue2.path];
         if (fullpath.length === 0) {
           fieldErrors._errors.push(mapper(issue2));
         } else {
@@ -1699,17 +1699,17 @@ function formatError(error62, mapper = (issue2) => issue2.message) {
 }
 function treeifyError(error62, mapper = (issue2) => issue2.message) {
   const result = { errors: [] };
-  const processError = (error63, path15 = []) => {
+  const processError = (error63, path16 = []) => {
     var _a3;
     for (const issue2 of error63.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
-        issue2.errors.map((issues) => processError({ issues }, [...path15, ...issue2.path]));
+        issue2.errors.map((issues) => processError({ issues }, [...path16, ...issue2.path]));
       } else if (issue2.code === "invalid_key") {
-        processError({ issues: issue2.issues }, [...path15, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path16, ...issue2.path]);
       } else if (issue2.code === "invalid_element") {
-        processError({ issues: issue2.issues }, [...path15, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path16, ...issue2.path]);
       } else {
-        const fullpath = [...path15, ...issue2.path];
+        const fullpath = [...path16, ...issue2.path];
         if (fullpath.length === 0) {
           result.errors.push(mapper(issue2));
           continue;
@@ -1748,8 +1748,8 @@ function treeifyError(error62, mapper = (issue2) => issue2.message) {
 }
 function toDotPath(_path) {
   const segs = [];
-  const path15 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
-  for (const seg of path15) {
+  const path16 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
+  for (const seg of path16) {
     if (typeof seg === "number")
       segs.push(`[${seg}]`);
     else if (typeof seg === "symbol")
@@ -18887,13 +18887,13 @@ function resolveRef(ref, ctx) {
   if (!ref.startsWith("#")) {
     throw new Error("External $ref is not supported, only local refs (#/...) are allowed");
   }
-  const path15 = ref.slice(1).split("/").filter(Boolean);
-  if (path15.length === 0) {
+  const path16 = ref.slice(1).split("/").filter(Boolean);
+  if (path16.length === 0) {
     return ctx.rootSchema;
   }
   const defsKey = ctx.version === "draft-2020-12" ? "$defs" : "definitions";
-  if (path15[0] === defsKey) {
-    const key = path15[1] === void 0 ? void 0 : decodeJSONPointerSegment(path15[1]);
+  if (path16[0] === defsKey) {
+    const key = path16[1] === void 0 ? void 0 : decodeJSONPointerSegment(path16[1]);
     if (!key || !ctx.defs[key]) {
       throw new Error(`Reference not found: ${ref}`);
     }
@@ -19758,7 +19758,7 @@ function buildClaudeConfig({ env, homeDir }) {
   return {
     name: "claude",
     home: env.CLAUDE_CONFIG_DIR || path.join(homeDir, ".claude"),
-    allow: ["CLAUDE.md", "skills", "commands", "agents"],
+    allow: ["CLAUDE.md", "skills", "commands", "agents", ".sync-ai-plugins.json"],
     // Only the skills, commands and agents the user lists are synced; CLAUDE.md always is.
     optIn: ["skills", "commands", "agents"],
     deny: [
@@ -19792,7 +19792,7 @@ function buildCodexConfig({ env, homeDir }) {
   return {
     name: "codex",
     home: env.CODEX_CONFIG_DIR || path2.join(homeDir, ".codex"),
-    allow: ["AGENTS.md", "skills"],
+    allow: ["AGENTS.md", "skills", ".sync-ai-plugins.json"],
     optIn: ["skills"],
     deny: [
       "auth.json",
@@ -19830,7 +19830,7 @@ function resolveAgent(name, environment) {
 }
 
 // src/commands/check.ts
-import path10 from "node:path";
+import path11 from "node:path";
 
 // src/domain/check-decision.ts
 function shouldAutoPull(facts) {
@@ -20277,7 +20277,7 @@ async function saveState(dataHome, state) {
 }
 
 // src/commands/auto-push.ts
-import fs8 from "node:fs/promises";
+import fs9 from "node:fs/promises";
 
 // src/domain/auto-push.ts
 var DEFAULT_QUIET_MINUTES = 5;
@@ -20404,9 +20404,9 @@ function parseTree(output2, prefix) {
     const tab = line.indexOf("	");
     if (tab < 0) continue;
     const [mode, type, sha] = line.slice(0, tab).split(" ");
-    const path15 = line.slice(tab + 1);
-    if (type !== "blob" || !sha || !path15.startsWith(prefix)) continue;
-    entries.set(path15.slice(prefix.length), { sha, executable: mode === "100755" });
+    const path16 = line.slice(tab + 1);
+    if (type !== "blob" || !sha || !path16.startsWith(prefix)) continue;
+    entries.set(path16.slice(prefix.length), { sha, executable: mode === "100755" });
   }
   return entries;
 }
@@ -20685,8 +20685,176 @@ function describeLocations(findings, limit = 3) {
   return places.length > limit ? `${shown}, ...` : shown;
 }
 
-// src/commands/sync-plan.ts
+// src/commands/plugins.ts
 import fs7 from "node:fs/promises";
+import path8 from "node:path";
+
+// src/infra/run-process.ts
+import { execFile, spawn } from "node:child_process";
+var MAX_OUTPUT_BYTES = 64 * 1024 * 1024;
+function runProcess(file2, args, env, options = {}) {
+  return new Promise((resolve) => {
+    execFile(
+      file2,
+      [...args],
+      {
+        env: { ...env },
+        encoding: "utf8",
+        maxBuffer: MAX_OUTPUT_BYTES,
+        windowsHide: true,
+        ...options.timeoutMs === void 0 ? {} : { timeout: options.timeoutMs }
+      },
+      (error62, stdout, stderr) => {
+        if (!error62) {
+          resolve({ code: 0, stdout, stderr });
+          return;
+        }
+        if (error62.code === "ENOENT") {
+          resolve(void 0);
+          return;
+        }
+        const code = typeof error62.code === "number" ? error62.code : 1;
+        resolve({ code, stdout, stderr: stderr || error62.message });
+      }
+    );
+  });
+}
+function runProcessBinary(file2, args, env) {
+  return new Promise((resolve) => {
+    execFile(
+      file2,
+      [...args],
+      { env: { ...env }, encoding: "buffer", maxBuffer: MAX_OUTPUT_BYTES, windowsHide: true },
+      (error62, stdout, stderr) => {
+        if (!error62) {
+          resolve({ code: 0, stdout, stderr: stderr.toString("utf8") });
+          return;
+        }
+        if (error62.code === "ENOENT") {
+          resolve(void 0);
+          return;
+        }
+        const code = typeof error62.code === "number" ? error62.code : 1;
+        resolve({ code, stdout, stderr: stderr.toString("utf8") || error62.message });
+      }
+    );
+  });
+}
+function runInteractive(file2, args, env) {
+  return new Promise((resolve) => {
+    const child = spawn(file2, [...args], { env: { ...env }, stdio: "inherit", windowsHide: false });
+    child.on("error", (error62) => {
+      resolve(error62.code === "ENOENT" ? void 0 : 1);
+    });
+    child.on("close", (code) => resolve(code ?? 1));
+  });
+}
+
+// src/commands/plugins.ts
+var MANIFEST = ".sync-ai-plugins.json";
+var PLUGIN_ID = /^[a-z0-9][a-z0-9._-]*@[a-z0-9][a-z0-9._-]*$/i;
+function manifestPath(context) {
+  return path8.join(context.agent.home, MANIFEST);
+}
+async function readJson(file2) {
+  try {
+    const value = JSON.parse(await fs7.readFile(file2, "utf8"));
+    return value !== null && typeof value === "object" ? value : void 0;
+  } catch {
+    return void 0;
+  }
+}
+function sourceFromMarketplace(value) {
+  if (!value || typeof value !== "object") return void 0;
+  const source = value.source;
+  if (!source || typeof source !== "object") return void 0;
+  const record2 = source;
+  if (typeof record2.repo === "string") return record2.repo;
+  if (typeof record2.url === "string") return record2.url;
+  if (typeof record2.source === "string") return record2.source;
+  return void 0;
+}
+function pluginSpec(id, source) {
+  return source === void 0 ? { id } : { id, source };
+}
+async function installedPlugins(context) {
+  if (context.agent.name === "claude") {
+    const registry2 = await readJson(path8.join(context.agent.home, "plugins", "installed_plugins.json"));
+    const marketplaces = await readJson(path8.join(context.agent.home, "plugins", "known_marketplaces.json"));
+    const plugins = registry2?.plugins;
+    if (!plugins || typeof plugins !== "object") return [];
+    return Object.keys(plugins).filter((id) => PLUGIN_ID.test(id)).map((id) => pluginSpec(id, sourceFromMarketplace(marketplaces?.[id.split("@")[1] ?? ""])));
+  }
+  if (context.agent.name === "codex") {
+    try {
+      const config2 = await fs7.readFile(path8.join(context.agent.home, "config.toml"), "utf8");
+      return [...config2.matchAll(/^\[plugins\."([^"]+)"\]/gm)].map((match) => match[1]).filter((id) => Boolean(id && PLUGIN_ID.test(id))).map((id) => ({ id }));
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+async function readManifest(context) {
+  const value = await readJson(manifestPath(context));
+  const plugins = Array.isArray(value?.plugins) ? value.plugins : [];
+  const valid = [];
+  for (const plugin of plugins) {
+    if (plugin === null || typeof plugin !== "object") continue;
+    const record2 = plugin;
+    if (typeof record2.id !== "string" || !PLUGIN_ID.test(record2.id)) continue;
+    valid.push(pluginSpec(record2.id, typeof record2.source === "string" ? record2.source : void 0));
+  }
+  return { version: 1, plugins: valid };
+}
+function mergePlugins(...groups) {
+  const merged = /* @__PURE__ */ new Map();
+  for (const group of groups) {
+    for (const plugin of group) {
+      const previous = merged.get(plugin.id);
+      merged.set(plugin.id, pluginSpec(plugin.id, plugin.source ?? previous?.source));
+    }
+  }
+  return [...merged.values()].sort((left, right) => left.id.localeCompare(right.id));
+}
+async function ensurePluginManifest(context) {
+  const current = await readManifest(context);
+  const discovered = await installedPlugins(context);
+  const plugins = mergePlugins(current.plugins, discovered);
+  if (plugins.length === 0 && current.plugins.length === 0) return;
+  const next = JSON.stringify({ version: 1, plugins }, null, 2) + "\n";
+  let previous = "";
+  try {
+    previous = await fs7.readFile(manifestPath(context), "utf8");
+  } catch {
+  }
+  if (previous !== next) {
+    await fs7.writeFile(manifestPath(context), next, "utf8");
+    context.io.info(`Plugin manifest updated: ${plugins.length} plugin${plugins.length === 1 ? "" : "s"}.`);
+  }
+}
+async function installPluginManifest(context) {
+  const manifest = await readManifest(context);
+  if (manifest.plugins.length === 0) return;
+  const installed = new Set((await installedPlugins(context)).map((plugin) => plugin.id));
+  for (const plugin of manifest.plugins) {
+    if (installed.has(plugin.id)) continue;
+    const [marketplace] = plugin.id.split("@").slice(1);
+    if (plugin.source) {
+      const addMarketplace = context.agent.name === "claude" ? await runProcess("claude", ["plugin", "marketplace", "add", plugin.source], context.env, { timeoutMs: 12e4 }) : await runProcess("codex", ["plugin", "marketplace", "add", plugin.source], context.env, { timeoutMs: 12e4 });
+      if (addMarketplace === void 0 || addMarketplace.code !== 0) {
+        context.io.warn(`Could not add marketplace for ${plugin.id}${marketplace ? ` (${marketplace})` : ""}.`);
+        continue;
+      }
+    }
+    const result = context.agent.name === "claude" ? await runProcess("claude", ["plugin", "install", plugin.id, "--yes"], context.env, { timeoutMs: 12e4 }) : await runProcess("codex", ["plugin", "add", plugin.id], context.env, { timeoutMs: 12e4 });
+    if (result?.code === 0) context.io.info(`Installed plugin: ${plugin.id}`);
+    else context.io.warn(`Could not install plugin: ${plugin.id}`);
+  }
+}
+
+// src/commands/sync-plan.ts
+import fs8 from "node:fs/promises";
 
 // src/domain/classify-file.ts
 function same(a, b) {
@@ -20723,7 +20891,7 @@ function entriesIn(plan, ...states) {
   return plan.entries.filter((entry) => states.includes(entry.state));
 }
 async function readLocal(context, rel) {
-  return fs7.readFile(toNativePath(context.agent.home, rel));
+  return fs8.readFile(toNativePath(context.agent.home, rel));
 }
 async function buildPlan(context, snapshot, state) {
   const bases2 = basesOf(state, context.agent.name);
@@ -20822,6 +20990,7 @@ async function executePush(context, options) {
   const { agent, io, repoGit, dataHome } = context;
   await requireRepo(context);
   if (!await isDirectory(agent.home)) throw new AppError(`${agent.home} does not exist`);
+  await ensurePluginManifest(context);
   const everyFile = await listLocalFiles(context);
   if (everyFile.length === 0) {
     throw new AppError(`no files to sync in ${agent.home}`);
@@ -20902,7 +21071,7 @@ async function ageOfFiles(context, rels4) {
   const files = [];
   for (const rel of rels4) {
     try {
-      const { mtimeMs } = await fs8.stat(toNativePath(context.agent.home, rel));
+      const { mtimeMs } = await fs9.stat(toNativePath(context.agent.home, rel));
       files.push({ rel, ageMinutes: Math.max(0, (now - mtimeMs) / MINUTE2) });
     } catch {
       files.push({ rel, ageMinutes: 0 });
@@ -21000,8 +21169,8 @@ async function countAhead(git, branch) {
 }
 
 // src/commands/apply-repo.ts
-import fs9 from "node:fs/promises";
-import path8 from "node:path";
+import fs10 from "node:fs/promises";
+import path9 from "node:path";
 async function backUp(context, destination) {
   if (!await pathExists(destination)) return;
   await copyPreserving(destination, `${destination}.backup-${formatStamp(context.now())}`);
@@ -21014,8 +21183,8 @@ async function installFromSnapshot(context, snapshot, rels4) {
     if (!content) throw new AppError(`the repository object for ${rel} is missing from the clone`);
     const destination = toNativePath(context.agent.home, rel);
     await backUp(context, destination);
-    await fs9.mkdir(path8.dirname(destination), { recursive: true });
-    await fs9.writeFile(destination, content, { mode: snapshot.executable.has(rel) ? 493 : 420 });
+    await fs10.mkdir(path9.dirname(destination), { recursive: true });
+    await fs10.writeFile(destination, content, { mode: snapshot.executable.has(rel) ? 493 : 420 });
   }
 }
 async function removeLocalWithBackup(context, rel) {
@@ -21025,8 +21194,8 @@ async function removeLocalWithBackup(context, rel) {
 }
 
 // src/infra/conflict-store.ts
-import fs10 from "node:fs/promises";
-import path9 from "node:path";
+import fs11 from "node:fs/promises";
+import path10 from "node:path";
 var MANIFEST_FILE = "manifest.json";
 var manifestSchema = external_exports.object({
   version: external_exports.literal(1),
@@ -21049,19 +21218,19 @@ var ConflictStore = class {
   dataHome;
   agent;
   get directory() {
-    return path9.join(this.dataHome, "conflicts", this.agent);
+    return path10.join(this.dataHome, "conflicts", this.agent);
   }
   copyPath(rel, side) {
     const target = toNativePath(this.directory, `${rel}.${side}`);
-    const relative = path9.relative(this.directory, target);
-    if (relative.startsWith("..") || path9.isAbsolute(relative)) {
+    const relative = path10.relative(this.directory, target);
+    if (relative.startsWith("..") || path10.isAbsolute(relative)) {
       throw new AppError(`refusing to store a conflict copy outside ${this.directory}: ${rel}`);
     }
     return target;
   }
   async load() {
     try {
-      const content = await fs10.readFile(path9.join(this.directory, MANIFEST_FILE), "utf8");
+      const content = await fs11.readFile(path10.join(this.directory, MANIFEST_FILE), "utf8");
       const parsed = manifestSchema.safeParse(JSON.parse(content));
       if (parsed.success) return parsed.data;
     } catch {
@@ -21077,8 +21246,8 @@ var ConflictStore = class {
         await removeFile(target);
         continue;
       }
-      await fs10.mkdir(path9.dirname(target), { recursive: true });
-      await fs10.writeFile(target, content);
+      await fs11.mkdir(path10.dirname(target), { recursive: true });
+      await fs11.writeFile(target, content);
     }
     return {
       hasLocal: contents.local !== void 0,
@@ -21088,9 +21257,9 @@ var ConflictStore = class {
     };
   }
   async save(manifest) {
-    await fs10.mkdir(this.directory, { recursive: true });
-    await fs10.writeFile(
-      path9.join(this.directory, MANIFEST_FILE),
+    await fs11.mkdir(this.directory, { recursive: true });
+    await fs11.writeFile(
+      path10.join(this.directory, MANIFEST_FILE),
       `${JSON.stringify(manifest, null, 2)}
 `
     );
@@ -21102,8 +21271,8 @@ var ConflictStore = class {
   }
 };
 async function pruneEmptyDirsKeepingRoot(root) {
-  for (const entry of await fs10.readdir(root, { withFileTypes: true })) {
-    if (entry.isDirectory()) await pruneEmptyDirs(path9.join(root, entry.name));
+  for (const entry of await fs11.readdir(root, { withFileTypes: true })) {
+    if (entry.isDirectory()) await pruneEmptyDirs(path10.join(root, entry.name));
   }
 }
 
@@ -21214,6 +21383,7 @@ async function runPull(context) {
     return conflicts.length > 0 ? 5 /* Conflicts */ : 0 /* Ok */;
   }
   await installFromSnapshot(context, snapshot, rels2(toInstall));
+  if (!context.dryRun && !context.hook) await installPluginManifest(context);
   const settled = [];
   if (context.assumeYes) {
     for (const entry of conflicts) {
@@ -21309,7 +21479,7 @@ async function check2(context) {
   const { agent, dataHome, repoGit } = context;
   const manual = !context.hook;
   const input2 = manual ? manualInput() : parseHookInput(await context.readStdin());
-  if (!await isDirectory(path10.join(context.repoDir, ".git"))) return;
+  if (!await isDirectory(path11.join(context.repoDir, ".git"))) return;
   const probeDeadline = startDeadline(CHECK_BUDGET_MS);
   const overallDeadline = startDeadline(OVERALL_BUDGET_MS);
   const now = context.now();
@@ -21430,10 +21600,10 @@ function runRemove(context) {
 }
 
 // src/commands/init.ts
-import path12 from "node:path";
+import path13 from "node:path";
 
 // src/commands/clone-repo.ts
-import fs11 from "node:fs/promises";
+import fs12 from "node:fs/promises";
 
 // src/domain/github-repo.ts
 var GH_CREDENTIAL_HELPER = "!gh auth git-credential";
@@ -21464,7 +21634,7 @@ function isRepoNotFound(stderr) {
 // src/commands/clone-repo.ts
 async function cloneRepository(context, url2, options = {}) {
   const { git, repoGit, repoDir, dataHome } = context;
-  await fs11.mkdir(dataHome, { recursive: true });
+  await fs12.mkdir(dataHome, { recursive: true });
   if (!options.withGhCredentials) {
     await git.must(["clone", "--quiet", "--", url2, repoDir]);
     return;
@@ -21485,7 +21655,7 @@ async function cloneRepository(context, url2, options = {}) {
 }
 
 // src/commands/init-with-github.ts
-import path11 from "node:path";
+import path12 from "node:path";
 
 // src/domain/repo-name.ts
 var DEFAULT_REPO_NAME = "sync-ai-data";
@@ -21557,7 +21727,7 @@ async function requireAuthenticatedLogin(gh) {
 }
 async function reportExistingClone(context) {
   const { repoDir, repoGit, io } = context;
-  if (!await isDirectory(path11.join(repoDir, ".git"))) return false;
+  if (!await isDirectory(path12.join(repoDir, ".git"))) return false;
   const origin = await repoGit.run(["remote", "get-url", "origin"]);
   const where = origin.code === 0 ? ` (origin: ${origin.stdout.trim()})` : "";
   io.info(`Already initialized: ${repoDir}${where}`);
@@ -21616,7 +21786,7 @@ async function runInit(context) {
   if (context.repoName !== void 0) {
     throw new UsageError("--name only applies when init is run without a URL");
   }
-  if (await isDirectory(path12.join(repoDir, ".git"))) {
+  if (await isDirectory(path13.join(repoDir, ".git"))) {
     const existing = await repoGit.run(["remote", "get-url", "origin"]);
     const current = existing.code === 0 ? existing.stdout.trim() : "";
     if (current === url2) {
@@ -21638,7 +21808,7 @@ async function runInit(context) {
 }
 
 // src/commands/resolve.ts
-import fs12 from "node:fs/promises";
+import fs13 from "node:fs/promises";
 
 // src/domain/editor-command.ts
 function editorArguments(editor, files) {
@@ -21648,67 +21818,6 @@ function editorArguments(editor, files) {
 var CMD_METACHARACTERS = /[&|<>^%!"]/;
 function isSafeForCmd(args) {
   return args.every((arg) => !CMD_METACHARACTERS.test(arg));
-}
-
-// src/infra/run-process.ts
-import { execFile, spawn } from "node:child_process";
-var MAX_OUTPUT_BYTES = 64 * 1024 * 1024;
-function runProcess(file2, args, env, options = {}) {
-  return new Promise((resolve) => {
-    execFile(
-      file2,
-      [...args],
-      {
-        env: { ...env },
-        encoding: "utf8",
-        maxBuffer: MAX_OUTPUT_BYTES,
-        windowsHide: true,
-        ...options.timeoutMs === void 0 ? {} : { timeout: options.timeoutMs }
-      },
-      (error62, stdout, stderr) => {
-        if (!error62) {
-          resolve({ code: 0, stdout, stderr });
-          return;
-        }
-        if (error62.code === "ENOENT") {
-          resolve(void 0);
-          return;
-        }
-        const code = typeof error62.code === "number" ? error62.code : 1;
-        resolve({ code, stdout, stderr: stderr || error62.message });
-      }
-    );
-  });
-}
-function runProcessBinary(file2, args, env) {
-  return new Promise((resolve) => {
-    execFile(
-      file2,
-      [...args],
-      { env: { ...env }, encoding: "buffer", maxBuffer: MAX_OUTPUT_BYTES, windowsHide: true },
-      (error62, stdout, stderr) => {
-        if (!error62) {
-          resolve({ code: 0, stdout, stderr: stderr.toString("utf8") });
-          return;
-        }
-        if (error62.code === "ENOENT") {
-          resolve(void 0);
-          return;
-        }
-        const code = typeof error62.code === "number" ? error62.code : 1;
-        resolve({ code, stdout, stderr: stderr.toString("utf8") || error62.message });
-      }
-    );
-  });
-}
-function runInteractive(file2, args, env) {
-  return new Promise((resolve) => {
-    const child = spawn(file2, [...args], { env: { ...env }, stdio: "inherit", windowsHide: false });
-    child.on("error", (error62) => {
-      resolve(error62.code === "ENOENT" ? void 0 : 1);
-    });
-    child.on("close", (code) => resolve(code ?? 1));
-  });
 }
 
 // src/commands/resolve-editor.ts
@@ -21777,7 +21886,7 @@ async function listConflicts(context) {
 }
 async function readVersions(context, snapshot, rel) {
   const localPath = toNativePath(context.agent.home, rel);
-  const local = await pathExists(localPath) ? await fs12.readFile(localPath) : void 0;
+  const local = await pathExists(localPath) ? await fs13.readFile(localPath) : void 0;
   const repoBlob = snapshot.blobs.get(rel);
   const repo = repoBlob ? await snapshot.read(repoBlob) : void 0;
   const { state } = await loadState(context.dataHome);
@@ -21844,7 +21953,7 @@ async function autoMerge(context, rel, snapshot, versions) {
     return 5 /* Conflicts */;
   }
   await backUpLocal(context, rel);
-  await fs12.writeFile(toNativePath(context.agent.home, rel), merge2.stdout);
+  await fs13.writeFile(toNativePath(context.agent.home, rel), merge2.stdout);
   await settle2(context, rel, snapshot.blobs.get(rel));
   context.io.info(`Merged ${rel} automatically. Review it, then run 'push' to publish the result.`);
   return 0 /* Ok */;
@@ -21993,14 +22102,14 @@ async function runStatus(context) {
 }
 
 // src/infra/data-home.ts
-import path13 from "node:path";
+import path14 from "node:path";
 function resolveDataHome(env, homeDir, platform) {
   if (env.AGENT_SYNC_HOME) return env.AGENT_SYNC_HOME;
   if (platform === "win32") {
-    const localAppData = env.LOCALAPPDATA || path13.join(homeDir, "AppData", "Local");
-    return path13.join(localAppData, "agent-sync");
+    const localAppData = env.LOCALAPPDATA || path14.join(homeDir, "AppData", "Local");
+    return path14.join(localAppData, "agent-sync");
   }
-  return path13.join(homeDir, ".local", "share", "agent-sync");
+  return path14.join(homeDir, ".local", "share", "agent-sync");
 }
 
 // src/infra/gh.ts
@@ -22318,7 +22427,7 @@ async function execute(argv, runtime) {
   const command = commandNameSchema.safeParse(options.command);
   if (!command.success) throw new UsageError(`unknown command: ${options.command}`);
   const dataHome = resolveDataHome(runtime.env, runtime.homeDir, runtime.platform);
-  const repoDir = path14.join(dataHome, "repo");
+  const repoDir = path15.join(dataHome, "repo");
   const git = new Git(runtime.env);
   return COMMANDS[command.data]({
     agent,
