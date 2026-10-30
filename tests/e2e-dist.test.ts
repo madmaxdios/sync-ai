@@ -19,7 +19,7 @@ describe('built bundle between two devices', () => {
 
   beforeAll(() => {
     if (!fs.existsSync(bundle)) {
-      throw new Error(`Missing ${bundle}. Run "npm run build" in sync/ before the tests.`);
+      throw new Error(`Missing ${bundle}. Run "npm run build" in sync-ai/ before the tests.`);
     }
   });
   afterAll(() => sandbox.cleanup());

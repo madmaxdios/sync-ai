@@ -7,7 +7,7 @@ var __export = (target, all) => {
 
 // src/cli/run.ts
 import os from "node:os";
-import path15 from "node:path";
+import path16 from "node:path";
 
 // src/domain/app-error.ts
 var AppError = class extends Error {
@@ -842,10 +842,10 @@ function mergeDefs(...defs) {
 function cloneDef(schema) {
   return mergeDefs(schema._zod.def);
 }
-function getElementAtPath(obj, path16) {
-  if (!path16)
+function getElementAtPath(obj, path17) {
+  if (!path17)
     return obj;
-  return path16.reduce((acc, key) => acc?.[key], obj);
+  return path17.reduce((acc, key) => acc?.[key], obj);
 }
 function promiseAllObject(promisesObj) {
   const keys = Object.keys(promisesObj);
@@ -1185,11 +1185,11 @@ function explicitlyAborted(x, startIndex = 0) {
   }
   return false;
 }
-function prefixIssues(path16, issues) {
+function prefixIssues(path17, issues) {
   return issues.map((iss) => {
     var _a3;
     (_a3 = iss).path ?? (_a3.path = []);
-    iss.path.unshift(path16);
+    iss.path.unshift(path17);
     return iss;
   });
 }
@@ -1651,16 +1651,16 @@ function flattenError(error62, mapper = (issue2) => issue2.message) {
 }
 function formatError(error62, mapper = (issue2) => issue2.message) {
   const fieldErrors = { _errors: [] };
-  const processError = (error63, path16 = []) => {
+  const processError = (error63, path17 = []) => {
     for (const issue2 of error63.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
-        issue2.errors.map((issues) => processError({ issues }, [...path16, ...issue2.path]));
+        issue2.errors.map((issues) => processError({ issues }, [...path17, ...issue2.path]));
       } else if (issue2.code === "invalid_key") {
-        processError({ issues: issue2.issues }, [...path16, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path17, ...issue2.path]);
       } else if (issue2.code === "invalid_element") {
-        processError({ issues: issue2.issues }, [...path16, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path17, ...issue2.path]);
       } else {
-        const fullpath = [...path16, ...issue2.path];
+        const fullpath = [...path17, ...issue2.path];
         if (fullpath.length === 0) {
           fieldErrors._errors.push(mapper(issue2));
         } else {
@@ -1699,17 +1699,17 @@ function formatError(error62, mapper = (issue2) => issue2.message) {
 }
 function treeifyError(error62, mapper = (issue2) => issue2.message) {
   const result = { errors: [] };
-  const processError = (error63, path16 = []) => {
+  const processError = (error63, path17 = []) => {
     var _a3;
     for (const issue2 of error63.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
-        issue2.errors.map((issues) => processError({ issues }, [...path16, ...issue2.path]));
+        issue2.errors.map((issues) => processError({ issues }, [...path17, ...issue2.path]));
       } else if (issue2.code === "invalid_key") {
-        processError({ issues: issue2.issues }, [...path16, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path17, ...issue2.path]);
       } else if (issue2.code === "invalid_element") {
-        processError({ issues: issue2.issues }, [...path16, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path17, ...issue2.path]);
       } else {
-        const fullpath = [...path16, ...issue2.path];
+        const fullpath = [...path17, ...issue2.path];
         if (fullpath.length === 0) {
           result.errors.push(mapper(issue2));
           continue;
@@ -1748,8 +1748,8 @@ function treeifyError(error62, mapper = (issue2) => issue2.message) {
 }
 function toDotPath(_path) {
   const segs = [];
-  const path16 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
-  for (const seg of path16) {
+  const path17 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
+  for (const seg of path17) {
     if (typeof seg === "number")
       segs.push(`[${seg}]`);
     else if (typeof seg === "symbol")
@@ -18887,13 +18887,13 @@ function resolveRef(ref, ctx) {
   if (!ref.startsWith("#")) {
     throw new Error("External $ref is not supported, only local refs (#/...) are allowed");
   }
-  const path16 = ref.slice(1).split("/").filter(Boolean);
-  if (path16.length === 0) {
+  const path17 = ref.slice(1).split("/").filter(Boolean);
+  if (path17.length === 0) {
     return ctx.rootSchema;
   }
   const defsKey = ctx.version === "draft-2020-12" ? "$defs" : "definitions";
-  if (path16[0] === defsKey) {
-    const key = path16[1] === void 0 ? void 0 : decodeJSONPointerSegment(path16[1]);
+  if (path17[0] === defsKey) {
+    const key = path17[1] === void 0 ? void 0 : decodeJSONPointerSegment(path17[1]);
     if (!key || !ctx.defs[key]) {
       throw new Error(`Reference not found: ${ref}`);
     }
@@ -19815,10 +19815,39 @@ function buildCodexConfig({ env, homeDir }) {
   };
 }
 
+// src/agents/opencode.ts
+import path3 from "node:path";
+function buildOpenCodeConfig({ env, homeDir }) {
+  return {
+    name: "opencode",
+    home: env.OPENCODE_CONFIG_DIR || path3.join(homeDir, ".config", "opencode"),
+    allow: ["AGENTS.md", "skills", "commands", "agents", "instructions", ".sync-ai-plugins.json"],
+    optIn: ["skills", "commands", "agents", "instructions"],
+    deny: [
+      "auth.json",
+      "node_modules",
+      "plugins",
+      "package-lock.json",
+      "opencode.json",
+      "opencode.jsonc",
+      "*.db",
+      "*.db-shm",
+      "*.db-wal",
+      "*.backup-*",
+      "*.bak",
+      "*.bak-*",
+      "*.tmp",
+      ".git",
+      ".DS_Store"
+    ]
+  };
+}
+
 // src/agents/registry.ts
 var AGENT_BUILDERS = /* @__PURE__ */ new Map([
   ["claude", buildClaudeConfig],
-  ["codex", buildCodexConfig]
+  ["codex", buildCodexConfig],
+  ["opencode", buildOpenCodeConfig]
 ]);
 function resolveAgent(name, environment) {
   if (!AGENT_NAME_PATTERN.test(name)) throw new AppError(`invalid agent name: ${name}`);
@@ -19830,7 +19859,7 @@ function resolveAgent(name, environment) {
 }
 
 // src/commands/check.ts
-import path11 from "node:path";
+import path12 from "node:path";
 
 // src/domain/check-decision.ts
 function shouldAutoPull(facts) {
@@ -20148,11 +20177,11 @@ function withSelection(state, agent, selection) {
 
 // src/infra/check-cache-store.ts
 import fs from "node:fs/promises";
-import path3 from "node:path";
+import path4 from "node:path";
 var CACHE_FILE = "check-cache.json";
 async function loadCheckCache(dataHome) {
   try {
-    const content = await fs.readFile(path3.join(dataHome, CACHE_FILE), "utf8");
+    const content = await fs.readFile(path4.join(dataHome, CACHE_FILE), "utf8");
     return parseCache(content) ?? emptyCache();
   } catch {
     return emptyCache();
@@ -20160,7 +20189,7 @@ async function loadCheckCache(dataHome) {
 }
 async function saveCheckCache(dataHome, cache) {
   await fs.mkdir(dataHome, { recursive: true });
-  const target = path3.join(dataHome, CACHE_FILE);
+  const target = path4.join(dataHome, CACHE_FILE);
   const temporary = `${target}.tmp`;
   await fs.writeFile(temporary, serializeCache(cache));
   await fs.rename(temporary, target);
@@ -20174,9 +20203,9 @@ function startDeadline(budgetMs) {
 
 // src/infra/file-system.ts
 import fs2 from "node:fs/promises";
-import path4 from "node:path";
+import path5 from "node:path";
 function toNativePath(base, rel) {
-  return path4.join(base, ...rel.split("/"));
+  return path5.join(base, ...rel.split("/"));
 }
 async function pathExists(target) {
   try {
@@ -20194,7 +20223,7 @@ async function isDirectory(target) {
   }
 }
 async function copyPreserving(source, destination) {
-  await fs2.mkdir(path4.dirname(destination), { recursive: true });
+  await fs2.mkdir(path5.dirname(destination), { recursive: true });
   await fs2.copyFile(source, destination);
   const stats = await fs2.stat(source);
   await fs2.utimes(destination, stats.atime, stats.mtime);
@@ -20210,7 +20239,7 @@ async function pruneEmptyDirs(root) {
     return;
   }
   for (const entry of entries) {
-    if (entry.isDirectory()) await pruneEmptyDirs(path4.join(root, entry.name));
+    if (entry.isDirectory()) await pruneEmptyDirs(path5.join(root, entry.name));
   }
   if ((await fs2.readdir(root)).length === 0) await fs2.rmdir(root);
 }
@@ -20256,12 +20285,12 @@ function createConsoleIo(isAnswer) {
 
 // src/infra/state-store.ts
 import fs3 from "node:fs/promises";
-import path5 from "node:path";
+import path6 from "node:path";
 var STATE_FILE = "state.json";
 async function loadState(dataHome) {
   let content;
   try {
-    content = await fs3.readFile(path5.join(dataHome, STATE_FILE), "utf8");
+    content = await fs3.readFile(path6.join(dataHome, STATE_FILE), "utf8");
   } catch {
     return { state: emptyState(), invalid: false };
   }
@@ -20270,7 +20299,7 @@ async function loadState(dataHome) {
 }
 async function saveState(dataHome, state) {
   await fs3.mkdir(dataHome, { recursive: true });
-  const target = path5.join(dataHome, STATE_FILE);
+  const target = path6.join(dataHome, STATE_FILE);
   const temporary = `${target}.tmp`;
   await fs3.writeFile(temporary, serializeState(state));
   await fs3.rename(temporary, target);
@@ -20301,7 +20330,7 @@ function decideAutoPush(facts) {
 }
 
 // src/commands/local-tree.ts
-import path6 from "node:path";
+import path7 from "node:path";
 
 // src/domain/path-filter.ts
 var REGEXP_SPECIALS = /[.+^${}()|[\]\\]/g;
@@ -20348,7 +20377,7 @@ async function listTree(base, allow, isDenied) {
 
 // src/commands/local-tree.ts
 function agentRepoDir(context) {
-  return path6.join(context.repoDir, context.agent.name);
+  return path7.join(context.repoDir, context.agent.name);
 }
 function listLocalFiles(context) {
   const { home, allow, deny } = context.agent;
@@ -20359,7 +20388,7 @@ function listRepoFiles(context) {
   return listTree(agentRepoDir(context), allow, createDenyMatcher(deny));
 }
 async function requireRepo(context) {
-  if (await isDirectory(path6.join(context.repoDir, ".git"))) return;
+  if (await isDirectory(path7.join(context.repoDir, ".git"))) return;
   throw new AppError(
     `no repository initialized at ${context.repoDir}. Run first: init [repo-url]`
   );
@@ -20404,9 +20433,9 @@ function parseTree(output2, prefix) {
     const tab = line.indexOf("	");
     if (tab < 0) continue;
     const [mode, type, sha] = line.slice(0, tab).split(" ");
-    const path16 = line.slice(tab + 1);
-    if (type !== "blob" || !sha || !path16.startsWith(prefix)) continue;
-    entries.set(path16.slice(prefix.length), { sha, executable: mode === "100755" });
+    const path17 = line.slice(tab + 1);
+    if (type !== "blob" || !sha || !path17.startsWith(prefix)) continue;
+    entries.set(path17.slice(prefix.length), { sha, executable: mode === "100755" });
   }
   return entries;
 }
@@ -20646,11 +20675,11 @@ function scanText(content, options = {}) {
 
 // src/infra/scan-words.ts
 import fs5 from "node:fs/promises";
-import path7 from "node:path";
+import path8 from "node:path";
 var SCAN_WORDS_FILE = "scan-words.txt";
 async function loadScanWords(dataHome) {
   try {
-    const content = await fs5.readFile(path7.join(dataHome, SCAN_WORDS_FILE), "utf8");
+    const content = await fs5.readFile(path8.join(dataHome, SCAN_WORDS_FILE), "utf8");
     return content.split(/\r?\n/).map((line) => line.trim()).filter((line) => line !== "" && !line.startsWith("#"));
   } catch {
     return [];
@@ -20687,7 +20716,7 @@ function describeLocations(findings, limit = 3) {
 
 // src/commands/plugins.ts
 import fs7 from "node:fs/promises";
-import path8 from "node:path";
+import path9 from "node:path";
 
 // src/infra/run-process.ts
 import { execFile, spawn } from "node:child_process";
@@ -20754,7 +20783,7 @@ function runInteractive(file2, args, env) {
 var MANIFEST = ".sync-ai-plugins.json";
 var PLUGIN_ID = /^[a-z0-9][a-z0-9._-]*@[a-z0-9][a-z0-9._-]*$/i;
 function manifestPath(context) {
-  return path8.join(context.agent.home, MANIFEST);
+  return path9.join(context.agent.home, MANIFEST);
 }
 async function readJson(file2) {
   try {
@@ -20779,15 +20808,15 @@ function pluginSpec(id, source) {
 }
 async function installedPlugins(context) {
   if (context.agent.name === "claude") {
-    const registry2 = await readJson(path8.join(context.agent.home, "plugins", "installed_plugins.json"));
-    const marketplaces = await readJson(path8.join(context.agent.home, "plugins", "known_marketplaces.json"));
+    const registry2 = await readJson(path9.join(context.agent.home, "plugins", "installed_plugins.json"));
+    const marketplaces = await readJson(path9.join(context.agent.home, "plugins", "known_marketplaces.json"));
     const plugins = registry2?.plugins;
     if (!plugins || typeof plugins !== "object") return [];
     return Object.keys(plugins).filter((id) => PLUGIN_ID.test(id)).map((id) => pluginSpec(id, sourceFromMarketplace(marketplaces?.[id.split("@")[1] ?? ""])));
   }
   if (context.agent.name === "codex") {
     try {
-      const config2 = await fs7.readFile(path8.join(context.agent.home, "config.toml"), "utf8");
+      const config2 = await fs7.readFile(path9.join(context.agent.home, "config.toml"), "utf8");
       return [...config2.matchAll(/^\[plugins\."([^"]+)"\]/gm)].map((match) => match[1]).filter((id) => Boolean(id && PLUGIN_ID.test(id))).map((id) => ({ id }));
     } catch {
       return [];
@@ -21170,7 +21199,7 @@ async function countAhead(git, branch) {
 
 // src/commands/apply-repo.ts
 import fs10 from "node:fs/promises";
-import path9 from "node:path";
+import path10 from "node:path";
 async function backUp(context, destination) {
   if (!await pathExists(destination)) return;
   await copyPreserving(destination, `${destination}.backup-${formatStamp(context.now())}`);
@@ -21183,7 +21212,7 @@ async function installFromSnapshot(context, snapshot, rels4) {
     if (!content) throw new AppError(`the repository object for ${rel} is missing from the clone`);
     const destination = toNativePath(context.agent.home, rel);
     await backUp(context, destination);
-    await fs10.mkdir(path9.dirname(destination), { recursive: true });
+    await fs10.mkdir(path10.dirname(destination), { recursive: true });
     await fs10.writeFile(destination, content, { mode: snapshot.executable.has(rel) ? 493 : 420 });
   }
 }
@@ -21195,7 +21224,7 @@ async function removeLocalWithBackup(context, rel) {
 
 // src/infra/conflict-store.ts
 import fs11 from "node:fs/promises";
-import path10 from "node:path";
+import path11 from "node:path";
 var MANIFEST_FILE = "manifest.json";
 var manifestSchema = external_exports.object({
   version: external_exports.literal(1),
@@ -21218,19 +21247,19 @@ var ConflictStore = class {
   dataHome;
   agent;
   get directory() {
-    return path10.join(this.dataHome, "conflicts", this.agent);
+    return path11.join(this.dataHome, "conflicts", this.agent);
   }
   copyPath(rel, side) {
     const target = toNativePath(this.directory, `${rel}.${side}`);
-    const relative = path10.relative(this.directory, target);
-    if (relative.startsWith("..") || path10.isAbsolute(relative)) {
+    const relative = path11.relative(this.directory, target);
+    if (relative.startsWith("..") || path11.isAbsolute(relative)) {
       throw new AppError(`refusing to store a conflict copy outside ${this.directory}: ${rel}`);
     }
     return target;
   }
   async load() {
     try {
-      const content = await fs11.readFile(path10.join(this.directory, MANIFEST_FILE), "utf8");
+      const content = await fs11.readFile(path11.join(this.directory, MANIFEST_FILE), "utf8");
       const parsed = manifestSchema.safeParse(JSON.parse(content));
       if (parsed.success) return parsed.data;
     } catch {
@@ -21246,7 +21275,7 @@ var ConflictStore = class {
         await removeFile(target);
         continue;
       }
-      await fs11.mkdir(path10.dirname(target), { recursive: true });
+      await fs11.mkdir(path11.dirname(target), { recursive: true });
       await fs11.writeFile(target, content);
     }
     return {
@@ -21259,7 +21288,7 @@ var ConflictStore = class {
   async save(manifest) {
     await fs11.mkdir(this.directory, { recursive: true });
     await fs11.writeFile(
-      path10.join(this.directory, MANIFEST_FILE),
+      path11.join(this.directory, MANIFEST_FILE),
       `${JSON.stringify(manifest, null, 2)}
 `
     );
@@ -21272,7 +21301,7 @@ var ConflictStore = class {
 };
 async function pruneEmptyDirsKeepingRoot(root) {
   for (const entry of await fs11.readdir(root, { withFileTypes: true })) {
-    if (entry.isDirectory()) await pruneEmptyDirs(path10.join(root, entry.name));
+    if (entry.isDirectory()) await pruneEmptyDirs(path11.join(root, entry.name));
   }
 }
 
@@ -21479,7 +21508,7 @@ async function check2(context) {
   const { agent, dataHome, repoGit } = context;
   const manual = !context.hook;
   const input2 = manual ? manualInput() : parseHookInput(await context.readStdin());
-  if (!await isDirectory(path11.join(context.repoDir, ".git"))) return;
+  if (!await isDirectory(path12.join(context.repoDir, ".git"))) return;
   const probeDeadline = startDeadline(CHECK_BUDGET_MS);
   const overallDeadline = startDeadline(OVERALL_BUDGET_MS);
   const now = context.now();
@@ -21600,7 +21629,7 @@ function runRemove(context) {
 }
 
 // src/commands/init.ts
-import path13 from "node:path";
+import path14 from "node:path";
 
 // src/commands/clone-repo.ts
 import fs12 from "node:fs/promises";
@@ -21655,7 +21684,7 @@ async function cloneRepository(context, url2, options = {}) {
 }
 
 // src/commands/init-with-github.ts
-import path12 from "node:path";
+import path13 from "node:path";
 
 // src/domain/repo-name.ts
 var DEFAULT_REPO_NAME = "sync-ai-data";
@@ -21727,7 +21756,7 @@ async function requireAuthenticatedLogin(gh) {
 }
 async function reportExistingClone(context) {
   const { repoDir, repoGit, io } = context;
-  if (!await isDirectory(path12.join(repoDir, ".git"))) return false;
+  if (!await isDirectory(path13.join(repoDir, ".git"))) return false;
   const origin = await repoGit.run(["remote", "get-url", "origin"]);
   const where = origin.code === 0 ? ` (origin: ${origin.stdout.trim()})` : "";
   io.info(`Already initialized: ${repoDir}${where}`);
@@ -21786,7 +21815,7 @@ async function runInit(context) {
   if (context.repoName !== void 0) {
     throw new UsageError("--name only applies when init is run without a URL");
   }
-  if (await isDirectory(path13.join(repoDir, ".git"))) {
+  if (await isDirectory(path14.join(repoDir, ".git"))) {
     const existing = await repoGit.run(["remote", "get-url", "origin"]);
     const current = existing.code === 0 ? existing.stdout.trim() : "";
     if (current === url2) {
@@ -22032,6 +22061,38 @@ async function runResolve(context) {
   }
 }
 
+// src/domain/status-report.ts
+function repositoryLabel(remoteUrl) {
+  const value = remoteUrl.trim().replace(/\.git(?:\/)?$/, "");
+  const github = value.match(/github\.com[/:]([^/]+\/[^/]+)$/i);
+  return github?.[1] ?? value;
+}
+function formatTree(paths) {
+  const root = { children: /* @__PURE__ */ new Map(), file: false };
+  for (const path17 of paths) {
+    let node2 = root;
+    for (const part of path17.split("/")) {
+      let child = node2.children.get(part);
+      if (child === void 0) {
+        child = { children: /* @__PURE__ */ new Map(), file: false };
+        node2.children.set(part, child);
+      }
+      node2 = child;
+    }
+    node2.file = true;
+  }
+  const lines = [];
+  const visit2 = (node2, prefix) => {
+    for (const [name, child] of [...node2.children.entries()].sort(([a], [b]) => a.localeCompare(b))) {
+      const directory = child.children.size > 0;
+      lines.push(`${prefix}|--- ${name}${directory ? "/" : ""}`);
+      if (directory) visit2(child, `${prefix}|    `);
+    }
+  };
+  visit2(root, "");
+  return lines;
+}
+
 // src/commands/status.ts
 function rels3(entries) {
   return entries.map((entry) => entry.rel);
@@ -22043,6 +22104,14 @@ function printSection(context, title, lines) {
   if (lines.length === 0) return;
   context.io.info(title);
   for (const line of lines) context.io.info(line);
+}
+async function printConfiguration(context, plan) {
+  const remote = await context.repoGit.run(["remote", "get-url", "origin"]);
+  const remoteName = remote.code === 0 ? repositoryLabel(remote.stdout) : context.repoDir;
+  context.io.info(`repo: ${remoteName}`);
+  context.io.info(`local: ${context.agent.home}/`);
+  const localPaths = plan.entries.filter((entry) => entry.state !== "new-repo" /* NewRepo */ && entry.state !== "repo-deleted" /* RepoDeleted */ && entry.state !== "gone" /* Gone */).map((entry) => entry.rel);
+  for (const line of formatTree(localPaths)) context.io.info(line);
 }
 function printPlan2(context, plan) {
   const toPush = [
@@ -22095,6 +22164,11 @@ async function runStatus(context) {
   const snapshot = await readRepoSnapshot(context, comparisonRef(remote));
   const plan = await buildPlan(context, snapshot, loaded.state);
   const differences = printPlan2(context, plan);
+  const everythingSynced = differences === 0 && plan.unlisted.length === 0 && remote.status === "ready" && remote.ahead === 0 && remote.behind === 0;
+  if (everythingSynced) io.info("\u2713 Todo sincronizado");
+  else if (differences === 0) io.info("\u26A0 Hay elementos pendientes de sincronizar.");
+  else io.info("\u26A0 Hay cambios pendientes de sincronizar.");
+  await printConfiguration(context, plan);
   if (differences === 0) io.info("Local and repository: no differences.");
   else if (entriesIn(plan, "conflict" /* Conflict */).length > 0) io.info("Next step: run 'resolve' to review the conflicts.");
   printUnlisted(context, plan);
@@ -22102,14 +22176,14 @@ async function runStatus(context) {
 }
 
 // src/infra/data-home.ts
-import path14 from "node:path";
+import path15 from "node:path";
 function resolveDataHome(env, homeDir, platform) {
   if (env.AGENT_SYNC_HOME) return env.AGENT_SYNC_HOME;
   if (platform === "win32") {
-    const localAppData = env.LOCALAPPDATA || path14.join(homeDir, "AppData", "Local");
-    return path14.join(localAppData, "agent-sync");
+    const localAppData = env.LOCALAPPDATA || path15.join(homeDir, "AppData", "Local");
+    return path15.join(localAppData, "agent-sync");
   }
-  return path14.join(homeDir, ".local", "share", "agent-sync");
+  return path15.join(homeDir, ".local", "share", "agent-sync");
 }
 
 // src/infra/gh.ts
@@ -22427,7 +22501,7 @@ async function execute(argv, runtime) {
   const command = commandNameSchema.safeParse(options.command);
   if (!command.success) throw new UsageError(`unknown command: ${options.command}`);
   const dataHome = resolveDataHome(runtime.env, runtime.homeDir, runtime.platform);
-  const repoDir = path15.join(dataHome, "repo");
+  const repoDir = path16.join(dataHome, "repo");
   const git = new Git(runtime.env);
   return COMMANDS[command.data]({
     agent,

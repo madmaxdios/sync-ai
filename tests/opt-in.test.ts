@@ -108,10 +108,15 @@ describe('opt-in list', () => {
     it('says nothing when every local item is listed', async () => {
       await sandbox.run('A', ['add', 'skill', 'git']);
       await sandbox.run('A', ['add', 'command', 'deploy']);
+      await sandbox.run('A', ['push']);
 
       const status = await sandbox.run('A', ['status']);
 
       expect(status.stdout).not.toContain('not synced');
+      expect(status.stdout).toContain('✓ Todo sincronizado');
+      expect(status.stdout).toContain('local:');
+      expect(status.stdout).toContain('|--- skills/');
+      expect(status.stdout).toContain('|    |--- git/');
     });
   });
 

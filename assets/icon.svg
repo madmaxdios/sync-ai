@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
+  <title id="title">sync-ai</title>
+  <desc id="desc">Two arrows forming a synchronization loop</desc>
+  <rect width="256" height="256" rx="48" fill="#171717"/>
+  <path d="M60 96h92l-20-20 14-14 44 44-44 44-14-14 20-20H60z" fill="#72e6b4"/>
+  <path d="M196 160h-92l20 20-14 14-44-44 44-44 14 14-20 20h92z" fill="#6ea8fe"/>
+</svg>

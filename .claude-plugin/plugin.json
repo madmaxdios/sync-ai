@@ -1,6 +1,6 @@
 {
   "name": "sync-ai",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "Sync your skills, commands, agents and global instructions across devices through your own private git repository.",
   "author": {
     "name": "madmaxdios"
@@ -8,5 +8,10 @@
   "homepage": "https://github.com/madmaxdios/sync-ai",
   "repository": "https://github.com/madmaxdios/sync-ai",
   "license": "MIT",
+  "icon": "./assets/icon.svg",
+  "documentationUrl": "https://github.com/madmaxdios/sync-ai#readme",
+  "supportUrl": "https://github.com/madmaxdios/sync-ai/issues",
+  "privacyPolicyUrl": "https://github.com/madmaxdios/sync-ai/blob/main/PRIVACY.md",
+  "termsOfServiceUrl": "https://github.com/madmaxdios/sync-ai/blob/main/TERMS.md",
   "keywords": ["sync", "dotfiles", "skills", "commands", "configuration"]
 }

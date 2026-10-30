@@ -8,11 +8,13 @@ import {
 } from './agent-config';
 import { buildClaudeConfig } from './claude';
 import { buildCodexConfig } from './codex';
+import { buildOpenCodeConfig } from './opencode';
 
 // A Map avoids resolving inherited keys such as "constructor" as agents.
 const AGENT_BUILDERS = new Map<string, (environment: AgentEnvironment) => AgentConfigInput>([
   ['claude', buildClaudeConfig],
   ['codex', buildCodexConfig],
+  ['opencode', buildOpenCodeConfig],
 ]);
 
 export function resolveAgent(name: string, environment: AgentEnvironment): AgentConfig {

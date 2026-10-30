@@ -1,6 +1,7 @@
 import { ExitCode } from '../domain/exit-code';
 import { FileState } from '../domain/file-state';
 import { describeRelation, formatList } from '../domain/report';
+import { formatTree, repositoryLabel } from '../domain/status-report';
 import { loadState } from '../infra/state-store';
 import type { CommandContext } from './context';
 import { requireRepo } from './local-tree';
@@ -21,6 +22,17 @@ function printSection(context: CommandContext, title: string, lines: readonly st
   if (lines.length === 0) return;
   context.io.info(title);
   for (const line of lines) context.io.info(line);
+}
+
+async function printConfiguration(context: CommandContext, plan: SyncPlan): Promise<void> {
+  const remote = await context.repoGit.run(['remote', 'get-url', 'origin']);
+  const remoteName = remote.code === 0 ? repositoryLabel(remote.stdout) : context.repoDir;
+  context.io.info(`repo: ${remoteName}`);
+  context.io.info(`local: ${context.agent.home}/`);
+  const localPaths = plan.entries
+    .filter((entry) => entry.state !== FileState.NewRepo && entry.state !== FileState.RepoDeleted && entry.state !== FileState.Gone)
+    .map((entry) => entry.rel);
+  for (const line of formatTree(localPaths)) context.io.info(line);
 }
 
 function printPlan(context: CommandContext, plan: SyncPlan): number {
@@ -81,6 +93,11 @@ export async function runStatus(context: CommandContext): Promise<ExitCode> {
   const plan = await buildPlan(context, snapshot, loaded.state);
 
   const differences = printPlan(context, plan);
+  const everythingSynced = differences === 0 && plan.unlisted.length === 0 && remote.status === 'ready' && remote.ahead === 0 && remote.behind === 0;
+  if (everythingSynced) io.info('✓ Todo sincronizado');
+  else if (differences === 0) io.info('⚠ Hay elementos pendientes de sincronizar.');
+  else io.info('⚠ Hay cambios pendientes de sincronizar.');
+  await printConfiguration(context, plan);
   if (differences === 0) io.info('Local and repository: no differences.');
   else if (entriesIn(plan, FileState.Conflict).length > 0) io.info("Next step: run 'resolve' to review the conflicts.");
   printUnlisted(context, plan);

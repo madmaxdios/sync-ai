@@ -1,12 +1,16 @@
 # sync-ai
 
+Directory metadata and the short privacy/terms documents live in
+`sync-ai/.claude-plugin/plugin.json`, `PRIVACY.md` and `TERMS.md`.
+
 Sync your skills, commands, agents and global instructions across devices
 through **your own private git repository**, much like VS Code Settings Sync.
 This plugin is public and contains nothing personal: your data lives only in
 your repository.
 
-Claude Code and Codex are supported. Claude uses the plugin commands below;
-Codex uses the bundled `sync-*` skills and the same private repository.
+Claude Code, Codex and OpenCode are supported. Claude uses the plugin commands
+below; Codex uses the bundled `sync-*` skills; OpenCode uses the same core
+commands with `--agent opencode` and the same private repository.
 
 ## Requirements
 
@@ -149,7 +153,7 @@ authenticate through `gh auth git-credential` in its own git config only; your
 global git config is not modified and no token is written anywhere. The core also works outside Claude Code:
 
 ```bash
-node sync/dist/agent-sync.mjs --agent claude status
+node sync-ai/dist/agent-sync.mjs --agent claude status
 ```
 
 Options: `--yes` confirms repository creation, cloning and taking the repository
@@ -161,8 +165,8 @@ default in `~/.local/share/agent-sync/repo` (on Windows,
 `%LOCALAPPDATA%\agent-sync\repo`); change it with `AGENT_SYNC_HOME`. When
 comparing text files, CRLF and LF line-ending differences are ignored.
 
-Inside your repository the files are stored under `<agent>/<path>`: `claude/` or
-`codex/`.
+Inside your repository the files are stored under `<agent>/<path>`:
+`claude/`, `codex/` or `opencode/`.
 
 ## What is synced
 
@@ -171,7 +175,9 @@ For Claude, only this allowlist from `~/.claude`:
 - `CLAUDE.md`, always.
 - Skills, commands and agents. An item already present in the repository is synced on every device; local items are reported by `/sync-ai:status` before publication.
 
-`/sync-ai:status` shows the items that are not synced and the files waiting to be pushed or pulled.
+`/sync-ai:status` shows the repository, local configuration tree, whether
+everything is synchronized, the items that are not synced and the files
+waiting to be pushed or pulled. The status formatter is shared by all agents.
 
 A local item with the same name as a repository item that this device never synced is treated as a **conflict**, never overwritten. The list lives in `state.json`; devices whose state predates the list keep syncing what the repository already has.
 
@@ -186,6 +192,11 @@ ignored. The full list is in `src/agents/claude.ts`.
 For Codex, the allowlist is `AGENTS.md` and `skills/` from `~/.codex`. Codex
 credentials, `config.toml`, sessions, databases, logs, caches and plugins are
 never synced; the full list is in `src/agents/codex.ts`.
+
+For OpenCode, the allowlist is `AGENTS.md`, personal `skills/`, `commands/`,
+`agents/` and `instructions/` from `~/.config/opencode`. Runtime settings,
+plugins, dependencies, databases and credentials are denied; the full list is
+in `src/agents/opencode.ts`.
 
 ## Conflicts
 
@@ -267,7 +278,7 @@ backup).
 ## Development
 
 ```bash
-cd sync
+cd sync-ai
 npm install
 npm run tsc:check   # types (strict)
 npm run lint        # ESLint + typescript-eslint
@@ -304,7 +315,7 @@ git tag sync-v0.2.0 && git push origin sync-v0.2.0
 ```
 
 The `.github/workflows/publish-sync.yml` workflow checks that the tag matches
-the versions, runs `tsc:check`, `lint` and `test`, and copies only `sync/` to
+the versions, runs `tsc:check`, `lint` and `test`, and copies only `sync-ai/` to
 the public repository in a single commit tagged `v0.2.0`. It needs the
 `SYNC_AI_DEPLOY_KEY` secret: the private key of a deploy key with write access
 to `madmaxdios/sync-ai`.

@@ -18,3 +18,21 @@ describe('codex agent', () => {
     );
   });
 });
+
+describe('opencode agent', () => {
+  it('uses ~/.config/opencode and allows personal skills and commands', () => {
+    const config = resolveAgent('opencode', { env: {}, homeDir: '/home/test' });
+    expect(config.name).toBe('opencode');
+    expect(config.home).toBe(path.join('/home/test', '.config', 'opencode'));
+    expect(config.allow).toContain('skills');
+    expect(config.allow).toContain('commands');
+    expect(config.optIn).toEqual(['skills', 'commands', 'agents', 'instructions']);
+    expect(config.deny).toEqual(expect.arrayContaining(['auth.json', 'node_modules', 'opencode.json']));
+  });
+
+  it('honors OPENCODE_CONFIG_DIR', () => {
+    expect(resolveAgent('opencode', { env: { OPENCODE_CONFIG_DIR: '/custom/opencode' }, homeDir: '/home/test' }).home).toBe(
+      '/custom/opencode',
+    );
+  });
+});
