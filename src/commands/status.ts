@@ -26,9 +26,9 @@ function printSection(context: CommandContext, title: string, lines: readonly st
 
 async function printConfiguration(context: CommandContext, plan: SyncPlan): Promise<void> {
   const remote = await context.repoGit.run(['remote', 'get-url', 'origin']);
-  const remoteName = remote.code === 0 ? repositoryLabel(remote.stdout) : context.repoDir;
-  context.io.info(`repo: ${remoteName}`);
-  context.io.info(`local: ${context.agent.home}/`);
+  const remoteName = remote.code === 0 ? repositoryLabel(remote.stdout) : 'sync-ai-data';
+  context.io.info(`Remote repository: ${remoteName}`);
+  context.io.info(`Local configuration: ${context.agent.home}/`);
   const localPaths = plan.entries
     .filter((entry) => entry.state !== FileState.NewRepo && entry.state !== FileState.RepoDeleted && entry.state !== FileState.Gone)
     .map((entry) => entry.rel);
@@ -72,15 +72,16 @@ function printUnlisted(context: CommandContext, plan: SyncPlan): void {
 }
 
 export async function runStatus(context: CommandContext): Promise<ExitCode> {
-  const { agent, io, repoDir } = context;
+  const { agent, io } = context;
   await requireRepo(context);
   io.info(`Agent:       ${agent.name}`);
   io.info(`Local:       ${agent.home}`);
-  io.info(`Repository:  ${repoDir}`);
 
   const remote = await refreshRemote(context.repoGit);
   if (remote.status === 'unreachable') {
     io.warn(`Remote:      unreachable (${remote.error})`);
+    io.warn('Comparison skipped: the remote repository is unavailable; no sync conclusion can be made.');
+    return ExitCode.Ok;
   } else if (remote.status === 'empty') {
     io.info("Remote:      empty (use 'push' to publish)");
   } else {
@@ -98,7 +99,7 @@ export async function runStatus(context: CommandContext): Promise<ExitCode> {
   else if (differences === 0) io.info('⚠ Hay elementos pendientes de sincronizar.');
   else io.info('⚠ Hay cambios pendientes de sincronizar.');
   await printConfiguration(context, plan);
-  if (differences === 0) io.info('Local and repository: no differences.');
+  if (differences === 0) io.info('Local configuration and remote repository: no differences.');
   else if (entriesIn(plan, FileState.Conflict).length > 0) io.info("Next step: run 'resolve' to review the conflicts.");
   printUnlisted(context, plan);
   return ExitCode.Ok;

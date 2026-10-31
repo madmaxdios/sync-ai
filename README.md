@@ -165,6 +165,10 @@ default in `~/.local/share/agent-sync/repo` (on Windows,
 `%LOCALAPPDATA%\agent-sync\repo`); change it with `AGENT_SYNC_HOME`. When
 comparing text files, CRLF and LF line-ending differences are ignored.
 
+To prepare a release, run `npm run version:patch` or `npm run version:minor`
+from `sync-ai/`. These commands update the package, lockfile and both plugin
+manifests together; they do not commit or push.
+
 Inside your repository the files are stored under `<agent>/<path>`:
 `claude/`, `codex/` or `opencode/`.
 
@@ -175,9 +179,15 @@ For Claude, only this allowlist from `~/.claude`:
 - `CLAUDE.md`, always.
 - Skills, commands and agents. An item already present in the repository is synced on every device; local items are reported by `/sync-ai:status` before publication.
 
-`/sync-ai:status` shows the repository, local configuration tree, whether
-everything is synchronized, the items that are not synced and the files
-waiting to be pushed or pulled. The status formatter is shared by all agents.
+`/sync-ai:status` compares only the agent's home directory with the user's
+remote `sync-ai-data` repository. The local clone under the agent-sync data
+directory is only a transport/cache for Git operations; it is never the source
+of truth, and the current working repository (for example `dotfiles`) is
+irrelevant. The command shows the remote repository, local configuration tree,
+whether everything is synchronized, the items that are not synced and the files
+waiting to be pushed or pulled. If the remote is unreachable, it does not fall
+back to comparing against the clone or claim that synchronization is complete.
+The status formatter is shared by all agents.
 
 A local item with the same name as a repository item that this device never synced is treated as a **conflict**, never overwritten. The list lives in `state.json`; devices whose state predates the list keep syncing what the repository already has.
 

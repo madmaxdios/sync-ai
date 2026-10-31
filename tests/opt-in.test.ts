@@ -114,9 +114,26 @@ describe('opt-in list', () => {
 
       expect(status.stdout).not.toContain('not synced');
       expect(status.stdout).toContain('✓ Todo sincronizado');
-      expect(status.stdout).toContain('local:');
+      expect(status.stdout).toContain('Local configuration:');
+      expect(status.stdout).not.toContain('Repository:');
       expect(status.stdout).toContain('|--- skills/');
       expect(status.stdout).toContain('|    |--- git/');
+    });
+
+    it('does not use the local clone as a sync source when the remote is unreachable', async () => {
+      await sandbox.run('A', ['add', 'skill', 'git']);
+      await sandbox.run('A', ['push']);
+      sandbox.disconnectRemote();
+
+      try {
+        const status = await sandbox.run('A', ['status']);
+
+        expect(status.output).toContain('Comparison skipped:');
+        expect(status.output).not.toContain('Todo sincronizado');
+        expect(status.output).not.toContain('no differences');
+      } finally {
+        sandbox.reconnectRemote();
+      }
     });
   });
 

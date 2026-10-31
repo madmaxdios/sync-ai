@@ -1,6 +1,6 @@
 {
   "name": "agent-sync",
-  "version": "0.7.1",
+  "version": "0.8.1",
   "private": true,
   "type": "module",
   "description": "Sync an allowlisted subset of an AI agent's user-level config through a private git repository.",
@@ -9,6 +9,8 @@
     "node": ">=20"
   },
   "scripts": {
+    "version:patch": "node scripts/bump-version.mjs patch",
+    "version:minor": "node scripts/bump-version.mjs minor",
     "test:unit": "npm test",
     "tsc:check": "tsc --noEmit",
     "lint": "eslint .",

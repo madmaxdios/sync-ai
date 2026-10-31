@@ -7,7 +7,8 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 const run = promisify(execFile);
 const root = path.resolve(import.meta.dirname, '..');
-const normalize = (text: string): string => text.replace(/\r\n/g, '\n');
+const normalize = (text: string): string =>
+  text.replace(/\r\n/g, '\n').replace(/node_modules\/\.pnpm\/[^/]+\/node_modules\//g, 'node_modules/');
 
 let tempDir: string | undefined;
 
