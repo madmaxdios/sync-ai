@@ -20234,6 +20234,7 @@ async function copyPreserving(source, destination) {
   await fs2.mkdir(path5.dirname(destination), { recursive: true });
   await fs2.copyFile(source, destination);
   const stats = await fs2.stat(source);
+  await fs2.chmod(destination, stats.mode & 511);
   await fs2.utimes(destination, stats.atime, stats.mtime);
 }
 async function removeFile(target) {

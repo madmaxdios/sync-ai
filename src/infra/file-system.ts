@@ -28,6 +28,7 @@ export async function copyPreserving(source: string, destination: string): Promi
   await fs.mkdir(path.dirname(destination), { recursive: true });
   await fs.copyFile(source, destination);
   const stats = await fs.stat(source);
+  await fs.chmod(destination, stats.mode & 0o777);
   await fs.utimes(destination, stats.atime, stats.mtime);
 }
 
