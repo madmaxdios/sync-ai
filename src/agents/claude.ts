@@ -6,6 +6,8 @@ export function buildClaudeConfig({ env, homeDir }: AgentEnvironment): AgentConf
     name: 'claude',
     home: env.CLAUDE_CONFIG_DIR || path.join(homeDir, '.claude'),
     allow: ['CLAUDE.md', 'skills', 'commands', 'agents', '.sync-ai-plugins.json'],
+    mainFile: 'CLAUDE.md',
+    shared: ['skills'],
     // Only the skills, commands and agents the user lists are synced; CLAUDE.md always is.
     optIn: ['skills', 'commands', 'agents'],
     deny: [

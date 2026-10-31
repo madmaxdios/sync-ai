@@ -2,7 +2,7 @@ import { AppError } from '../domain/app-error';
 import { ExitCode } from '../domain/exit-code';
 import { FileState } from '../domain/file-state';
 import { formatList } from '../domain/report';
-import { copyPreserving, isDirectory, pathExists, pruneEmptyDirs, removeFile, toNativePath } from '../infra/file-system';
+import { copyPreserving, isDirectory, pathExists, removeFile, toNativePath } from '../infra/file-system';
 import { loadState, saveState } from '../infra/state-store';
 import type { SyncState } from '../domain/sync-state';
 import type { CommandContext } from './context';
@@ -11,6 +11,7 @@ import { refreshRemote, requireReachable } from './remote-state';
 import { readRepoSnapshot } from './repo-snapshot';
 import { filesWithFindings, printFindings, scanFilesToPublish, type PathFinding } from './scan-secrets';
 import { ensurePluginManifest } from './plugins';
+import { repoPathForLocal } from './repo-paths';
 import { buildPlan, entriesIn, recordInSyncBases, type PlanEntry, type SyncPlan } from './sync-plan';
 
 function rels(entries: readonly PlanEntry[]): string[] {
@@ -60,21 +61,29 @@ async function applyToRepo(
   toDelete: readonly string[],
 ): Promise<void> {
   const repoRoot = agentRepoDir(context);
-  for (const rel of toDelete) await removeFile(toNativePath(repoRoot, rel));
+  for (const rel of toDelete) await removeFile(toNativePath(repoRoot, repoPathForLocal(context.agent, rel)));
   for (const rel of toCopy) {
-    await copyPreserving(toNativePath(context.agent.home, rel), toNativePath(repoRoot, rel));
+    await copyPreserving(
+      toNativePath(context.agent.home, rel),
+      toNativePath(repoRoot, repoPathForLocal(context.agent, rel)),
+    );
   }
-  await pruneEmptyDirs(repoRoot);
 }
 
 /** Stages only allowlisted paths; never the whole working tree. */
 async function stageAllowedPaths(context: CommandContext): Promise<void> {
   for (const entry of context.agent.allow) {
-    const gitPath = `${context.agent.name}/${entry}`;
-    const exists =
-      (await pathExists(toNativePath(context.repoDir, gitPath))) ||
-      (await context.repoGit.succeeds(['ls-files', '--error-unmatch', '--', gitPath]));
-    if (exists) await context.repoGit.must(['add', '-A', '--', gitPath]);
+    const localPaths = await listLocalFiles(context);
+    const repoPaths = localPaths
+      .filter((rel) => rel === entry || rel.startsWith(`${entry}/`))
+      .map((rel) => repoPathForLocal(context.agent, rel));
+    const gitPaths = [...new Set([repoPathForLocal(context.agent, entry), ...repoPaths])];
+    for (const gitPath of gitPaths) {
+      const exists =
+        (await pathExists(toNativePath(context.repoDir, gitPath))) ||
+        (await context.repoGit.succeeds(['ls-files', '--error-unmatch', '--', gitPath]));
+      if (exists) await context.repoGit.must(['add', '-A', '--', gitPath]);
+    }
   }
 }
 

@@ -41,7 +41,7 @@ export interface ExternalRunResult {
   readonly stderr: string;
 }
 
-export type Device = 'A' | 'B';
+export type Device = 'A' | 'B' | 'C';
 
 export interface SandboxOptions {
   /**
@@ -74,6 +74,12 @@ export class Sandbox {
   }
 
   agentHome(device: Device): string {
+    return this.configHome(device, 'claude');
+  }
+
+  configHome(device: Device, agent: string): string {
+    if (agent === 'codex') return path.join(this.home(device), '.codex');
+    if (agent === 'opencode') return path.join(this.home(device), '.config', 'opencode');
     return path.join(this.home(device), '.claude');
   }
 
@@ -111,18 +117,30 @@ export class Sandbox {
   }
 
   write(device: Device, rel: string, content: string): void {
-    const target = path.join(this.agentHome(device), ...rel.split('/'));
+    this.writeAgent(device, 'claude', rel, content);
+  }
+
+  writeAgent(device: Device, agent: string, rel: string, content: string): void {
+    const target = path.join(this.configHome(device, agent), ...rel.split('/'));
     fs.mkdirSync(path.dirname(target), { recursive: true });
     fs.writeFileSync(target, content);
   }
 
   read(device: Device, rel: string): string | undefined {
-    const target = path.join(this.agentHome(device), ...rel.split('/'));
+    return this.readAgent(device, 'claude', rel);
+  }
+
+  readAgent(device: Device, agent: string, rel: string): string | undefined {
+    const target = path.join(this.configHome(device, agent), ...rel.split('/'));
     return fs.existsSync(target) ? fs.readFileSync(target, 'utf8') : undefined;
   }
 
   exists(device: Device, rel: string): boolean {
-    return fs.existsSync(path.join(this.agentHome(device), ...rel.split('/')));
+    return this.existsAgent(device, 'claude', rel);
+  }
+
+  existsAgent(device: Device, agent: string, rel: string): boolean {
+    return fs.existsSync(path.join(this.configHome(device, agent), ...rel.split('/')));
   }
 
   remove(device: Device, rel: string): void {

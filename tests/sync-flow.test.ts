@@ -44,7 +44,7 @@ describe('agent-sync between two devices', () => {
       expect(result.code).toBe(0);
     });
 
-    it.each(['claude/CLAUDE.md', 'claude/skills/foo/SKILL.md', 'claude/commands/hello.md', 'claude/agents/a.md'])(
+    it.each(['skills/MAIN-SKILL.md', 'skills/foo/SKILL.md', 'claude/commands/hello.md', 'claude/agents/a.md'])(
       'remote has %s',
       (file) => {
         expect(sandbox.remoteFiles()).toContain(file);

@@ -1,0 +1,49 @@
+name: Publish sync-ai
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  validate-and-tag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Validate
+        run: |
+          npm ci
+          npm run tsc:check
+          npm run lint
+          npm test
+
+      - name: Tag the version when it is new
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          version="$(node -p "require('./package.json').version")"
+          plugin_version="$(node -p "require('./.claude-plugin/plugin.json').version")"
+          codex_plugin_version="$(node -p "require('./.codex-plugin/plugin.json').version")"
+          if [[ "$version" != "$plugin_version" || "$version" != "$codex_plugin_version" ]]; then
+            echo "Package and plugin versions must match" >&2
+            exit 1
+          fi
+          tag="v${version}"
+          if git rev-parse -q --verify "refs/tags/$tag" >/dev/null; then
+            echo "Tag $tag already exists; nothing to publish."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag "$tag"
+          git push origin "$tag"

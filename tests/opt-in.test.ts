@@ -18,7 +18,7 @@ describe('opt-in list', () => {
     const result = await sandbox.run('A', ['push']);
 
     expect(result.code).toBe(0);
-    expect(sandbox.remoteFiles()).toEqual(['claude/CLAUDE.md']);
+    expect(sandbox.remoteFiles()).toEqual(['skills/MAIN-SKILL.md']);
     expect(result.stdout).toContain('2 items not synced');
   });
 
@@ -29,7 +29,7 @@ describe('opt-in list', () => {
     await sandbox.run('A', ['push']);
 
     expect(add.code).toBe(0);
-    expect(sandbox.remoteFiles().sort()).toEqual(['claude/CLAUDE.md', 'claude/skills/git/SKILL.md']);
+    expect(sandbox.remoteFiles().sort()).toEqual(['skills/MAIN-SKILL.md', 'skills/git/SKILL.md']);
   });
 
   it('adds a command by name with or without .md and an agent too', async () => {
@@ -57,7 +57,7 @@ describe('opt-in list', () => {
     await sandbox.run('A', ['add', 'skill', 'git', '--dry-run']);
     await sandbox.run('A', ['push']);
 
-    expect(sandbox.remoteFiles()).toEqual(['claude/CLAUDE.md']);
+    expect(sandbox.remoteFiles()).toEqual(['skills/MAIN-SKILL.md']);
   });
 
   it('items that come from the repository are listed automatically after a pull', async () => {
@@ -175,7 +175,7 @@ describe('opt-in list', () => {
 
       expect(remove.code).toBe(0);
       expect(sandbox.read('A', 'skills/git/SKILL.md')).toBe('edited after removal\n');
-      expect(sandbox.remoteFiles()).toContain('claude/skills/git/SKILL.md');
+      expect(sandbox.remoteFiles()).toContain('skills/git/SKILL.md');
       expect(sandbox.remoteContains('edited after removal')).toBe(false);
       expect(push.code).toBe(0);
       expect(sandbox.remoteHead()).toBe(head);

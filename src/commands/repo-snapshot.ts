@@ -1,5 +1,6 @@
 import { createDenyMatcher } from '../domain/path-filter';
 import type { CommandContext } from './context';
+import { localPathForRepo } from './repo-paths';
 
 /** The agent's files in the repository at one git ref, read straight from git objects. */
 export interface RepoSnapshot {
@@ -44,13 +45,13 @@ export async function readRepoSnapshot(
   const hasRef = await repoGit.succeeds(['rev-parse', '--verify', '-q', `${ref}^{commit}`]);
   if (!hasRef) return { ref, blobs: new Map(), executable: new Set(), read };
 
-  const prefix = `${agent.name}/`;
-  const output = await repoGit.must(['ls-tree', '-r', '-z', ref, '--', prefix]);
+  const output = await repoGit.must(['ls-tree', '-r', '-z', ref]);
   const isDenied = createDenyMatcher(agent.deny);
   const blobs = new Map<string, string>();
   const executable = new Set<string>();
-  for (const [rel, entry] of parseTree(output, prefix)) {
-    if (!isAllowed(rel, agent.allow) || isDenied(rel)) continue;
+  for (const [repoRel, entry] of parseTree(output, '')) {
+    const rel = localPathForRepo(agent, repoRel);
+    if (rel === undefined || !isAllowed(rel, agent.allow) || isDenied(rel)) continue;
     blobs.set(rel, entry.sha);
     if (entry.executable) executable.add(rel);
   }

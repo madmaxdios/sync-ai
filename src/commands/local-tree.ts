@@ -6,7 +6,7 @@ import { listTree } from '../infra/file-tree';
 import type { CommandContext } from './context';
 
 export function agentRepoDir(context: CommandContext): string {
-  return path.join(context.repoDir, context.agent.name);
+  return context.repoDir;
 }
 
 export function listLocalFiles(context: CommandContext): Promise<string[]> {

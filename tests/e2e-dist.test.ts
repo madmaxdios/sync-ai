@@ -40,12 +40,12 @@ describe('built bundle between two devices', () => {
     it('A init and push exit 0', async () => {
       expect((await cli('A', 'init', sandbox.remote)).code).toBe(0);
       expect((await cli('A', 'push')).code).toBe(0);
-      expect(sandbox.remoteFiles()).toEqual(['claude/CLAUDE.md']);
+      expect(sandbox.remoteFiles()).toEqual(['skills/MAIN-SKILL.md']);
       expect((await cli('A', 'add', 'skill', 'foo')).code).toBe(0);
       expect((await cli('A', 'add', 'command', 'hello.md')).code).toBe(0);
       expect((await cli('A', 'add', 'agent', 'a.md')).code).toBe(0);
       expect((await cli('A', 'push')).code).toBe(0);
-      expect(sandbox.remoteFiles()).toContain('claude/skills/foo/SKILL.md');
+      expect(sandbox.remoteFiles()).toContain('skills/foo/SKILL.md');
     });
 
     it('B init and pull bring the files', async () => {

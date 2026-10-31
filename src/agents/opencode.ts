@@ -6,6 +6,8 @@ export function buildOpenCodeConfig({ env, homeDir }: AgentEnvironment): AgentCo
     name: 'opencode',
     home: env.OPENCODE_CONFIG_DIR || path.join(homeDir, '.config', 'opencode'),
     allow: ['AGENTS.md', 'skills', 'commands', 'agents', 'instructions', '.sync-ai-plugins.json'],
+    mainFile: 'AGENTS.md',
+    shared: ['skills'],
     optIn: ['skills', 'commands', 'agents', 'instructions'],
     deny: [
       'auth.json',

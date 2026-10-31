@@ -12,6 +12,8 @@ export const AGENT_NAME_PATTERN = /^[a-z0-9][a-z0-9-]*$/;
  * optIn: folders (relative to home) whose direct children are synced only when listed:
  *        `skills/git` or `commands/deploy.md`. Allowed paths outside these folders
  *        (such as CLAUDE.md) are always synced.
+ * mainFile: the agent's main instruction file, stored as skills/MAIN-SKILL.md in the data repo.
+ * shared: local folders stored at the root of the data repo and shared by all agents.
  */
 export const agentConfigSchema = z.object({
   name: z.string().regex(AGENT_NAME_PATTERN),
@@ -19,6 +21,8 @@ export const agentConfigSchema = z.object({
   allow: z.array(z.string().min(1)).min(1),
   deny: z.array(z.string().min(1)),
   optIn: z.array(z.string().min(1)).default([]),
+  mainFile: z.string().min(1),
+  shared: z.array(z.string().min(1)).default(['skills']),
 });
 
 export type AgentConfig = z.output<typeof agentConfigSchema>;

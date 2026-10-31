@@ -169,14 +169,17 @@ To prepare a release, run `npm run version:patch` or `npm run version:minor`
 from `sync-ai/`. These commands update the package, lockfile and both plugin
 manifests together; they do not commit or push.
 
-Inside your repository the files are stored under `<agent>/<path>`:
-`claude/`, `codex/` or `opencode/`.
+Inside your private data repository, skills are shared by all three agents:
+`skills/` contains every skill and `skills/MAIN-SKILL.md` is the common main
+instruction file. It is installed locally as `CLAUDE.md` for Claude and
+`AGENTS.md` for Codex and OpenCode. Agent-specific commands, agents and
+instructions remain under `claude/`, `codex/` or `opencode/`.
 
 ## What is synced
 
 For Claude, only this allowlist from `~/.claude`:
 
-- `CLAUDE.md`, always.
+- `CLAUDE.md`, always (stored as the shared `skills/MAIN-SKILL.md`).
 - Skills, commands and agents. An item already present in the repository is synced on every device; local items are reported by `/sync-ai:status` before publication.
 
 `/sync-ai:status` compares only the agent's home directory with the user's

@@ -164,7 +164,7 @@ describe('automatic push inside check', () => {
       const result = await hook('A');
 
       expect(sandbox.remoteHead()).toBe(head);
-      expect(sandbox.remoteFiles()).toContain('claude/skills/foo/SKILL.md');
+      expect(sandbox.remoteFiles()).toContain('skills/foo/SKILL.md');
       expect(result.output?.systemMessage).toContain('1 deletion pending, run /sync-ai:sync to confirm');
     });
 
@@ -175,7 +175,7 @@ describe('automatic push inside check', () => {
       const result = await hook('A');
 
       expect(sandbox.remoteFiles()).toContain('claude/commands/new.md');
-      expect(sandbox.remoteFiles()).toContain('claude/skills/foo/SKILL.md');
+      expect(sandbox.remoteFiles()).toContain('skills/foo/SKILL.md');
       expect(result.output?.systemMessage).toContain('pushed 1 file');
       expect(result.output?.systemMessage).toContain('1 deletion pending');
     });
