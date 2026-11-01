@@ -99,7 +99,7 @@ describe('automatic push inside check', () => {
       const head = sandbox.remoteHead();
 
       const early = await hook('A', { now: minutesFromNow(4) });
-      expect(early.stdout).toBe('');
+      expect(early.output?.systemMessage).toContain('waiting for automatic push');
       expect(sandbox.remoteHead()).toBe(head);
 
       const later = await hook('A', { now: minutesFromNow(6), session: 'later' });
@@ -273,7 +273,7 @@ describe('automatic push inside check', () => {
   });
 
   describe('failures', () => {
-    it('stays silent and does not retry on every prompt when the remote is down', async () => {
+    it('reports failure without blocking when the remote is down', async () => {
       await edit('skills/foo/SKILL.md', 'skill foo v2\n');
       sandbox.disconnectRemote();
 
@@ -282,6 +282,7 @@ describe('automatic push inside check', () => {
 
       expect(result.code).toBe(0);
       expect(result.stderr).toBe('');
+      expect(result.output?.systemMessage).toContain('remote unavailable');
       expect(sandbox.remoteContains('skill foo v2')).toBe(false);
     });
   });

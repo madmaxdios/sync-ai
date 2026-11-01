@@ -125,11 +125,11 @@ describe('built bundle between two devices', () => {
   describe('check, the hook that tells whether this device is in sync', () => {
     const hookInput = (event: string): string => JSON.stringify({ hook_event_name: event, session_id: 'e2e' });
 
-    it('is silent and exits 0 when the device is in sync', async () => {
+    it('reports success and exits 0 when the device is in sync', async () => {
       const result = await sandbox.runBundle(bundle, 'A', ['check', '--hook'], { stdin: hookInput('SessionStart') });
 
       expect(result.code).toBe(0);
-      expect(result.stdout).toBe('');
+      expect(result.stdout.trim()).toBe(JSON.stringify({ systemMessage: 'sync-ai: in sync.' }));
       expect(result.stderr).toBe('');
     });
 

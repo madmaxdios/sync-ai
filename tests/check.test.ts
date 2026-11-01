@@ -45,11 +45,11 @@ describe('check', () => {
   }
 
   describe('when everything is in sync', () => {
-    it.each(['SessionStart', 'UserPromptSubmit'] as const)('says nothing at %s and exits 0', async (event) => {
+    it.each(['SessionStart', 'UserPromptSubmit'] as const)('reports a completed check at %s and exits 0', async (event) => {
       const result = await hook('A', event);
 
       expect(result.code).toBe(0);
-      expect(result.stdout).toBe('');
+      expect(result.output?.systemMessage).toBe('sync-ai: in sync.');
       expect(result.stderr).toBe('');
     });
   });
@@ -194,11 +194,11 @@ describe('check', () => {
       sandbox.reconnectRemote();
     });
 
-    it('is silent and exits 0 when nothing changed locally', async () => {
+    it('reports an unreachable remote without claiming everything is in sync', async () => {
       const result = await hook('A', 'SessionStart');
 
       expect(result.code).toBe(0);
-      expect(result.stdout).toBe('');
+      expect(result.output?.systemMessage).toContain('remote unavailable');
       expect(result.stderr).toBe('');
     });
 
@@ -207,13 +207,14 @@ describe('check', () => {
 
       const result = await hook('A', 'SessionStart');
 
-      expect(result.output?.systemMessage).toBe('sync-ai: 1 local change not pushed (run /sync-ai:sync)');
+      expect(result.output?.systemMessage).toContain('remote unavailable');
+      expect(result.output?.systemMessage).toContain('1 local change not pushed');
     });
   });
 
   describe('network throttling', () => {
     it('does not contact the remote again within the interval, and does after it', async () => {
-      expect((await hook('A', 'UserPromptSubmit', { now: minutesAfter(0) })).stdout).toBe('');
+      expect((await hook('A', 'UserPromptSubmit', { now: minutesAfter(0) })).output?.systemMessage).toBe('sync-ai: in sync.');
       await pushFromB('skills/bar/SKILL.md', 'skill bar\n');
 
       const inside = await hook('A', 'UserPromptSubmit', { now: minutesAfter(5) });
@@ -295,6 +296,15 @@ describe('check', () => {
   });
 
   describe('hook output', () => {
+    it('reports an internal failure as one safe JSON message and still exits zero', async () => {
+      sandbox.writeDataFile('A', 'repo/.git/HEAD', 'invalid reference\n');
+      const result = await hook('A', 'SessionStart');
+      expect(result.code).toBe(0);
+      expect(result.output?.systemMessage).toContain('check failed');
+      expect(result.stdout.trim().split('\n')).toHaveLength(1);
+      expect(result.stderr).toBe('');
+    });
+
     beforeEach(() => {
       sandbox.write('A', 'skills/foo/SKILL.md', 'skill foo v2\n');
     });

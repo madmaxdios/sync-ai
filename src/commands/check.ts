@@ -22,7 +22,7 @@ import { isDirectory } from '../infra/file-system';
 import { SILENT_IO } from '../infra/io';
 import { loadState } from '../infra/state-store';
 import { runAutoPush } from './auto-push';
-import { countAhead, countBehind, probeRemote } from './check-remote';
+import { countAhead, countBehind, probeRemote, type RemoteProbe } from './check-remote';
 import type { CommandContext } from './context';
 import { runPull } from './pull';
 import { readRepoSnapshot } from './repo-snapshot';
@@ -145,9 +145,10 @@ async function check(context: CommandContext): Promise<void> {
   const interval = intervalFrom(context.env.AGENT_SYNC_CHECK_INTERVAL_MINUTES);
   const remoteDue =
     hasBaseline && (manual || input.event === CheckEvent.SessionStart || isRemoteCheckDue(cache, now, interval));
+  let remoteProbe: RemoteProbe | undefined;
   if (remoteDue) {
     // The outcome only matters through the refs it updates; an unreachable remote is not an error.
-    await probeRemote(repoGit, branch, probeDeadline);
+    remoteProbe = await probeRemote(repoGit, branch, probeDeadline);
     cache = withRemoteCheck(cache, now);
   }
 
@@ -172,6 +173,7 @@ async function check(context: CommandContext): Promise<void> {
   }
 
   let autoPush: AutoPushOutcome = AUTO_PUSH_OFF;
+  let pushFailed = false;
   if (manual) printDetectedChanges(context, findings);
   if (hasBaseline) {
     const run = await runAutoPush(context, {
@@ -187,25 +189,43 @@ async function check(context: CommandContext): Promise<void> {
       deadline: overallDeadline,
     });
     autoPush = run.outcome;
+    pushFailed = run.failed;
     if (run.failed && !context.dryRun) cache = withAutoPushFailure(cache, now);
     if (autoPush.kind === 'pushed') findings = await compare(context, (await loadState(dataHome)).state, 'HEAD');
   }
 
   const report = buildReport(factsOf(), { pulled, dryRun: context.dryRun, autoPush });
 
-  if (report) cache = announce(context, input, cache, report);
+  if (context.hook && (remoteDue || pulled > 0 || autoPush.kind === 'pushed' || pushFailed)) {
+    const result = report?.user ?? (findings.pushFiles.length > 0
+      ? `sync-ai: ${findings.pushFiles.length} local ${findings.pushFiles.length === 1 ? 'change' : 'changes'} waiting for automatic push.`
+      : 'sync-ai: in sync.');
+    const user = remoteProbe === 'unreachable'
+      ? `sync-ai: remote unavailable; remote synchronization could not be verified. ${report?.user ?? ''}`.trim()
+      : pushFailed ? `${result} Automatic push failed; will retry later.` : result;
+    context.io.info(formatHookOutput(input, {
+      user,
+      claude: report?.claude,
+      signature: report?.signature ?? 'completed',
+    }));
+    if (report && !context.dryRun) cache = withAnnouncement(cache, input.sessionId, report.signature, now);
+  } else if (report) cache = announce(context, input, cache, report);
   else if (manual && !context.quiet) context.io.info('sync-ai: in sync.');
 
   if (!context.dryRun && cache !== before) await saveCheckCache(dataHome, cache);
 }
 
-/** Tells whether this device is out of sync. It always exits 0 and prints nothing on any failure. */
+/** Tells whether this device is out of sync. Failures are reported without blocking the session. */
 export async function runCheck(context: CommandContext): Promise<ExitCode> {
   if (context.env.AGENT_SYNC_CHECK === '0') return ExitCode.Ok;
+  let reported = false;
   try {
-    await check(context);
+    await check({ ...context, io: { ...context.io, info: (message) => {
+      reported = true;
+      context.io.info(message);
+    } } });
   } catch {
-    // A hook that fails or talks must never get in the user's way.
+    if (context.hook && !reported) context.io.info(JSON.stringify({ systemMessage: 'sync-ai: automatic synchronization check failed; run sync-ai status to inspect.' }));
   }
   return ExitCode.Ok;
 }

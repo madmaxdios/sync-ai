@@ -1,6 +1,6 @@
 {
   "name": "sync-ai",
-  "version": "0.8.3",
+  "version": "0.8.4",
   "description": "Sync Codex skills and AGENTS.md across devices through your own private git repository.",
   "author": {
     "name": "madmaxdios"
@@ -9,5 +9,6 @@
   "repository": "https://github.com/madmaxdios/sync-ai",
   "license": "MIT",
   "keywords": ["sync", "codex", "skills", "configuration"],
-  "skills": "./codex/skills/"
+  "skills": "./codex/skills/",
+  "hooks": "./codex/hooks.json"
 }

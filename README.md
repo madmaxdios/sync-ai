@@ -30,9 +30,14 @@ claude plugin install sync-ai@sync-ai
 
 Then, inside Claude Code, run `/reload-plugins` or start a new session.
 
-For Codex, add this repository's `.agents/plugins/marketplace.json`, install
-`sync-ai`, and start a new conversation. The available skills are `$sync-sync`,
-`$sync-status` and `$sync-resolve`.
+For Codex, install from the remote marketplace and start a new conversation:
+
+```bash
+codex plugin marketplace add madmaxdios/sync-ai
+codex plugin add sync-ai@sync-ai
+```
+
+The available skills are `$sync-sync`, `$sync-status` and `$sync-resolve`.
 
 ## Usage
 
@@ -85,9 +90,16 @@ What you see, as one short line in the chat:
 - `sync-ai: 1 conflict, run /sync-ai:resolve`: nothing is overwritten.
 - `sync-ai: this device has no sync baseline yet ...`: once per chat. Without `state.json` the tool cannot tell "I deleted this on purpose" from "this is new", so it never pulls on its own. Run `/sync-ai:status` to inspect the setup.
 
-When everything is in sync it prints nothing and costs no tokens. The same message is not repeated on every prompt: it is announced again only when the situation changes, after 30 minutes, or in another chat.
+While a hook runs, its status message says that sync-ai is checking and synchronizing
+the current agent. Each scheduled remote check reports its result, including
+`sync-ai: in sync.`, pending uploads, or an unreachable remote. Completed automatic
+pulls and pushes are reported too. Prompts inside the check interval remain silent
+unless there is a new finding. Each hook returns one valid JSON response.
 
-`check` never blocks and never asks questions: it always exits 0, stays silent when it is offline or the data repository does not exist, and keeps its network work inside about 4 seconds (`git ls-remote` first, a quiet `git fetch` only when the remote moved).
+`check` never asks questions and always exits 0. It reports failures without exposing
+error details or credentials, stays silent when the data repository does not exist,
+and keeps its remote probe inside about 4 seconds (`git ls-remote` first, a quiet
+`git fetch` only when the remote moved).
 
 | Variable | Effect |
 | --- | --- |
@@ -97,7 +109,7 @@ When everything is in sync it prints nothing and costs no tokens. The same messa
 | `AGENT_SYNC_AUTO_PUSH_QUIET_MINUTES` | Minutes a file must stay unedited before it is pushed (default 5) |
 | `AGENT_SYNC_AUTO_PUSH_MAX_FILES` | Most files one automatic push may publish (default 20) |
 
-Run it by hand with `agent-sync --agent claude check` (it also prints `sync-ai: in sync.` unless you add `--quiet`), or with `--dry-run` to see what it would do. The throttle and the repeated-message memory live in `check-cache.json` in the data directory, next to `state.json`. Codex does not currently use the Claude hook commands, so invoke its skills when you want to check or change sync state.
+Run it by hand with `agent-sync --agent claude check` (it also prints `sync-ai: in sync.` unless you add `--quiet`), or with `--dry-run` to see what it would do. The throttle and the repeated-message memory live in `check-cache.json` in the data directory, next to `state.json`. Codex uses its own `codex/hooks.json`, selected by its plugin manifest, and runs the same flow with `--agent codex`. After installing or updating in Codex, review and trust the plugin hooks in `/hooks` before relying on automatic sync.
 
 To turn the hooks off without uninstalling the plugin, set `AGENT_SYNC_CHECK=0` in the `env` block of your `settings.json`.
 
@@ -112,7 +124,7 @@ To turn the hooks off without uninstalling the plugin, set `AGENT_SYNC_CHECK=0` 
 - there are no conflicts and the repository has nothing newer than this device (it pulls first, at the start of a chat);
 - this device has a sync baseline.
 
-It **never deletes** anything: deleted files are reported as pending and need `/sync-ai:sync` and your confirmation. If the push fails (offline, rejected) it stays silent and tries again after the check interval. `--dry-run` only says what it would push.
+It **never deletes** anything: deleted files are reported as pending and need `/sync-ai:sync` and your confirmation. If the push fails (offline, rejected), it reports the failure and tries again after the check interval. `--dry-run` only says what it would push.
 
 ## Upgrading from `agent-sync`
 
