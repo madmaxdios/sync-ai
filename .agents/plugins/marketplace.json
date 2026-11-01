@@ -1,0 +1,20 @@
+{
+  "name": "sync-ai",
+  "interface": {
+    "displayName": "sync-ai"
+  },
+  "plugins": [
+    {
+      "name": "sync-ai",
+      "source": {
+        "source": "local",
+        "path": "./"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

@@ -30,9 +30,24 @@ claude plugin install sync-ai@sync-ai
 
 Then, inside Claude Code, run `/reload-plugins` or start a new session.
 
-For Codex, add this repository's `.agents/plugins/marketplace.json`, install
-`sync-ai`, and start a new conversation. The available skills are `$sync-sync`,
-`$sync-status` and `$sync-resolve`.
+For Codex, add the marketplace, install `sync-ai`, and start a new conversation.
+The available skills are `$sync-sync`, `$sync-status` and `$sync-resolve`.
+
+```bash
+codex plugin marketplace add madmaxdios/sync-ai
+codex plugin add sync-ai@sync-ai
+```
+
+For OpenCode, install the CLI from npm and run it from your terminal:
+
+```bash
+npm install -g @madmaxdios/sync-ai
+agent-sync --agent opencode status
+agent-sync --agent opencode sync
+```
+
+OpenCode uses `~/.config/opencode` and the same private repository as the other
+agents. Installing the Claude or Codex plugin does not register it in OpenCode.
 
 ## Usage
 
@@ -63,6 +78,18 @@ update the plugin:
 
 ```bash
 claude plugin marketplace update sync-ai && claude plugin update sync-ai@sync-ai
+```
+
+**Codex.** Refresh the marketplace:
+
+```bash
+codex plugin marketplace upgrade sync-ai
+```
+
+**OpenCode.** Update the CLI:
+
+```bash
+npm update -g @madmaxdios/sync-ai
 ```
 
 ## Staying in sync automatically
