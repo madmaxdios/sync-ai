@@ -19,8 +19,8 @@ Directory metadata and the short privacy and terms documents live in
   (`/sync-ai:*`) and from two hooks, `SessionStart` and `UserPromptSubmit` (see
   [Staying in sync automatically](#staying-in-sync-automatically)).
 - **What it contacts:** only the git remote of **your own data repository**,
-  through `git ls-remote`, `git fetch`, `git pull` and `git push`. During `init`,
-  and only if you use it, the GitHub CLI (`gh`) creates that private repository
+  through `git ls-remote`, `git fetch`, `git pull` and `git push`. On the first run on a device,
+  the GitHub CLI (`gh`) finds your private repository, or creates it after asking you,
   with your existing `gh` login. There is no other destination, telemetry or
   analytics.
 - **What it sends:** only the files on your sync list (see
@@ -42,7 +42,7 @@ Directory metadata and the short privacy and terms documents live in
   `dist/agent-sync.mjs`).
 - `git` on the `PATH`.
 - Optional: the [GitHub CLI](https://cli.github.com) (`gh`), logged in with
-  `gh auth login`, so `init` can create your private repository for you.
+  `gh auth login`, so the first `sync` on a device can find or create your private repository (`<login>/sync-ai-data`). Without `gh`, set `AGENT_SYNC_REPO_URL` to the URL of a private repository.
 - Works on Linux, macOS and Windows.
 
 ## Installation
@@ -218,7 +218,7 @@ node sync-ai/dist/agent-sync.mjs --agent claude status
 Options: `--yes` confirms repository creation, cloning and taking the repository
 version for conflicts, `--take-local`, `--take-repo`, `--auto` and `--editor`
 choose how `resolve` settles a file,
-`--name <repo>` names the repository `init` creates, and `--dry-run` does not
+`--name <repo>` names the repository the first `sync` creates, and `--dry-run` does not
 modify your local configuration, create repositories, create commits or publish. The clone lives by
 default in `~/.local/share/agent-sync/repo` (on Windows,
 `%LOCALAPPDATA%\agent-sync\repo`); change it with `AGENT_SYNC_HOME`. When
@@ -370,7 +370,7 @@ Run `npm run build` and commit `dist/` together with any change to `src/`.
 Structure of `src/`:
 
 - `cli/`: argument parsing (Zod) and command dispatch.
-- `commands/`: the core operations (`init`, `pull`, `push`, `status`, `resolve`) and `check` (the hook command, with its remote probe in `check-remote.ts`). Claude also exposes the model-guided `/sync-ai:skill-add` command.
+- `commands/`: the core operations (`pull`, `push`, `status`, `resolve`) and `check` (the hook command, with its remote probe in `check-remote.ts`). Claude also exposes the model-guided `/sync-ai:skill-add` command.
 - `domain/`: pure functions (deny list, secret scanner, three-way file classification, and the `check` decision, message, throttle and hook JSON).
 - `agents/`: typed configuration for each agent, validated with Zod.
 - `infra/`: git (no shell, optional timeout), file system, sync state, `check` cache, conflict copies, time budget and input/output.

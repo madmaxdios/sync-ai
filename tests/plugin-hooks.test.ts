@@ -21,9 +21,9 @@ describe('installed plugin hook commands', () => {
     sandbox = new Sandbox();
     const main = agent === 'codex' ? 'AGENTS.md' : 'CLAUDE.md';
     sandbox.writeAgent('A', agent, main, 'initial instructions\n');
-    expect((await sandbox.run('A', ['init', sandbox.remote], { agent })).code).toBe(0);
+    expect((await sandbox.connect('A', { agent })).code).toBe(0);
     expect((await sandbox.run('A', ['push'], { agent })).code).toBe(0);
-    expect((await sandbox.run('B', ['init', sandbox.remote], { agent })).code).toBe(0);
+    expect((await sandbox.connect('B', { agent })).code).toBe(0);
     expect((await sandbox.run('B', ['pull'], { agent })).code).toBe(0);
     sandbox.writeAgent('B', agent, main, 'updated instructions\n');
     expect((await sandbox.run('B', ['push'], { agent })).code).toBe(0);

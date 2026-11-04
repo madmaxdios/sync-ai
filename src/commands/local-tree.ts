@@ -22,6 +22,6 @@ export function listRepoFiles(context: CommandContext): Promise<string[]> {
 export async function requireRepo(context: CommandContext): Promise<void> {
   if (await isDirectory(path.join(context.repoDir, '.git'))) return;
   throw new AppError(
-    `no repository initialized at ${context.repoDir}. Run first: init [repo-url]`,
+    `no repository initialized at ${context.repoDir}. Run first: sync`,
   );
 }

@@ -21,9 +21,9 @@ describe('automatic push inside check', () => {
     sandbox = new Sandbox({ autoList: true });
     sandbox.write('A', 'CLAUDE.md', 'instructions v1\n');
     sandbox.write('A', 'skills/foo/SKILL.md', 'skill foo v1\n');
-    await sandbox.run('A', ['init', sandbox.remote]);
+    await sandbox.connect('A');
     await sandbox.run('A', ['push']);
-    await sandbox.run('B', ['init', sandbox.remote]);
+    await sandbox.connect('B');
     await sandbox.run('B', ['pull']);
   });
   afterEach(() => sandbox.cleanup());
@@ -208,7 +208,7 @@ describe('automatic push inside check', () => {
       const other = new Sandbox({ autoList: true });
       try {
         other.write('A', 'commands/mine.md', 'mine\n');
-        await other.run('A', ['init', other.remote]);
+        await other.connect('A');
         const result = await other.run('A', ['check', '--hook'], {
           stdin: JSON.stringify({ hook_event_name: 'SessionStart', session_id: 's' }),
           now: minutesFromNow(10),

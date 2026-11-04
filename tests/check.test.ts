@@ -1,4 +1,7 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { pathWithoutGh } from './helpers/fake-gh';
 import { Sandbox, type Device } from './helpers/sandbox';
 
 interface HookOutput {
@@ -16,9 +19,9 @@ describe('check', () => {
     sandbox = new Sandbox({ autoList: true });
     sandbox.write('A', 'CLAUDE.md', 'instructions v1\n');
     sandbox.write('A', 'skills/foo/SKILL.md', 'skill foo v1\n');
-    await sandbox.run('A', ['init', sandbox.remote]);
+    await sandbox.connect('A');
     await sandbox.run('A', ['push']);
-    await sandbox.run('B', ['init', sandbox.remote]);
+    await sandbox.connect('B');
     await sandbox.run('B', ['pull']);
   });
   afterEach(() => sandbox.cleanup());
@@ -388,16 +391,21 @@ describe('check', () => {
   });
 
   describe('before the data repository exists', () => {
-    it('is silent and creates nothing', async () => {
+    it('tells how to finish the setup once per session and creates nothing', async () => {
       const fresh = new Sandbox({ autoList: true });
       try {
-        const result = await fresh.run('A', ['check', '--hook'], {
-          stdin: JSON.stringify({ hook_event_name: 'SessionStart', session_id: 's1' }),
-        });
+        // Without gh and without AGENT_SYNC_REPO_URL there is nowhere to clone from.
+        const run = () =>
+          fresh.run('A', ['check', '--hook'], {
+            stdin: JSON.stringify({ hook_event_name: 'SessionStart', session_id: 's1' }),
+            env: { PATH: pathWithoutGh(), Path: pathWithoutGh() },
+          });
+        const first = await run();
 
-        expect(result.code).toBe(0);
-        expect(result.stdout).toBe('');
-        expect(fresh.dataFile('A', 'check-cache.json')).toBeUndefined();
+        expect(first.code).toBe(0);
+        expect((JSON.parse(first.stdout) as { systemMessage: string }).systemMessage).toContain('AGENT_SYNC_REPO_URL');
+        expect(fs.existsSync(path.join(fresh.dataHome('A'), 'repo'))).toBe(false);
+        expect((await run()).stdout).toBe('');
       } finally {
         fresh.cleanup();
       }

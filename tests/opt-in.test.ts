@@ -9,8 +9,8 @@ describe('opt-in list', () => {
     sandbox.write('A', 'CLAUDE.md', 'instructions\n');
     sandbox.write('A', 'skills/git/SKILL.md', 'git skill\n');
     sandbox.write('A', 'commands/deploy.md', 'deploy\n');
-    await sandbox.run('A', ['init', sandbox.remote]);
-    await sandbox.run('B', ['init', sandbox.remote]);
+    await sandbox.connect('A');
+    await sandbox.connect('B');
   });
   afterEach(() => sandbox.cleanup());
 

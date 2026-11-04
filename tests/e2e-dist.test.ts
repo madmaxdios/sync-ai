@@ -16,6 +16,8 @@ const PRIVATE_KEY_HEADER = ['-----BEGIN RSA PRIV', 'ATE KEY-----'].join('');
 describe('built bundle between two devices', () => {
   const sandbox = new Sandbox();
   const cli = (device: Device, ...args: string[]) => sandbox.runBundle(bundle, device, args);
+  const firstRun = (device: Device) =>
+    sandbox.runBundle(bundle, device, ['sync'], { env: { AGENT_SYNC_REPO_URL: sandbox.remote } });
 
   beforeAll(() => {
     if (!fs.existsSync(bundle)) {
@@ -37,8 +39,8 @@ describe('built bundle between two devices', () => {
       sandbox.write('A', 'agents/a.md', 'agent a v1\n');
     });
 
-    it('A init and push exit 0', async () => {
-      expect((await cli('A', 'init', sandbox.remote)).code).toBe(0);
+    it('A first sync and push exit 0', async () => {
+      expect((await firstRun('A')).code).toBe(0);
       expect((await cli('A', 'push')).code).toBe(0);
       expect(sandbox.remoteFiles()).toEqual(['skills/MAIN-SKILL.md']);
       expect((await cli('A', 'add', 'skill', 'foo')).code).toBe(0);
@@ -48,9 +50,8 @@ describe('built bundle between two devices', () => {
       expect(sandbox.remoteFiles()).toContain('skills/foo/SKILL.md');
     });
 
-    it('B init and pull bring the files', async () => {
-      expect((await cli('B', 'init', sandbox.remote)).code).toBe(0);
-      expect((await cli('B', 'pull')).code).toBe(0);
+    it('B first sync brings the files', async () => {
+      expect((await firstRun('B')).code).toBe(0);
       expect(sandbox.read('B', 'CLAUDE.md')).toBe('instructions v1\n');
       expect(sandbox.read('B', 'skills/foo/SKILL.md')).toBe('skill foo v1\n');
       expect(sandbox.read('B', 'commands/hello.md')).toBe('hello v1\n');

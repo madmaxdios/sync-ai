@@ -1,4 +1,3 @@
-import path from 'node:path';
 import type { AutoPushOutcome } from '../domain/auto-push';
 import { buildReport, shouldAutoPull, type CheckFacts } from '../domain/check-decision';
 import {
@@ -18,10 +17,10 @@ import { formatList } from '../domain/report';
 import { basesOf, type SyncState } from '../domain/sync-state';
 import { loadCheckCache, saveCheckCache } from '../infra/check-cache-store';
 import { startDeadline } from '../infra/deadline';
-import { isDirectory } from '../infra/file-system';
 import { SILENT_IO } from '../infra/io';
 import { loadState } from '../infra/state-store';
 import { runAutoPush } from './auto-push';
+import { bootstrapRepository, hasLocalRepository } from './bootstrap';
 import { countAhead, countBehind, probeRemote, type RemoteProbe } from './check-remote';
 import type { CommandContext } from './context';
 import { runPull } from './pull';
@@ -127,11 +126,46 @@ function announce(
   return withAnnouncement(cache, input.sessionId, message.signature, now);
 }
 
+/** What a hook says after trying the first-run setup; never throws. */
+async function hookFirstRun(context: CommandContext, input: HookInput): Promise<void> {
+  const now = context.now();
+  const interval = intervalFrom(context.env.AGENT_SYNC_CHECK_INTERVAL_MINUTES);
+  let cache = await loadCheckCache(context.dataHome);
+  if (input.event !== CheckEvent.SessionStart && !isRemoteCheckDue(cache, now, interval)) return;
+  const before = cache;
+  cache = withRemoteCheck(cache, now);
+
+  let message: string;
+  try {
+    const code = await bootstrapRepository({ ...context, io: SILENT_IO, dryRun: false }, false);
+    if (code === ExitCode.Ok) message = 'sync-ai: repository cloned and your configuration installed.';
+    else if (code === ExitCode.Conflicts) message = 'sync-ai: repository cloned; local files differ from it. Run /sync-ai:resolve.';
+    else message = `sync-ai: first-run setup did not finish (exit ${code}). Run /sync-ai:sync.`;
+  } catch (error) {
+    message = `sync-ai: ${error instanceof Error ? error.message : String(error)}`;
+  }
+  cache = announce(context, input, cache, { user: message, claude: undefined, signature: 'first-run' });
+  if (cache !== before) await saveCheckCache(context.dataHome, cache);
+}
+
+/** A manual `sync` on a device without a local clone: sets it up, creating the repository if needed. */
+async function manualFirstRun(context: CommandContext): Promise<void> {
+  try {
+    await bootstrapRepository(context, true);
+  } catch (error) {
+    context.io.warn(`Error: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
 async function check(context: CommandContext): Promise<void> {
   const { agent, dataHome, repoGit } = context;
   const manual = !context.hook;
   const input = manual ? manualInput() : parseHookInput(await context.readStdin());
-  if (!(await isDirectory(path.join(context.repoDir, '.git')))) return;
+  if (!(await hasLocalRepository(context))) {
+    if (manual) await manualFirstRun(context);
+    else await hookFirstRun(context, input);
+    return;
+  }
 
   const probeDeadline = startDeadline(CHECK_BUDGET_MS);
   const overallDeadline = startDeadline(OVERALL_BUDGET_MS);

@@ -178,6 +178,14 @@ export class Sandbox {
     }
   }
 
+  /** First-run setup of a device against the shared bare repository (what `sync` does on a new device). */
+  connect(device: Device, options: RunOptions = {}): Promise<RunResult> {
+    return this.run(device, ['sync'], {
+      ...options,
+      env: { AGENT_SYNC_REPO_URL: this.remote, ...options.env },
+    });
+  }
+
   async run(device: Device, args: readonly string[], options: RunOptions = {}): Promise<RunResult> {
     if (this.options.autoList && args[0] === 'push') await this.listAll(device);
     const entries: { stream: 'out' | 'err'; text: string }[] = [];

@@ -8,7 +8,7 @@ import { runPull } from './pull';
 import { refreshRemote, requireReachable } from './remote-state';
 
 /**
- * `init` without a URL when `<login>/<name>` already exists: this is the user's data
+ * First-run setup when `<login>/<name>` already exists: this is the user's data
  * repository, so a second device clones it and installs its configuration.
  */
 export async function runInitWithExistingRepository(
@@ -22,7 +22,7 @@ export async function runInitWithExistingRepository(
     throw new AppError(
       `the repository ${info.url} already exists but GitHub reports it as PUBLIC, ` +
         'and sync-ai never uses a public repository for configuration. ' +
-        'Make it private, choose another name with --name <repo>, or pass the URL of a private repository: init <url>',
+        'Make it private, choose another name with --name <repo>, or set AGENT_SYNC_REPO_URL to the URL of a private repository',
     );
   }
 
@@ -31,17 +31,6 @@ export async function runInitWithExistingRepository(
       `[dry-run] Would clone the existing PRIVATE repository ${slug} into ${repoDir} and install its configuration`,
     );
     return ExitCode.Ok;
-  }
-
-  if (!context.assumeYes) {
-    const confirmed = await io.confirm(
-      `Clone the existing PRIVATE repository ${slug} into ${repoDir} and install its configuration? (y/N) `,
-    );
-    if (!confirmed) {
-      io.warn('Cancelled: nothing was cloned.');
-      io.warn(`Repeat with --yes to clone the existing private repository ${slug}.`);
-      return ExitCode.ConfirmationRequired;
-    }
   }
 
   const protocol = parseGitProtocol((await gh.run(['config', 'get', 'git_protocol'])).stdout);

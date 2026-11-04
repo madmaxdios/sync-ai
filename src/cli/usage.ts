@@ -1,10 +1,11 @@
 export const USAGE = `Usage: agent-sync [--agent NAME] [--yes] [--dry-run] <command>
 
 Commands:
-  sync         Run the safe automatic sync flow (no arguments)
-  init [url]   Clone your PRIVATE configuration repository; without a URL, use the
-               GitHub CLI (gh): create it, or clone it and install its files if it
-               already exists (setting up another device)
+  sync         Run the safe automatic sync flow (no arguments). On a device that has not
+               been set up yet it first clones your PRIVATE configuration repository
+               (<your gh login>/sync-ai-data) and installs its files; if it does not exist,
+               it creates it after asking. Set AGENT_SYNC_REPO_URL to use another private
+               repository without gh
   pull         Fetch changes from the repository and install the files into the agent
   push         Publish your local configuration (with a strict scan for secrets, passwords
                and personal data). Only items you listed are published: CLAUDE.md always,
@@ -21,8 +22,8 @@ Commands:
 
 Options:
   --agent NAME    Agent to sync (default: claude)
-  --name REPO     Name of the private repository init creates (default: sync-ai-data)
-  --yes, -y       Confirm repository creation, cloning, taking the repository version
+  --name REPO     Name of the private repository sync creates (default: sync-ai-data)
+  --yes, -y       Confirm repository creation, taking the repository version
                   for conflicts in pull, and resolve --editor results without asking
                   (required without a terminal)
   --dry-run       Do not modify your local configuration, create commits or publish

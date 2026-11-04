@@ -26,15 +26,16 @@ describe('agent-sync between two devices', () => {
     sandbox.write('A', 'plugins/p.json', 'SENTINEL_PLUGIN\n');
   });
 
-  describe('init and first push (device A)', () => {
-    it('init clones the repo', async () => {
-      await sandbox.run('A', ['init', sandbox.remote]);
+  describe('first sync and first push (device A)', () => {
+    it('the first sync clones the repo', async () => {
+      await sandbox.connect('A');
       expect(fs.existsSync(`${sandbox.dataHome('A')}/repo/.git`)).toBe(true);
     });
 
-    it('init twice is idempotent', async () => {
-      const result = await sandbox.run('A', ['init', sandbox.remote]);
-      expect(result.output).toContain('Already initialized');
+    it('a second sync does not clone again', async () => {
+      const result = await sandbox.connect('A');
+      expect(result.code).toBe(0);
+      expect(result.output).not.toContain('Initialized');
     });
 
     it('push exits 0', async () => {
@@ -75,7 +76,7 @@ describe('agent-sync between two devices', () => {
 
   describe('pull on a fresh device (device B)', () => {
     it('pull exits 0 without confirmation for new files', async () => {
-      await sandbox.run('B', ['init', sandbox.remote]);
+      await sandbox.connect('B');
       const result = await sandbox.run('B', ['pull']);
       expect(result.code).toBe(0);
     });

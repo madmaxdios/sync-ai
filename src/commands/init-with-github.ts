@@ -1,4 +1,3 @@
-import path from 'node:path';
 import { AppError, UsageError } from '../domain/app-error';
 import { ExitCode } from '../domain/exit-code';
 import {
@@ -9,7 +8,6 @@ import {
   type RepoInfo,
 } from '../domain/github-repo';
 import { DEFAULT_REPO_NAME, repoNameSchema } from '../domain/repo-name';
-import { isDirectory } from '../infra/file-system';
 import type { GitHubCli } from '../infra/gh';
 import { cloneRepository } from './clone-repo';
 import type { CommandContext } from './context';
@@ -29,7 +27,7 @@ async function requireAuthenticatedLogin(gh: GitHubCli): Promise<string> {
   const status = await gh.run(['auth', 'status']);
   if (status.code !== 0) {
     throw new AppError(
-      'gh is not logged in to GitHub. Run `gh auth login`, or pass the URL of a private repository: init <url>',
+      'gh is not logged in to GitHub. Run `gh auth login`, or set AGENT_SYNC_REPO_URL to the URL of a private repository',
       ExitCode.Usage,
     );
   }
@@ -38,22 +36,15 @@ async function requireAuthenticatedLogin(gh: GitHubCli): Promise<string> {
   return login;
 }
 
-async function reportExistingClone(context: CommandContext): Promise<boolean> {
-  const { repoDir, repoGit, io } = context;
-  if (!(await isDirectory(path.join(repoDir, '.git')))) return false;
-  const origin = await repoGit.run(['remote', 'get-url', 'origin']);
-  const where = origin.code === 0 ? ` (origin: ${origin.stdout.trim()})` : '';
-  io.info(`Already initialized: ${repoDir}${where}`);
-  return true;
-}
-
 /**
- * `init` without a URL: creates a PRIVATE repository with the GitHub CLI and clones it, or
- * clones the user's existing private data repository when it is already there.
+ * First-run setup through the GitHub CLI: clones the user's existing private data repository
+ * and installs its files, or (only when `allowCreate`) creates the PRIVATE repository and clones it.
  */
-export async function runInitWithGitHub(context: CommandContext): Promise<ExitCode> {
+export async function runInitWithGitHub(
+  context: CommandContext,
+  allowCreate: boolean,
+): Promise<ExitCode> {
   const { gh, io, repoDir } = context;
-  if (await reportExistingClone(context)) return ExitCode.Ok;
 
   const parsedName = repoNameSchema.safeParse(context.repoName ?? DEFAULT_REPO_NAME);
   if (!parsedName.success) {
@@ -67,6 +58,11 @@ export async function runInitWithGitHub(context: CommandContext): Promise<ExitCo
   const slug = `${login}/${name}`;
   const existing = await findRepository(gh, slug);
   if (existing) return runInitWithExistingRepository(context, slug, existing);
+  if (!allowCreate) {
+    throw new AppError(
+      `the private repository ${slug} does not exist yet; run /sync-ai:sync (or agent-sync sync) to create it`,
+    );
+  }
 
   if (context.dryRun) {
     io.info(`[dry-run] Would create the PRIVATE repository ${slug} on GitHub and clone it into ${repoDir}`);
@@ -91,7 +87,7 @@ export async function runInitWithGitHub(context: CommandContext): Promise<ExitCo
   if (!created.isPrivate) {
     throw new AppError(
       `the repository ${created.url} was created but GitHub reports it is NOT private. ` +
-        'Nothing was cloned or uploaded. Make it private or delete it, then run init again.',
+        'Nothing was cloned or uploaded. Make it private or delete it, then run sync again.',
     );
   }
 
@@ -102,6 +98,6 @@ export async function runInitWithGitHub(context: CommandContext): Promise<ExitCo
 
   io.info(`Created the private repository ${created.url}`);
   io.info(`Initialized: ${repoDir}`);
-  io.info("Next step: run 'push' to upload your configuration.");
+  io.info("Next step: add the skills you want to share and run 'push' to upload your configuration.");
   return ExitCode.Ok;
 }

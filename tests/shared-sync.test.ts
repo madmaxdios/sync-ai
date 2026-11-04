@@ -7,7 +7,7 @@ describe('shared skills across agents', () => {
   beforeAll(async () => {
     sandbox.writeAgent('A', 'claude', 'CLAUDE.md', 'shared instructions\n');
     sandbox.writeAgent('A', 'claude', 'skills/common/SKILL.md', 'common skill\n');
-    await sandbox.run('A', ['init', sandbox.remote]);
+    await sandbox.connect('A');
     expect((await sandbox.run('A', ['add', 'skill', 'common'])).code).toBe(0);
     expect((await sandbox.run('A', ['push'])).code).toBe(0);
   });
@@ -19,14 +19,14 @@ describe('shared skills across agents', () => {
   });
 
   it('installs shared content into Codex using its local names', async () => {
-    await sandbox.run('B', ['init', sandbox.remote], { agent: 'codex' });
+    await sandbox.connect('B', { agent: 'codex' });
     expect((await sandbox.run('B', ['pull'], { agent: 'codex' })).code).toBe(0);
     expect(sandbox.readAgent('B', 'codex', 'AGENTS.md')).toBe('shared instructions\n');
     expect(sandbox.readAgent('B', 'codex', 'skills/common/SKILL.md')).toBe('common skill\n');
   });
 
   it('lets OpenCode consume the same shared content', async () => {
-    await sandbox.run('C', ['init', sandbox.remote], { agent: 'opencode' });
+    await sandbox.connect('C', { agent: 'opencode' });
     expect((await sandbox.run('C', ['pull'], { agent: 'opencode' })).code).toBe(0);
     expect(sandbox.readAgent('C', 'opencode', 'AGENTS.md')).toBe('shared instructions\n');
     expect(sandbox.readAgent('C', 'opencode', 'skills/common/SKILL.md')).toBe('common skill\n');

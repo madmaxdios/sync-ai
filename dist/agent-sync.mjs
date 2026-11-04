@@ -7,7 +7,7 @@ var __export = (target, all) => {
 
 // src/cli/run.ts
 import os from "node:os";
-import path16 from "node:path";
+import path14 from "node:path";
 
 // src/domain/app-error.ts
 var AppError = class extends Error {
@@ -25,7 +25,7 @@ var UsageError = class extends AppError {
   }
 };
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/classic/external.js
+// node_modules/zod/v4/classic/external.js
 var external_exports = {};
 __export(external_exports, {
   $brand: () => $brand,
@@ -288,7 +288,7 @@ __export(external_exports, {
   xor: () => xor
 });
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/core/index.js
+// node_modules/zod/v4/core/index.js
 var core_exports2 = {};
 __export(core_exports2, {
   $ZodAny: () => $ZodAny,
@@ -605,7 +605,7 @@ __export(core_exports2, {
   withParser: () => withParser
 });
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/core/util.js
+// node_modules/zod/v4/core/util.js
 var util_exports = {};
 __export(util_exports, {
   BIGINT_FORMAT_RANGES: () => BIGINT_FORMAT_RANGES,
@@ -842,10 +842,10 @@ function mergeDefs(...defs) {
 function cloneDef(schema) {
   return mergeDefs(schema._zod.def);
 }
-function getElementAtPath(obj, path17) {
-  if (!path17)
+function getElementAtPath(obj, path15) {
+  if (!path15)
     return obj;
-  return path17.reduce((acc, key) => acc?.[key], obj);
+  return path15.reduce((acc, key) => acc?.[key], obj);
 }
 function promiseAllObject(promisesObj) {
   const keys = Object.keys(promisesObj);
@@ -1185,11 +1185,11 @@ function explicitlyAborted(x, startIndex = 0) {
   }
   return false;
 }
-function prefixIssues(path17, issues) {
+function prefixIssues(path15, issues) {
   return issues.map((iss) => {
     var _a3;
     (_a3 = iss).path ?? (_a3.path = []);
-    iss.path.unshift(path17);
+    iss.path.unshift(path15);
     return iss;
   });
 }
@@ -1461,7 +1461,7 @@ function constantCatch(value) {
   return fn;
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/core/core.js
+// node_modules/zod/v4/core/core.js
 var _a;
 var NEVER = /* @__PURE__ */ Object.freeze({
   status: "aborted"
@@ -1583,7 +1583,7 @@ function config(newConfig) {
   return globalConfig;
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/core/errors.js
+// node_modules/zod/v4/core/errors.js
 function _getMessage() {
   const internals = this._zod;
   internals.message ?? (internals.message = JSON.stringify(internals.def, jsonStringifyReplacer, 2));
@@ -1651,16 +1651,16 @@ function flattenError(error62, mapper = (issue2) => issue2.message) {
 }
 function formatError(error62, mapper = (issue2) => issue2.message) {
   const fieldErrors = { _errors: [] };
-  const processError = (error63, path17 = []) => {
+  const processError = (error63, path15 = []) => {
     for (const issue2 of error63.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
-        issue2.errors.map((issues) => processError({ issues }, [...path17, ...issue2.path]));
+        issue2.errors.map((issues) => processError({ issues }, [...path15, ...issue2.path]));
       } else if (issue2.code === "invalid_key") {
-        processError({ issues: issue2.issues }, [...path17, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path15, ...issue2.path]);
       } else if (issue2.code === "invalid_element") {
-        processError({ issues: issue2.issues }, [...path17, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path15, ...issue2.path]);
       } else {
-        const fullpath = [...path17, ...issue2.path];
+        const fullpath = [...path15, ...issue2.path];
         if (fullpath.length === 0) {
           fieldErrors._errors.push(mapper(issue2));
         } else {
@@ -1699,17 +1699,17 @@ function formatError(error62, mapper = (issue2) => issue2.message) {
 }
 function treeifyError(error62, mapper = (issue2) => issue2.message) {
   const result = { errors: [] };
-  const processError = (error63, path17 = []) => {
+  const processError = (error63, path15 = []) => {
     var _a3;
     for (const issue2 of error63.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
-        issue2.errors.map((issues) => processError({ issues }, [...path17, ...issue2.path]));
+        issue2.errors.map((issues) => processError({ issues }, [...path15, ...issue2.path]));
       } else if (issue2.code === "invalid_key") {
-        processError({ issues: issue2.issues }, [...path17, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path15, ...issue2.path]);
       } else if (issue2.code === "invalid_element") {
-        processError({ issues: issue2.issues }, [...path17, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path15, ...issue2.path]);
       } else {
-        const fullpath = [...path17, ...issue2.path];
+        const fullpath = [...path15, ...issue2.path];
         if (fullpath.length === 0) {
           result.errors.push(mapper(issue2));
           continue;
@@ -1748,8 +1748,8 @@ function treeifyError(error62, mapper = (issue2) => issue2.message) {
 }
 function toDotPath(_path) {
   const segs = [];
-  const path17 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
-  for (const seg of path17) {
+  const path15 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
+  for (const seg of path15) {
     if (typeof seg === "number")
       segs.push(`[${seg}]`);
     else if (typeof seg === "symbol")
@@ -1775,7 +1775,7 @@ function prettifyError(error62) {
   return lines.join("\n");
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/core/parse.js
+// node_modules/zod/v4/core/parse.js
 function finalizeParams(callee, params) {
   return { callee: params?.callee ?? callee, Err: params?.Err };
 }
@@ -1935,7 +1935,7 @@ var _safeDecodeAsync = (_Err) => async (schema, value, _ctx) => {
 };
 var safeDecodeAsync = /* @__PURE__ */ _safeDecodeAsync($ZodRealError);
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/core/regexes.js
+// node_modules/zod/v4/core/regexes.js
 var regexes_exports = {};
 __export(regexes_exports, {
   anyString: () => anyString,
@@ -2107,7 +2107,7 @@ var sha512_hex = /^[0-9a-fA-F]{128}$/;
 var sha512_base64 = /* @__PURE__ */ fixedBase64(86, "==");
 var sha512_base64url = /* @__PURE__ */ fixedBase64url(86);
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/core/checks.js
+// node_modules/zod/v4/core/checks.js
 var $ZodCheck = /* @__PURE__ */ $constructor("$ZodCheck", (inst, def) => {
   var _a3;
   inst._zod ?? (inst._zod = {});
@@ -2583,7 +2583,7 @@ var $ZodCheckOverwrite = /* @__PURE__ */ $constructor("$ZodCheckOverwrite", (ins
   };
 });
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/core/doc.js
+// node_modules/zod/v4/core/doc.js
 var Doc = class {
   constructor(args = [], closed = {}) {
     this.content = [];
@@ -2624,14 +2624,14 @@ ${content.join("\n")}
   }
 };
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/core/versions.js
+// node_modules/zod/v4/core/versions.js
 var version = {
   major: 4,
   minor: 6,
   patch: 7
 };
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/core/schemas.js
+// node_modules/zod/v4/core/schemas.js
 var $ZodType = /* @__PURE__ */ $constructor("$ZodType", (inst, def) => {
   var _a3;
   inst ?? (inst = {});
@@ -5073,7 +5073,7 @@ function handleRefineResult(result, payload, input2, inst) {
   }
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/core/memoizer.js
+// node_modules/zod/v4/core/memoizer.js
 var $ZodCyclicError = class extends Error {
   constructor() {
     super(`Cannot parse a reference cycle that closes through a transform`);
@@ -5350,7 +5350,7 @@ function isBackEdge(ctx, value) {
   return backEdges !== void 0 && isRef(value) && backEdges.has(value);
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/index.js
+// node_modules/zod/v4/locales/index.js
 var locales_exports = {};
 __export(locales_exports, {
   ar: () => ar_default,
@@ -5418,7 +5418,7 @@ __export(locales_exports, {
   zhTW: () => zh_TW_default
 });
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/ar.js
+// node_modules/zod/v4/locales/ar.js
 var error = () => {
   const Sizable = {
     string: { unit: "\u062D\u0631\u0641", verb: "\u0623\u0646 \u064A\u062D\u0648\u064A" },
@@ -5530,7 +5530,7 @@ function ar_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/az.js
+// node_modules/zod/v4/locales/az.js
 var error2 = () => {
   const Sizable = {
     string: { unit: "simvol", verb: "olmal\u0131d\u0131r" },
@@ -5641,7 +5641,7 @@ function az_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/be.js
+// node_modules/zod/v4/locales/be.js
 function getBelarusianPlural(count, one, few, many) {
   const absCount = Math.abs(count);
   const lastDigit = absCount % 10;
@@ -5810,7 +5810,7 @@ function be_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/bg.js
+// node_modules/zod/v4/locales/bg.js
 var error4 = () => {
   const Sizable = {
     string: { unit: "\u0441\u0438\u043C\u0432\u043E\u043B\u0430", verb: "\u0434\u0430 \u0441\u044A\u0434\u044A\u0440\u0436\u0430" },
@@ -5936,7 +5936,7 @@ function bg_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/bn.js
+// node_modules/zod/v4/locales/bn.js
 var error5 = () => {
   const Sizable = {
     string: { unit: "\u0985\u0995\u09CD\u09B7\u09B0", verb: "\u09A5\u09BE\u0995\u09A4\u09C7 \u09B9\u09AC\u09C7" },
@@ -6050,7 +6050,7 @@ function bn_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/ca.js
+// node_modules/zod/v4/locales/ca.js
 var error6 = () => {
   const Sizable = {
     string: { unit: "car\xE0cters", verb: "contenir" },
@@ -6164,7 +6164,7 @@ function ca_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/ckb.js
+// node_modules/zod/v4/locales/ckb.js
 var error7 = () => {
   const Sizable = {
     string: { unit: "\u067E\u06CC\u062A", verb: "\u0628\u06CE\u062A" },
@@ -6297,7 +6297,7 @@ function ckb_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/cs.js
+// node_modules/zod/v4/locales/cs.js
 var error8 = () => {
   const Sizable = {
     string: { unit: "znak\u016F", verb: "m\xEDt" },
@@ -6414,7 +6414,7 @@ function cs_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/da.js
+// node_modules/zod/v4/locales/da.js
 var error9 = () => {
   const Sizable = {
     string: { unit: "tegn", verb: "havde" },
@@ -6535,7 +6535,7 @@ function da_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/de.js
+// node_modules/zod/v4/locales/de.js
 var error10 = () => {
   const Sizable = {
     string: { unit: "Zeichen", verb: "zu haben" },
@@ -6649,7 +6649,7 @@ function de_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/el.js
+// node_modules/zod/v4/locales/el.js
 var error11 = () => {
   const Sizable = {
     string: { unit: "\u03C7\u03B1\u03C1\u03B1\u03BA\u03C4\u03AE\u03C1\u03B5\u03C2", verb: "\u03BD\u03B1 \u03AD\u03C7\u03B5\u03B9" },
@@ -6762,7 +6762,7 @@ function el_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/en.js
+// node_modules/zod/v4/locales/en.js
 var error12 = () => {
   const Sizable = {
     string: { unit: "characters", verb: "to have" },
@@ -6887,7 +6887,7 @@ function en_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/eo.js
+// node_modules/zod/v4/locales/eo.js
 var error13 = () => {
   const Sizable = {
     string: { unit: "karaktrojn", verb: "havi" },
@@ -7002,7 +7002,7 @@ function eo_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/es.js
+// node_modules/zod/v4/locales/es.js
 var error14 = () => {
   const Sizable = {
     string: { unit: "caracteres", verb: "tener" },
@@ -7139,7 +7139,7 @@ function es_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/fa.js
+// node_modules/zod/v4/locales/fa.js
 var error15 = () => {
   const Sizable = {
     string: { unit: "\u06A9\u0627\u0631\u0627\u06A9\u062A\u0631", verb: "\u062F\u0627\u0634\u062A\u0647 \u0628\u0627\u0634\u062F" },
@@ -7259,7 +7259,7 @@ function fa_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/fi.js
+// node_modules/zod/v4/locales/fi.js
 var error16 = () => {
   const Sizable = {
     string: { unit: "merkki\xE4", subject: "merkkijonon" },
@@ -7377,7 +7377,7 @@ function fi_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/fr.js
+// node_modules/zod/v4/locales/fr.js
 var error17 = () => {
   const Sizable = {
     string: { unit: "caract\xE8res", verb: "avoir" },
@@ -7507,7 +7507,7 @@ function fr_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/fr-CA.js
+// node_modules/zod/v4/locales/fr-CA.js
 var error18 = () => {
   const Sizable = {
     string: { unit: "caract\xE8res", verb: "avoir" },
@@ -7620,7 +7620,7 @@ function fr_CA_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/gu.js
+// node_modules/zod/v4/locales/gu.js
 var error19 = () => {
   const Sizable = {
     string: { unit: "\u0A85\u0A95\u0ACD\u0AB7\u0AB0", verb: "\u0AB9\u0ACB\u0AB5\u0ABE \u0A9C\u0ACB\u0A88\u0A8F" },
@@ -7734,7 +7734,7 @@ function gu_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/he.js
+// node_modules/zod/v4/locales/he.js
 var error20 = () => {
   const TypeNames = {
     string: { label: "\u05DE\u05D7\u05E8\u05D5\u05D6\u05EA", gender: "f" },
@@ -7936,7 +7936,7 @@ function he_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/hi.js
+// node_modules/zod/v4/locales/hi.js
 var error21 = () => {
   const Sizable = {
     string: { unit: "\u0905\u0915\u094D\u0937\u0930", verb: "\u0930\u0916\u0928\u0947 \u0915\u0947 \u0932\u093F\u090F" },
@@ -8048,7 +8048,7 @@ function hi_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/hr.js
+// node_modules/zod/v4/locales/hr.js
 var error22 = () => {
   const Sizable = {
     string: { unit: "znakova", verb: "imati" },
@@ -8175,7 +8175,7 @@ function hr_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/hu.js
+// node_modules/zod/v4/locales/hu.js
 var error23 = () => {
   const Sizable = {
     string: { unit: "karakter", verb: "legyen" },
@@ -8289,7 +8289,7 @@ function hu_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/hy.js
+// node_modules/zod/v4/locales/hy.js
 function getArmenianPlural(count, one, many) {
   return Math.abs(count) === 1 ? one : many;
 }
@@ -8448,7 +8448,7 @@ function hy_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/id.js
+// node_modules/zod/v4/locales/id.js
 var error25 = () => {
   const Sizable = {
     string: { unit: "karakter", verb: "memiliki" },
@@ -8560,7 +8560,7 @@ function id_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/is.js
+// node_modules/zod/v4/locales/is.js
 var error26 = () => {
   const Sizable = {
     string: { unit: "stafi", verb: "a\xF0 hafa" },
@@ -8675,7 +8675,7 @@ function is_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/it.js
+// node_modules/zod/v4/locales/it.js
 var error27 = () => {
   const Sizable = {
     string: { unit: "caratteri", verb: "avere" },
@@ -8789,7 +8789,7 @@ function it_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/ja.js
+// node_modules/zod/v4/locales/ja.js
 var error28 = () => {
   const Sizable = {
     string: { unit: "\u6587\u5B57", verb: "\u3067\u3042\u308B" },
@@ -8902,7 +8902,7 @@ function ja_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/ka.js
+// node_modules/zod/v4/locales/ka.js
 var error29 = () => {
   const Sizable = {
     string: { unit: "\u10E1\u10D8\u10DB\u10D1\u10DD\u10DA\u10DD", verb: "\u10E3\u10DC\u10D3\u10D0 \u10E8\u10D4\u10D8\u10EA\u10D0\u10D5\u10D3\u10D4\u10E1" },
@@ -9020,7 +9020,7 @@ function ka_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/km.js
+// node_modules/zod/v4/locales/km.js
 var error30 = () => {
   const Sizable = {
     string: { unit: "\u178F\u17BD\u17A2\u1780\u17D2\u179F\u179A", verb: "\u1782\u17BD\u179A\u1798\u17B6\u1793" },
@@ -9136,12 +9136,12 @@ function km_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/kh.js
+// node_modules/zod/v4/locales/kh.js
 function kh_default() {
   return km_default();
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/kn.js
+// node_modules/zod/v4/locales/kn.js
 var error31 = () => {
   const Sizable = {
     string: { unit: "\u0C85\u0C95\u0CCD\u0CB7\u0CB0\u0C97\u0CB3\u0CC1", verb: "\u0CB9\u0CCA\u0C82\u0CA6\u0CB2\u0CC1" },
@@ -9257,7 +9257,7 @@ function kn_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/ko.js
+// node_modules/zod/v4/locales/ko.js
 var error32 = () => {
   const Sizable = {
     string: { unit: "\uBB38\uC790", verb: "to have" },
@@ -9374,7 +9374,7 @@ function ko_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/lt.js
+// node_modules/zod/v4/locales/lt.js
 var capitalizeFirstCharacter = (text) => {
   return text.charAt(0).toUpperCase() + text.slice(1);
 };
@@ -9582,7 +9582,7 @@ function lt_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/mk.js
+// node_modules/zod/v4/locales/mk.js
 var error34 = () => {
   const Sizable = {
     string: { unit: "\u0437\u043D\u0430\u0446\u0438", verb: "\u0434\u0430 \u0438\u043C\u0430\u0430\u0442" },
@@ -9697,7 +9697,7 @@ function mk_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/ms.js
+// node_modules/zod/v4/locales/ms.js
 var error35 = () => {
   const Sizable = {
     string: { unit: "aksara", verb: "mempunyai" },
@@ -9810,7 +9810,7 @@ function ms_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/ne.js
+// node_modules/zod/v4/locales/ne.js
 var error36 = () => {
   const Sizable = {
     string: { unit: "\u0905\u0915\u094D\u0937\u0930", verb: "\u0939\u0941\u0928\u0941\u092A\u0930\u094D\u091B" },
@@ -9922,7 +9922,7 @@ function ne_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/nl.js
+// node_modules/zod/v4/locales/nl.js
 var error37 = () => {
   const Sizable = {
     string: { unit: "tekens", verb: "heeft" },
@@ -10038,7 +10038,7 @@ function nl_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/nn.js
+// node_modules/zod/v4/locales/nn.js
 var error38 = () => {
   const Sizable = {
     string: { unit: "teikn", verb: "\xE5 ha" },
@@ -10152,7 +10152,7 @@ function nn_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/no.js
+// node_modules/zod/v4/locales/no.js
 var error39 = () => {
   const Sizable = {
     string: { unit: "tegn", verb: "\xE5 ha" },
@@ -10266,7 +10266,7 @@ function no_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/ota.js
+// node_modules/zod/v4/locales/ota.js
 var error40 = () => {
   const Sizable = {
     string: { unit: "harf", verb: "olmal\u0131d\u0131r" },
@@ -10381,7 +10381,7 @@ function ota_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/ps.js
+// node_modules/zod/v4/locales/ps.js
 var error41 = () => {
   const Sizable = {
     string: { unit: "\u062A\u0648\u06A9\u064A", verb: "\u0648\u0644\u0631\u064A" },
@@ -10501,7 +10501,7 @@ function ps_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/pl.js
+// node_modules/zod/v4/locales/pl.js
 var error42 = () => {
   const Sizable = {
     string: { unit: "znak\xF3w", verb: "mie\u0107" },
@@ -10616,7 +10616,7 @@ function pl_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/pt.js
+// node_modules/zod/v4/locales/pt.js
 var error43 = () => {
   const Sizable = {
     string: { unit: "caracteres" },
@@ -10760,7 +10760,7 @@ function pt_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/pt-BR.js
+// node_modules/zod/v4/locales/pt-BR.js
 var error44 = () => {
   const Sizable = {
     string: { unit: "caracteres" },
@@ -10905,7 +10905,7 @@ function pt_BR_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/ro.js
+// node_modules/zod/v4/locales/ro.js
 var error45 = () => {
   const Sizable = {
     string: { unit: "caractere", verb: "s\u0103 aib\u0103" },
@@ -11028,7 +11028,7 @@ function ro_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/ru.js
+// node_modules/zod/v4/locales/ru.js
 function getRussianPlural(count, one, few, many) {
   const absCount = Math.abs(count);
   const lastDigit = absCount % 10;
@@ -11197,7 +11197,7 @@ function ru_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/sk.js
+// node_modules/zod/v4/locales/sk.js
 var error47 = () => {
   const Sizable = {
     string: { unit: "znakov", verb: "ma\u0165" },
@@ -11314,7 +11314,7 @@ function sk_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/sl.js
+// node_modules/zod/v4/locales/sl.js
 var error48 = () => {
   const Sizable = {
     string: { unit: "znakov", verb: "imeti" },
@@ -11429,7 +11429,7 @@ function sl_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/sv.js
+// node_modules/zod/v4/locales/sv.js
 var error49 = () => {
   const Sizable = {
     string: { unit: "tecken", verb: "att ha" },
@@ -11545,7 +11545,7 @@ function sv_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/ta.js
+// node_modules/zod/v4/locales/ta.js
 var error50 = () => {
   const Sizable = {
     string: { unit: "\u0B8E\u0BB4\u0BC1\u0BA4\u0BCD\u0BA4\u0BC1\u0B95\u0BCD\u0B95\u0BB3\u0BCD", verb: "\u0B95\u0BCA\u0BA3\u0BCD\u0B9F\u0BBF\u0BB0\u0BC1\u0B95\u0BCD\u0B95 \u0BB5\u0BC7\u0BA3\u0BCD\u0B9F\u0BC1\u0BAE\u0BCD" },
@@ -11661,7 +11661,7 @@ function ta_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/tg.js
+// node_modules/zod/v4/locales/tg.js
 var error51 = () => {
   const Sizable = {
     string: { unit: "\u0430\u043B\u043E\u043C\u0430\u0442", verb: "\u0434\u043E\u0448\u0442\u0430 \u0431\u043E\u0448\u0430\u0434" },
@@ -11778,7 +11778,7 @@ function tg_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/th.js
+// node_modules/zod/v4/locales/th.js
 var error52 = () => {
   const Sizable = {
     string: { unit: "\u0E15\u0E31\u0E27\u0E2D\u0E31\u0E01\u0E29\u0E23", verb: "\u0E04\u0E27\u0E23\u0E21\u0E35" },
@@ -11894,7 +11894,7 @@ function th_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/tk.js
+// node_modules/zod/v4/locales/tk.js
 var error53 = () => {
   const Sizable = {
     string: { unit: "simwol", verb: "bolmaly" },
@@ -12002,7 +12002,7 @@ function tk_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/tr.js
+// node_modules/zod/v4/locales/tr.js
 var error54 = () => {
   const Sizable = {
     string: { unit: "karakter", verb: "olmal\u0131" },
@@ -12113,7 +12113,7 @@ function tr_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/uk.js
+// node_modules/zod/v4/locales/uk.js
 var error55 = () => {
   const Sizable = {
     string: { unit: "\u0441\u0438\u043C\u0432\u043E\u043B\u0456\u0432", verb: "\u043C\u0430\u0442\u0438\u043C\u0435" },
@@ -12227,12 +12227,12 @@ function uk_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/ua.js
+// node_modules/zod/v4/locales/ua.js
 function ua_default() {
   return uk_default();
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/ur.js
+// node_modules/zod/v4/locales/ur.js
 var error56 = () => {
   const Sizable = {
     string: { unit: "\u062D\u0631\u0648\u0641", verb: "\u06C1\u0648\u0646\u0627" },
@@ -12348,7 +12348,7 @@ function ur_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/uz.js
+// node_modules/zod/v4/locales/uz.js
 var error57 = () => {
   const Sizable = {
     string: { unit: "belgi", verb: "bo\u2018lishi kerak" },
@@ -12462,7 +12462,7 @@ function uz_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/vi.js
+// node_modules/zod/v4/locales/vi.js
 var error58 = () => {
   const Sizable = {
     string: { unit: "k\xFD t\u1EF1", verb: "c\xF3" },
@@ -12576,7 +12576,7 @@ function vi_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/zh-CN.js
+// node_modules/zod/v4/locales/zh-CN.js
 var error59 = () => {
   const Sizable = {
     string: { unit: "\u5B57\u7B26", verb: "\u5305\u542B" },
@@ -12691,7 +12691,7 @@ function zh_CN_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/zh-TW.js
+// node_modules/zod/v4/locales/zh-TW.js
 var error60 = () => {
   const Sizable = {
     string: { unit: "\u5B57\u5143", verb: "\u64C1\u6709" },
@@ -12804,7 +12804,7 @@ function zh_TW_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/locales/yo.js
+// node_modules/zod/v4/locales/yo.js
 var error61 = () => {
   const Sizable = {
     string: { unit: "\xE0mi", verb: "n\xED" },
@@ -12917,7 +12917,7 @@ function yo_default() {
   };
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/core/registries.js
+// node_modules/zod/v4/core/registries.js
 var _a2;
 var $output = /* @__PURE__ */ Symbol("ZodOutput");
 var $input = /* @__PURE__ */ Symbol("ZodInput");
@@ -12967,7 +12967,7 @@ function registry() {
 (_a2 = globalThis).__zod_globalRegistry ?? (_a2.__zod_globalRegistry = registry());
 var globalRegistry = globalThis.__zod_globalRegistry;
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/core/compile.js
+// node_modules/zod/v4/core/compile.js
 var INVALID = /* @__PURE__ */ Symbol.for("zod.compile.invalid");
 var FALLBACK_FLAG = /* @__PURE__ */ Symbol.for("zod.compile.fallback");
 var ZodCompileAsyncError = class extends Error {
@@ -14577,7 +14577,7 @@ function generateTransformCheck(doc, ctx, schema, accessor) {
   return accessor;
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/core/api.js
+// node_modules/zod/v4/core/api.js
 function snapshotChecks(def) {
   if (def.checks)
     def.checks = [...def.checks];
@@ -15636,7 +15636,7 @@ function _stringFormat(Class2, format, fnOrRegex, _params = {}) {
   return inst;
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/core/to-json-schema.js
+// node_modules/zod/v4/core/to-json-schema.js
 function assignProps(target, ...sources) {
   for (const source of sources) {
     for (const key of Reflect.ownKeys(source)) {
@@ -16166,7 +16166,7 @@ var createStandardJSONSchemaMethod = (schema, io, processors = {}) => (params) =
   return finalize(ctx, schema);
 };
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/core/json-schema-processors.js
+// node_modules/zod/v4/core/json-schema-processors.js
 var narrowMin = (agg, key, value) => {
   if (agg[key] === void 0 || value > agg[key])
     agg[key] = value;
@@ -16914,7 +16914,7 @@ function toJSONSchema(input2, params) {
   return finalize(ctx, input2);
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/core/json-schema-generator.js
+// node_modules/zod/v4/core/json-schema-generator.js
 var JSONSchemaGenerator = class {
   /** @deprecated Access via ctx instead */
   get metadataRegistry() {
@@ -16992,10 +16992,10 @@ var JSONSchemaGenerator = class {
   }
 };
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/core/json-schema.js
+// node_modules/zod/v4/core/json-schema.js
 var json_schema_exports = {};
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/classic/schemas.js
+// node_modules/zod/v4/classic/schemas.js
 var schemas_exports2 = {};
 __export(schemas_exports2, {
   ZodAny: () => ZodAny,
@@ -17176,7 +17176,7 @@ __export(schemas_exports2, {
   xor: () => xor
 });
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/classic/checks.js
+// node_modules/zod/v4/classic/checks.js
 var checks_exports2 = {};
 __export(checks_exports2, {
   endsWith: () => _endsWith,
@@ -17211,7 +17211,7 @@ __export(checks_exports2, {
   uppercase: () => _uppercase
 });
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/classic/errors.js
+// node_modules/zod/v4/classic/errors.js
 var _installedErrorProtos = /* @__PURE__ */ new WeakSet([Object.prototype, Error.prototype]);
 function _lazyMethod(proto, key, make) {
   Object.defineProperty(proto, key, {
@@ -17257,7 +17257,7 @@ var ZodRealError = /* @__PURE__ */ $constructor("ZodError", initializer2, void 0
   Parent: Error
 });
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/classic/parse.js
+// node_modules/zod/v4/classic/parse.js
 var parse2 = /* @__PURE__ */ _parse(ZodRealError);
 var parseAsync2 = /* @__PURE__ */ _parseAsync(ZodRealError);
 var safeParse2 = /* @__PURE__ */ _safeParse(ZodRealError);
@@ -17271,7 +17271,7 @@ var safeDecode2 = /* @__PURE__ */ _safeDecode(ZodRealError);
 var safeEncodeAsync2 = /* @__PURE__ */ _safeEncodeAsync(ZodRealError);
 var safeDecodeAsync2 = /* @__PURE__ */ _safeDecodeAsync(ZodRealError);
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/classic/schemas.js
+// node_modules/zod/v4/classic/schemas.js
 function _ensureDefaultLocale() {
   if (!globalConfig.localeError)
     config(en_default());
@@ -18736,7 +18736,7 @@ function preprocess(fn, schema) {
   });
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/classic/compat.js
+// node_modules/zod/v4/classic/compat.js
 var ZodIssueCode = {
   invalid_type: "invalid_type",
   too_big: "too_big",
@@ -18762,7 +18762,7 @@ var ZodFirstPartyTypeKind;
 /* @__PURE__ */ (function(ZodFirstPartyTypeKind2) {
 })(ZodFirstPartyTypeKind || (ZodFirstPartyTypeKind = {}));
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/classic/iso.js
+// node_modules/zod/v4/classic/iso.js
 var iso_exports = {};
 __export(iso_exports, {
   ZodISODate: () => ZodISODate,
@@ -18787,7 +18787,7 @@ function duration2(params) {
   return _isoDuration(ZodISODuration, params);
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/classic/from-json-schema.js
+// node_modules/zod/v4/classic/from-json-schema.js
 var z = {
   ...schemas_exports2,
   ...checks_exports2,
@@ -18887,13 +18887,13 @@ function resolveRef(ref, ctx) {
   if (!ref.startsWith("#")) {
     throw new Error("External $ref is not supported, only local refs (#/...) are allowed");
   }
-  const path17 = ref.slice(1).split("/").filter(Boolean);
-  if (path17.length === 0) {
+  const path15 = ref.slice(1).split("/").filter(Boolean);
+  if (path15.length === 0) {
     return ctx.rootSchema;
   }
   const defsKey = ctx.version === "draft-2020-12" ? "$defs" : "definitions";
-  if (path17[0] === defsKey) {
-    const key = path17[1] === void 0 ? void 0 : decodeJSONPointerSegment(path17[1]);
+  if (path15[0] === defsKey) {
+    const key = path15[1] === void 0 ? void 0 : decodeJSONPointerSegment(path15[1]);
     if (!key || !ctx.defs[key]) {
       throw new Error(`Reference not found: ${ref}`);
     }
@@ -19520,7 +19520,7 @@ function fromJSONSchema(schema, params) {
   return convertSchema(normalized, ctx);
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/core/visit.js
+// node_modules/zod/v4/core/visit.js
 var RESOLVING = /* @__PURE__ */ Symbol("z.visit/resolving");
 function visit(schema, fnOrHandlers) {
   const fn = typeof fnOrHandlers === "function" ? fnOrHandlers : (node2, rewritten) => {
@@ -19675,7 +19675,7 @@ function visit(schema, fnOrHandlers) {
   return run(schema);
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/classic/deep-partial.js
+// node_modules/zod/v4/classic/deep-partial.js
 function deepPartial(schema) {
   return visit(schema, {
     object: (s) => s.partial(),
@@ -19687,7 +19687,7 @@ function deepPartial(schema) {
   });
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/classic/in-out.js
+// node_modules/zod/v4/classic/in-out.js
 function withChecks(side, checks) {
   if (!checks?.length)
     return side;
@@ -19717,7 +19717,7 @@ function output(schema) {
   });
 }
 
-// node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/classic/coerce.js
+// node_modules/zod/v4/classic/coerce.js
 var coerce_exports = {};
 __export(coerce_exports, {
   bigint: () => bigint3,
@@ -19865,9 +19865,6 @@ function resolveAgent(name, environment) {
   if (!parsed.success) throw new AppError(`incomplete configuration for agent: ${name}`);
   return parsed.data;
 }
-
-// src/commands/check.ts
-import path12 from "node:path";
 
 // src/domain/check-decision.ts
 function shouldAutoPull(facts) {
@@ -20209,50 +20206,6 @@ function startDeadline(budgetMs) {
   return { remaining: () => Math.max(0, end - Date.now()) };
 }
 
-// src/infra/file-system.ts
-import fs2 from "node:fs/promises";
-import path5 from "node:path";
-function toNativePath(base, rel) {
-  return path5.join(base, ...rel.split("/"));
-}
-async function pathExists(target) {
-  try {
-    await fs2.access(target);
-    return true;
-  } catch {
-    return false;
-  }
-}
-async function isDirectory(target) {
-  try {
-    return (await fs2.stat(target)).isDirectory();
-  } catch {
-    return false;
-  }
-}
-async function copyPreserving(source, destination) {
-  await fs2.mkdir(path5.dirname(destination), { recursive: true });
-  await fs2.copyFile(source, destination);
-  const stats = await fs2.stat(source);
-  await fs2.chmod(destination, stats.mode & 511);
-  await fs2.utimes(destination, stats.atime, stats.mtime);
-}
-async function removeFile(target) {
-  await fs2.rm(target, { force: true });
-}
-async function pruneEmptyDirs(root) {
-  let entries;
-  try {
-    entries = await fs2.readdir(root, { withFileTypes: true });
-  } catch {
-    return;
-  }
-  for (const entry of entries) {
-    if (entry.isDirectory()) await pruneEmptyDirs(path5.join(root, entry.name));
-  }
-  if ((await fs2.readdir(root)).length === 0) await fs2.rmdir(root);
-}
-
 // src/infra/io.ts
 import readline from "node:readline";
 var SILENT_IO = {
@@ -20293,13 +20246,13 @@ function createConsoleIo(isAnswer) {
 }
 
 // src/infra/state-store.ts
-import fs3 from "node:fs/promises";
-import path6 from "node:path";
+import fs2 from "node:fs/promises";
+import path5 from "node:path";
 var STATE_FILE = "state.json";
 async function loadState(dataHome) {
   let content;
   try {
-    content = await fs3.readFile(path6.join(dataHome, STATE_FILE), "utf8");
+    content = await fs2.readFile(path5.join(dataHome, STATE_FILE), "utf8");
   } catch {
     return { state: emptyState(), invalid: false };
   }
@@ -20307,11 +20260,11 @@ async function loadState(dataHome) {
   return parsed ? { state: parsed, invalid: false } : { state: emptyState(), invalid: true };
 }
 async function saveState(dataHome, state) {
-  await fs3.mkdir(dataHome, { recursive: true });
-  const target = path6.join(dataHome, STATE_FILE);
+  await fs2.mkdir(dataHome, { recursive: true });
+  const target = path5.join(dataHome, STATE_FILE);
   const temporary = `${target}.tmp`;
-  await fs3.writeFile(temporary, serializeState(state));
-  await fs3.rename(temporary, target);
+  await fs2.writeFile(temporary, serializeState(state));
+  await fs2.rename(temporary, target);
 }
 
 // src/commands/auto-push.ts
@@ -20336,6 +20289,50 @@ function decideAutoPush(facts) {
   if (facts.files.length > facts.maxFiles) return { action: "too-many", count: facts.files.length, max: facts.maxFiles };
   if (facts.files.some((file2) => file2.ageMinutes < facts.quietMinutes)) return { action: "wait" };
   return { action: "push" };
+}
+
+// src/infra/file-system.ts
+import fs3 from "node:fs/promises";
+import path6 from "node:path";
+function toNativePath(base, rel) {
+  return path6.join(base, ...rel.split("/"));
+}
+async function pathExists(target) {
+  try {
+    await fs3.access(target);
+    return true;
+  } catch {
+    return false;
+  }
+}
+async function isDirectory(target) {
+  try {
+    return (await fs3.stat(target)).isDirectory();
+  } catch {
+    return false;
+  }
+}
+async function copyPreserving(source, destination) {
+  await fs3.mkdir(path6.dirname(destination), { recursive: true });
+  await fs3.copyFile(source, destination);
+  const stats = await fs3.stat(source);
+  await fs3.chmod(destination, stats.mode & 511);
+  await fs3.utimes(destination, stats.atime, stats.mtime);
+}
+async function removeFile(target) {
+  await fs3.rm(target, { force: true });
+}
+async function pruneEmptyDirs(root) {
+  let entries;
+  try {
+    entries = await fs3.readdir(root, { withFileTypes: true });
+  } catch {
+    return;
+  }
+  for (const entry of entries) {
+    if (entry.isDirectory()) await pruneEmptyDirs(path6.join(root, entry.name));
+  }
+  if ((await fs3.readdir(root)).length === 0) await fs3.rmdir(root);
 }
 
 // src/commands/local-tree.ts
@@ -20399,7 +20396,7 @@ function listRepoFiles(context) {
 async function requireRepo(context) {
   if (await isDirectory(path7.join(context.repoDir, ".git"))) return;
   throw new AppError(
-    `no repository initialized at ${context.repoDir}. Run first: init [repo-url]`
+    `no repository initialized at ${context.repoDir}. Run first: sync`
   );
 }
 
@@ -20459,9 +20456,9 @@ function parseTree(output2, prefix) {
     const tab = line.indexOf("	");
     if (tab < 0) continue;
     const [mode, type, sha] = line.slice(0, tab).split(" ");
-    const path17 = line.slice(tab + 1);
-    if (type !== "blob" || !sha || !path17.startsWith(prefix)) continue;
-    entries.set(path17.slice(prefix.length), { sha, executable: mode === "100755" });
+    const path15 = line.slice(tab + 1);
+    if (type !== "blob" || !sha || !path15.startsWith(prefix)) continue;
+    entries.set(path15.slice(prefix.length), { sha, executable: mode === "100755" });
   }
   return entries;
 }
@@ -21198,39 +21195,67 @@ async function runAutoPush(context, input2) {
   return publish(context, input2);
 }
 
-// src/commands/check-remote.ts
-var LS_REMOTE_TIMEOUT_MS = 3e3;
-async function probeRemote(git, branch, deadline) {
-  const lsTimeout = Math.min(LS_REMOTE_TIMEOUT_MS, deadline.remaining());
-  if (lsTimeout <= 0) return "unreachable";
-  const heads = await git.run(["ls-remote", "--heads", "origin", `refs/heads/${branch}`], { timeoutMs: lsTimeout });
-  if (heads.code !== 0) return "unreachable";
-  const remoteTip = heads.stdout.trim().split(/\s+/)[0];
-  if (!remoteTip) return "unchanged";
-  const known = await git.run(["rev-parse", "--verify", "-q", `origin/${branch}`]);
-  if (known.code === 0 && known.stdout.trim() === remoteTip) return "unchanged";
-  const fetchTimeout = deadline.remaining();
-  if (fetchTimeout <= 0) return "unreachable";
-  const fetched = await git.run(["fetch", "--quiet", "origin"], { timeoutMs: fetchTimeout });
-  return fetched.code === 0 ? "fetched" : "unreachable";
+// src/commands/bootstrap.ts
+import path12 from "node:path";
+
+// src/commands/clone-repo.ts
+import fs10 from "node:fs/promises";
+
+// src/domain/github-repo.ts
+var GH_CREDENTIAL_HELPER = "!gh auth git-credential";
+var gitProtocolSchema = external_exports.enum(["ssh", "https"]);
+var repoInfoSchema = external_exports.object({
+  isPrivate: external_exports.boolean(),
+  url: external_exports.string().min(1),
+  sshUrl: external_exports.string().min(1)
+});
+function parseRepoInfo(json2) {
+  try {
+    return repoInfoSchema.parse(JSON.parse(json2));
+  } catch {
+    throw new AppError("could not understand the repository information returned by gh");
+  }
 }
-async function countBehind(git, branch) {
-  const remoteRef = `origin/${branch}`;
-  if (!await git.succeeds(["rev-parse", "--verify", "-q", remoteRef])) return 0;
-  const range = await git.succeeds(["rev-parse", "--verify", "-q", "HEAD"]) ? `HEAD..${remoteRef}` : remoteRef;
-  const counted = await git.run(["rev-list", "--count", range]);
-  return counted.code === 0 ? Number(counted.stdout.trim()) || 0 : 0;
+function parseGitProtocol(output2) {
+  const parsed = gitProtocolSchema.safeParse(output2.trim());
+  return parsed.success ? parsed.data : "https";
 }
-async function countAhead(git, branch) {
-  const remoteRef = `origin/${branch}`;
-  if (!await git.succeeds(["rev-parse", "--verify", "-q", remoteRef])) return 0;
-  if (!await git.succeeds(["rev-parse", "--verify", "-q", "HEAD"])) return 0;
-  const counted = await git.run(["rev-list", "--count", `${remoteRef}..HEAD`]);
-  return counted.code === 0 ? Number(counted.stdout.trim()) || 0 : 0;
+function cloneUrl(info, protocol) {
+  return protocol === "ssh" ? info.sshUrl : `${info.url}.git`;
+}
+function isRepoNotFound(stderr) {
+  return /could not resolve to a repository|http 404|not found/i.test(stderr);
 }
 
+// src/commands/clone-repo.ts
+async function cloneRepository(context, url2, options = {}) {
+  const { git, repoGit, repoDir, dataHome } = context;
+  await fs10.mkdir(dataHome, { recursive: true });
+  if (!options.withGhCredentials) {
+    await git.must(["clone", "--quiet", "--", url2, repoDir]);
+    return;
+  }
+  await git.must([
+    "-c",
+    "credential.helper=",
+    "-c",
+    `credential.helper=${GH_CREDENTIAL_HELPER}`,
+    "clone",
+    "--quiet",
+    "--",
+    url2,
+    repoDir
+  ]);
+  await repoGit.must(["config", "--local", "--add", "credential.helper", ""]);
+  await repoGit.must(["config", "--local", "--add", "credential.helper", GH_CREDENTIAL_HELPER]);
+}
+
+// src/domain/repo-name.ts
+var DEFAULT_REPO_NAME = "sync-ai-data";
+var repoNameSchema = external_exports.string().max(100).regex(/^[A-Za-z0-9_][A-Za-z0-9._-]*$/).refine((name) => !name.endsWith(".git") && !name.includes(".."));
+
 // src/commands/apply-repo.ts
-import fs10 from "node:fs/promises";
+import fs11 from "node:fs/promises";
 import path10 from "node:path";
 async function backUp(context, destination) {
   if (!await pathExists(destination)) return;
@@ -21244,8 +21269,8 @@ async function installFromSnapshot(context, snapshot, rels4) {
     if (!content) throw new AppError(`the repository object for ${rel} is missing from the clone`);
     const destination = toNativePath(context.agent.home, rel);
     await backUp(context, destination);
-    await fs10.mkdir(path10.dirname(destination), { recursive: true });
-    await fs10.writeFile(destination, content, { mode: snapshot.executable.has(rel) ? 493 : 420 });
+    await fs11.mkdir(path10.dirname(destination), { recursive: true });
+    await fs11.writeFile(destination, content, { mode: snapshot.executable.has(rel) ? 493 : 420 });
   }
 }
 async function removeLocalWithBackup(context, rel) {
@@ -21255,7 +21280,7 @@ async function removeLocalWithBackup(context, rel) {
 }
 
 // src/infra/conflict-store.ts
-import fs11 from "node:fs/promises";
+import fs12 from "node:fs/promises";
 import path11 from "node:path";
 var MANIFEST_FILE = "manifest.json";
 var manifestSchema = external_exports.object({
@@ -21291,7 +21316,7 @@ var ConflictStore = class {
   }
   async load() {
     try {
-      const content = await fs11.readFile(path11.join(this.directory, MANIFEST_FILE), "utf8");
+      const content = await fs12.readFile(path11.join(this.directory, MANIFEST_FILE), "utf8");
       const parsed = manifestSchema.safeParse(JSON.parse(content));
       if (parsed.success) return parsed.data;
     } catch {
@@ -21307,8 +21332,8 @@ var ConflictStore = class {
         await removeFile(target);
         continue;
       }
-      await fs11.mkdir(path11.dirname(target), { recursive: true });
-      await fs11.writeFile(target, content);
+      await fs12.mkdir(path11.dirname(target), { recursive: true });
+      await fs12.writeFile(target, content);
     }
     return {
       hasLocal: contents.local !== void 0,
@@ -21318,8 +21343,8 @@ var ConflictStore = class {
     };
   }
   async save(manifest) {
-    await fs11.mkdir(this.directory, { recursive: true });
-    await fs11.writeFile(
+    await fs12.mkdir(this.directory, { recursive: true });
+    await fs12.writeFile(
       path11.join(this.directory, MANIFEST_FILE),
       `${JSON.stringify(manifest, null, 2)}
 `
@@ -21332,7 +21357,7 @@ var ConflictStore = class {
   }
 };
 async function pruneEmptyDirsKeepingRoot(root) {
-  for (const entry of await fs11.readdir(root, { withFileTypes: true })) {
+  for (const entry of await fs12.readdir(root, { withFileTypes: true })) {
     if (entry.isDirectory()) await pruneEmptyDirs(path11.join(root, entry.name));
   }
 }
@@ -21464,6 +21489,173 @@ async function runPull(context) {
   return 5 /* Conflicts */;
 }
 
+// src/commands/init-existing-repo.ts
+async function runInitWithExistingRepository(context, slug, info) {
+  const { gh, io, repoDir, repoGit } = context;
+  if (!info.isPrivate) {
+    throw new AppError(
+      `the repository ${info.url} already exists but GitHub reports it as PUBLIC, and sync-ai never uses a public repository for configuration. Make it private, choose another name with --name <repo>, or set AGENT_SYNC_REPO_URL to the URL of a private repository`
+    );
+  }
+  if (context.dryRun) {
+    io.info(
+      `[dry-run] Would clone the existing PRIVATE repository ${slug} into ${repoDir} and install its configuration`
+    );
+    return 0 /* Ok */;
+  }
+  const protocol = parseGitProtocol((await gh.run(["config", "get", "git_protocol"])).stdout);
+  await cloneRepository(context, cloneUrl(info, protocol), {
+    withGhCredentials: protocol === "https"
+  });
+  io.info(`Cloned the existing private repository ${info.url}`);
+  io.info(`Initialized: ${repoDir}`);
+  const remote = requireReachable(await refreshRemote(repoGit));
+  if (remote.status === "empty" || (await listRepoFiles(context)).length === 0) {
+    io.info(`The repository has no '${context.agent.name}' files yet.`);
+    io.info("Next step: run 'push' to upload your configuration.");
+    return 0 /* Ok */;
+  }
+  const pulled = await runPull({ ...context, assumeYes: false });
+  if (pulled === 5 /* Conflicts */) {
+    io.warn(`The repository is cloned and initialized, but your conflicting local files in ${context.agent.home} were not changed.`);
+    io.warn("Run 'resolve' to review them, or 'pull --yes' to take the repository versions; a .backup-* copy is kept.");
+  }
+  return pulled;
+}
+
+// src/commands/init-with-github.ts
+var REPO_DESCRIPTION = "AI agent configuration synced with sync-ai";
+async function findRepository(gh, slug) {
+  const result = await gh.run(["repo", "view", slug, "--json", "isPrivate,url,sshUrl"]);
+  if (result.code === 0) return parseRepoInfo(result.stdout);
+  if (isRepoNotFound(result.stderr)) return void 0;
+  throw new AppError(`gh repo view failed: ${result.stderr.trim() || `exit code ${result.code}`}`);
+}
+async function requireAuthenticatedLogin(gh) {
+  const status = await gh.run(["auth", "status"]);
+  if (status.code !== 0) {
+    throw new AppError(
+      "gh is not logged in to GitHub. Run `gh auth login`, or set AGENT_SYNC_REPO_URL to the URL of a private repository",
+      2 /* Usage */
+    );
+  }
+  const login = await gh.must(["api", "user", "--jq", ".login"]);
+  if (!login) throw new AppError("gh did not return your GitHub username");
+  return login;
+}
+async function runInitWithGitHub(context, allowCreate) {
+  const { gh, io, repoDir } = context;
+  const parsedName = repoNameSchema.safeParse(context.repoName ?? DEFAULT_REPO_NAME);
+  if (!parsedName.success) {
+    throw new UsageError(
+      'invalid repository name: use letters, digits, ".", "_" or "-" (it cannot start with "-" or end with ".git")'
+    );
+  }
+  const name = parsedName.data;
+  const login = await requireAuthenticatedLogin(gh);
+  const slug = `${login}/${name}`;
+  const existing = await findRepository(gh, slug);
+  if (existing) return runInitWithExistingRepository(context, slug, existing);
+  if (!allowCreate) {
+    throw new AppError(
+      `the private repository ${slug} does not exist yet; run /sync-ai:sync (or agent-sync sync) to create it`
+    );
+  }
+  if (context.dryRun) {
+    io.info(`[dry-run] Would create the PRIVATE repository ${slug} on GitHub and clone it into ${repoDir}`);
+    return 0 /* Ok */;
+  }
+  if (!context.assumeYes) {
+    const confirmed = await io.confirm(
+      `Create the PRIVATE repository ${slug} on GitHub and use it for your configuration? (y/N) `
+    );
+    if (!confirmed) {
+      io.warn("Cancelled: nothing was created on GitHub.");
+      io.warn(`Review it and repeat with --yes to create the private repository ${slug}.`);
+      return 3 /* ConfirmationRequired */;
+    }
+  }
+  await gh.must(["repo", "create", name, "--private", "--description", REPO_DESCRIPTION]);
+  const created = await findRepository(gh, slug);
+  if (!created) throw new AppError(`gh created ${slug} but it cannot be found afterwards`);
+  if (!created.isPrivate) {
+    throw new AppError(
+      `the repository ${created.url} was created but GitHub reports it is NOT private. Nothing was cloned or uploaded. Make it private or delete it, then run sync again.`
+    );
+  }
+  const protocol = parseGitProtocol((await gh.run(["config", "get", "git_protocol"])).stdout);
+  await cloneRepository(context, cloneUrl(created, protocol), {
+    withGhCredentials: protocol === "https"
+  });
+  io.info(`Created the private repository ${created.url}`);
+  io.info(`Initialized: ${repoDir}`);
+  io.info("Next step: add the skills you want to share and run 'push' to upload your configuration.");
+  return 0 /* Ok */;
+}
+
+// src/commands/bootstrap.ts
+var REPO_URL_ENV = "AGENT_SYNC_REPO_URL";
+async function hasLocalRepository(context) {
+  return isDirectory(path12.join(context.repoDir, ".git"));
+}
+async function cloneFromUrl(context, url2) {
+  const { io, repoDir, repoGit } = context;
+  if (context.dryRun) {
+    io.info(`[dry-run] Would clone ${url2} into ${repoDir}`);
+    return 0 /* Ok */;
+  }
+  await cloneRepository(context, url2);
+  io.info(`Initialized: ${repoDir}`);
+  io.warn("Warning: use a PRIVATE repository. Your skills and instructions may contain sensitive data.");
+  const remote = requireReachable(await refreshRemote(repoGit));
+  if (remote.status === "empty" || (await listRepoFiles(context)).length === 0) {
+    io.info(`The repository has no '${context.agent.name}' files yet.`);
+    return 0 /* Ok */;
+  }
+  return runPull({ ...context, assumeYes: false });
+}
+async function bootstrapRepository(context, allowCreate) {
+  const url2 = context.env[REPO_URL_ENV]?.trim();
+  if (url2) {
+    if (context.repoName !== void 0) {
+      throw new AppError(`--name cannot be combined with ${REPO_URL_ENV}`);
+    }
+    return cloneFromUrl(context, url2);
+  }
+  return runInitWithGitHub(context, allowCreate);
+}
+
+// src/commands/check-remote.ts
+var LS_REMOTE_TIMEOUT_MS = 3e3;
+async function probeRemote(git, branch, deadline) {
+  const lsTimeout = Math.min(LS_REMOTE_TIMEOUT_MS, deadline.remaining());
+  if (lsTimeout <= 0) return "unreachable";
+  const heads = await git.run(["ls-remote", "--heads", "origin", `refs/heads/${branch}`], { timeoutMs: lsTimeout });
+  if (heads.code !== 0) return "unreachable";
+  const remoteTip = heads.stdout.trim().split(/\s+/)[0];
+  if (!remoteTip) return "unchanged";
+  const known = await git.run(["rev-parse", "--verify", "-q", `origin/${branch}`]);
+  if (known.code === 0 && known.stdout.trim() === remoteTip) return "unchanged";
+  const fetchTimeout = deadline.remaining();
+  if (fetchTimeout <= 0) return "unreachable";
+  const fetched = await git.run(["fetch", "--quiet", "origin"], { timeoutMs: fetchTimeout });
+  return fetched.code === 0 ? "fetched" : "unreachable";
+}
+async function countBehind(git, branch) {
+  const remoteRef = `origin/${branch}`;
+  if (!await git.succeeds(["rev-parse", "--verify", "-q", remoteRef])) return 0;
+  const range = await git.succeeds(["rev-parse", "--verify", "-q", "HEAD"]) ? `HEAD..${remoteRef}` : remoteRef;
+  const counted = await git.run(["rev-list", "--count", range]);
+  return counted.code === 0 ? Number(counted.stdout.trim()) || 0 : 0;
+}
+async function countAhead(git, branch) {
+  const remoteRef = `origin/${branch}`;
+  if (!await git.succeeds(["rev-parse", "--verify", "-q", remoteRef])) return 0;
+  if (!await git.succeeds(["rev-parse", "--verify", "-q", "HEAD"])) return 0;
+  const counted = await git.run(["rev-list", "--count", `${remoteRef}..HEAD`]);
+  return counted.code === 0 ? Number(counted.stdout.trim()) || 0 : 0;
+}
+
 // src/commands/check.ts
 var CHECK_BUDGET_MS = 4e3;
 var OVERALL_BUDGET_MS = 7e3;
@@ -21536,11 +21728,41 @@ function announce(context, input2, cache, message) {
   if (manual || context.dryRun) return cache;
   return withAnnouncement(cache, input2.sessionId, message.signature, now);
 }
+async function hookFirstRun(context, input2) {
+  const now = context.now();
+  const interval = intervalFrom(context.env.AGENT_SYNC_CHECK_INTERVAL_MINUTES);
+  let cache = await loadCheckCache(context.dataHome);
+  if (input2.event !== "SessionStart" /* SessionStart */ && !isRemoteCheckDue(cache, now, interval)) return;
+  const before = cache;
+  cache = withRemoteCheck(cache, now);
+  let message;
+  try {
+    const code = await bootstrapRepository({ ...context, io: SILENT_IO, dryRun: false }, false);
+    if (code === 0 /* Ok */) message = "sync-ai: repository cloned and your configuration installed.";
+    else if (code === 5 /* Conflicts */) message = "sync-ai: repository cloned; local files differ from it. Run /sync-ai:resolve.";
+    else message = `sync-ai: first-run setup did not finish (exit ${code}). Run /sync-ai:sync.`;
+  } catch (error62) {
+    message = `sync-ai: ${error62 instanceof Error ? error62.message : String(error62)}`;
+  }
+  cache = announce(context, input2, cache, { user: message, claude: void 0, signature: "first-run" });
+  if (cache !== before) await saveCheckCache(context.dataHome, cache);
+}
+async function manualFirstRun(context) {
+  try {
+    await bootstrapRepository(context, true);
+  } catch (error62) {
+    context.io.warn(`Error: ${error62 instanceof Error ? error62.message : String(error62)}`);
+  }
+}
 async function check2(context) {
   const { agent, dataHome, repoGit } = context;
   const manual = !context.hook;
   const input2 = manual ? manualInput() : parseHookInput(await context.readStdin());
-  if (!await isDirectory(path12.join(context.repoDir, ".git"))) return;
+  if (!await hasLocalRepository(context)) {
+    if (manual) await manualFirstRun(context);
+    else await hookFirstRun(context, input2);
+    return;
+  }
   const probeDeadline = startDeadline(CHECK_BUDGET_MS);
   const overallDeadline = startDeadline(OVERALL_BUDGET_MS);
   const now = context.now();
@@ -21675,214 +21897,6 @@ function runAdd(context) {
 }
 function runRemove(context) {
   return change(context, "remove");
-}
-
-// src/commands/init.ts
-import path14 from "node:path";
-
-// src/commands/clone-repo.ts
-import fs12 from "node:fs/promises";
-
-// src/domain/github-repo.ts
-var GH_CREDENTIAL_HELPER = "!gh auth git-credential";
-var gitProtocolSchema = external_exports.enum(["ssh", "https"]);
-var repoInfoSchema = external_exports.object({
-  isPrivate: external_exports.boolean(),
-  url: external_exports.string().min(1),
-  sshUrl: external_exports.string().min(1)
-});
-function parseRepoInfo(json2) {
-  try {
-    return repoInfoSchema.parse(JSON.parse(json2));
-  } catch {
-    throw new AppError("could not understand the repository information returned by gh");
-  }
-}
-function parseGitProtocol(output2) {
-  const parsed = gitProtocolSchema.safeParse(output2.trim());
-  return parsed.success ? parsed.data : "https";
-}
-function cloneUrl(info, protocol) {
-  return protocol === "ssh" ? info.sshUrl : `${info.url}.git`;
-}
-function isRepoNotFound(stderr) {
-  return /could not resolve to a repository|http 404|not found/i.test(stderr);
-}
-
-// src/commands/clone-repo.ts
-async function cloneRepository(context, url2, options = {}) {
-  const { git, repoGit, repoDir, dataHome } = context;
-  await fs12.mkdir(dataHome, { recursive: true });
-  if (!options.withGhCredentials) {
-    await git.must(["clone", "--quiet", "--", url2, repoDir]);
-    return;
-  }
-  await git.must([
-    "-c",
-    "credential.helper=",
-    "-c",
-    `credential.helper=${GH_CREDENTIAL_HELPER}`,
-    "clone",
-    "--quiet",
-    "--",
-    url2,
-    repoDir
-  ]);
-  await repoGit.must(["config", "--local", "--add", "credential.helper", ""]);
-  await repoGit.must(["config", "--local", "--add", "credential.helper", GH_CREDENTIAL_HELPER]);
-}
-
-// src/commands/init-with-github.ts
-import path13 from "node:path";
-
-// src/domain/repo-name.ts
-var DEFAULT_REPO_NAME = "sync-ai-data";
-var repoNameSchema = external_exports.string().max(100).regex(/^[A-Za-z0-9_][A-Za-z0-9._-]*$/).refine((name) => !name.endsWith(".git") && !name.includes(".."));
-
-// src/commands/init-existing-repo.ts
-async function runInitWithExistingRepository(context, slug, info) {
-  const { gh, io, repoDir, repoGit } = context;
-  if (!info.isPrivate) {
-    throw new AppError(
-      `the repository ${info.url} already exists but GitHub reports it as PUBLIC, and sync-ai never uses a public repository for configuration. Make it private, choose another name with --name <repo>, or pass the URL of a private repository: init <url>`
-    );
-  }
-  if (context.dryRun) {
-    io.info(
-      `[dry-run] Would clone the existing PRIVATE repository ${slug} into ${repoDir} and install its configuration`
-    );
-    return 0 /* Ok */;
-  }
-  if (!context.assumeYes) {
-    const confirmed = await io.confirm(
-      `Clone the existing PRIVATE repository ${slug} into ${repoDir} and install its configuration? (y/N) `
-    );
-    if (!confirmed) {
-      io.warn("Cancelled: nothing was cloned.");
-      io.warn(`Repeat with --yes to clone the existing private repository ${slug}.`);
-      return 3 /* ConfirmationRequired */;
-    }
-  }
-  const protocol = parseGitProtocol((await gh.run(["config", "get", "git_protocol"])).stdout);
-  await cloneRepository(context, cloneUrl(info, protocol), {
-    withGhCredentials: protocol === "https"
-  });
-  io.info(`Cloned the existing private repository ${info.url}`);
-  io.info(`Initialized: ${repoDir}`);
-  const remote = requireReachable(await refreshRemote(repoGit));
-  if (remote.status === "empty" || (await listRepoFiles(context)).length === 0) {
-    io.info(`The repository has no '${context.agent.name}' files yet.`);
-    io.info("Next step: run 'push' to upload your configuration.");
-    return 0 /* Ok */;
-  }
-  const pulled = await runPull({ ...context, assumeYes: false });
-  if (pulled === 5 /* Conflicts */) {
-    io.warn(`The repository is cloned and initialized, but your conflicting local files in ${context.agent.home} were not changed.`);
-    io.warn("Run 'resolve' to review them, or 'pull --yes' to take the repository versions; a .backup-* copy is kept.");
-  }
-  return pulled;
-}
-
-// src/commands/init-with-github.ts
-var REPO_DESCRIPTION = "AI agent configuration synced with sync-ai";
-async function findRepository(gh, slug) {
-  const result = await gh.run(["repo", "view", slug, "--json", "isPrivate,url,sshUrl"]);
-  if (result.code === 0) return parseRepoInfo(result.stdout);
-  if (isRepoNotFound(result.stderr)) return void 0;
-  throw new AppError(`gh repo view failed: ${result.stderr.trim() || `exit code ${result.code}`}`);
-}
-async function requireAuthenticatedLogin(gh) {
-  const status = await gh.run(["auth", "status"]);
-  if (status.code !== 0) {
-    throw new AppError(
-      "gh is not logged in to GitHub. Run `gh auth login`, or pass the URL of a private repository: init <url>",
-      2 /* Usage */
-    );
-  }
-  const login = await gh.must(["api", "user", "--jq", ".login"]);
-  if (!login) throw new AppError("gh did not return your GitHub username");
-  return login;
-}
-async function reportExistingClone(context) {
-  const { repoDir, repoGit, io } = context;
-  if (!await isDirectory(path13.join(repoDir, ".git"))) return false;
-  const origin = await repoGit.run(["remote", "get-url", "origin"]);
-  const where = origin.code === 0 ? ` (origin: ${origin.stdout.trim()})` : "";
-  io.info(`Already initialized: ${repoDir}${where}`);
-  return true;
-}
-async function runInitWithGitHub(context) {
-  const { gh, io, repoDir } = context;
-  if (await reportExistingClone(context)) return 0 /* Ok */;
-  const parsedName = repoNameSchema.safeParse(context.repoName ?? DEFAULT_REPO_NAME);
-  if (!parsedName.success) {
-    throw new UsageError(
-      'invalid repository name: use letters, digits, ".", "_" or "-" (it cannot start with "-" or end with ".git")'
-    );
-  }
-  const name = parsedName.data;
-  const login = await requireAuthenticatedLogin(gh);
-  const slug = `${login}/${name}`;
-  const existing = await findRepository(gh, slug);
-  if (existing) return runInitWithExistingRepository(context, slug, existing);
-  if (context.dryRun) {
-    io.info(`[dry-run] Would create the PRIVATE repository ${slug} on GitHub and clone it into ${repoDir}`);
-    return 0 /* Ok */;
-  }
-  if (!context.assumeYes) {
-    const confirmed = await io.confirm(
-      `Create the PRIVATE repository ${slug} on GitHub and use it for your configuration? (y/N) `
-    );
-    if (!confirmed) {
-      io.warn("Cancelled: nothing was created on GitHub.");
-      io.warn(`Review it and repeat with --yes to create the private repository ${slug}.`);
-      return 3 /* ConfirmationRequired */;
-    }
-  }
-  await gh.must(["repo", "create", name, "--private", "--description", REPO_DESCRIPTION]);
-  const created = await findRepository(gh, slug);
-  if (!created) throw new AppError(`gh created ${slug} but it cannot be found afterwards`);
-  if (!created.isPrivate) {
-    throw new AppError(
-      `the repository ${created.url} was created but GitHub reports it is NOT private. Nothing was cloned or uploaded. Make it private or delete it, then run init again.`
-    );
-  }
-  const protocol = parseGitProtocol((await gh.run(["config", "get", "git_protocol"])).stdout);
-  await cloneRepository(context, cloneUrl(created, protocol), {
-    withGhCredentials: protocol === "https"
-  });
-  io.info(`Created the private repository ${created.url}`);
-  io.info(`Initialized: ${repoDir}`);
-  io.info("Next step: run 'push' to upload your configuration.");
-  return 0 /* Ok */;
-}
-
-// src/commands/init.ts
-async function runInit(context) {
-  const { argument: url2, repoDir, io, repoGit } = context;
-  if (!url2) return runInitWithGitHub(context);
-  if (context.repoName !== void 0) {
-    throw new UsageError("--name only applies when init is run without a URL");
-  }
-  if (await isDirectory(path14.join(repoDir, ".git"))) {
-    const existing = await repoGit.run(["remote", "get-url", "origin"]);
-    const current = existing.code === 0 ? existing.stdout.trim() : "";
-    if (current === url2) {
-      io.info(`Already initialized: ${repoDir}`);
-      return 0 /* Ok */;
-    }
-    throw new AppError(`a clone already exists at ${repoDir} pointing to '${current}'`);
-  }
-  if (context.dryRun) {
-    io.info(`[dry-run] Would clone ${url2} into ${repoDir}`);
-    return 0 /* Ok */;
-  }
-  await cloneRepository(context, url2);
-  io.info(`Initialized: ${repoDir}`);
-  io.warn(
-    "Warning: use a PRIVATE repository. Your skills and instructions may contain sensitive data."
-  );
-  return 0 /* Ok */;
 }
 
 // src/commands/resolve.ts
@@ -22118,9 +22132,9 @@ function repositoryLabel(remoteUrl) {
 }
 function formatTree(paths) {
   const root = { children: /* @__PURE__ */ new Map(), file: false };
-  for (const path17 of paths) {
+  for (const path15 of paths) {
     let node2 = root;
-    for (const part of path17.split("/")) {
+    for (const part of path15.split("/")) {
       let child = node2.children.get(part);
       if (child === void 0) {
         child = { children: /* @__PURE__ */ new Map(), file: false };
@@ -22226,14 +22240,14 @@ async function runStatus(context) {
 }
 
 // src/infra/data-home.ts
-import path15 from "node:path";
+import path13 from "node:path";
 function resolveDataHome(env, homeDir, platform) {
   if (env.AGENT_SYNC_HOME) return env.AGENT_SYNC_HOME;
   if (platform === "win32") {
-    const localAppData = env.LOCALAPPDATA || path15.join(homeDir, "AppData", "Local");
-    return path15.join(localAppData, "agent-sync");
+    const localAppData = env.LOCALAPPDATA || path13.join(homeDir, "AppData", "Local");
+    return path13.join(localAppData, "agent-sync");
   }
-  return path15.join(homeDir, ".local", "share", "agent-sync");
+  return path13.join(homeDir, ".local", "share", "agent-sync");
 }
 
 // src/infra/gh.ts
@@ -22247,7 +22261,7 @@ var GitHubCli = class {
     const result = await runProcess("gh", args, { ...this.env, GH_PROMPT_DISABLED: "1" });
     if (!result) {
       throw new AppError(
-        "the GitHub CLI (gh) is required to create the repository automatically. Install it from https://cli.github.com and run `gh auth login`, or pass the URL of a private repository: init <url>",
+        "the GitHub CLI (gh) is required to create the repository automatically. Install it from https://cli.github.com and run `gh auth login`, or set AGENT_SYNC_REPO_URL to the URL of a private repository",
         2 /* Usage */
       );
     }
@@ -22332,7 +22346,7 @@ function readStdin(timeoutMs) {
 }
 
 // src/cli/command-name.ts
-var commandNameSchema = external_exports.enum(["sync", "init", "pull", "push", "status", "resolve", "check", "add", "remove"]);
+var commandNameSchema = external_exports.enum(["sync", "pull", "push", "status", "resolve", "check", "add", "remove"]);
 
 // src/cli/resolution.ts
 var resolutionSchema = external_exports.enum(["take-local", "take-repo", "auto", "editor"]);
@@ -22469,10 +22483,11 @@ function parseArgs(argv) {
 var USAGE2 = `Usage: agent-sync [--agent NAME] [--yes] [--dry-run] <command>
 
 Commands:
-  sync         Run the safe automatic sync flow (no arguments)
-  init [url]   Clone your PRIVATE configuration repository; without a URL, use the
-               GitHub CLI (gh): create it, or clone it and install its files if it
-               already exists (setting up another device)
+  sync         Run the safe automatic sync flow (no arguments). On a device that has not
+               been set up yet it first clones your PRIVATE configuration repository
+               (<your gh login>/sync-ai-data) and installs its files; if it does not exist,
+               it creates it after asking. Set AGENT_SYNC_REPO_URL to use another private
+               repository without gh
   pull         Fetch changes from the repository and install the files into the agent
   push         Publish your local configuration (with a strict scan for secrets, passwords
                and personal data). Only items you listed are published: CLAUDE.md always,
@@ -22489,8 +22504,8 @@ Commands:
 
 Options:
   --agent NAME    Agent to sync (default: claude)
-  --name REPO     Name of the private repository init creates (default: sync-ai-data)
-  --yes, -y       Confirm repository creation, cloning, taking the repository version
+  --name REPO     Name of the private repository sync creates (default: sync-ai-data)
+  --yes, -y       Confirm repository creation, taking the repository version
                   for conflicts in pull, and resolve --editor results without asking
                   (required without a terminal)
   --dry-run       Do not modify your local configuration, create commits or publish
@@ -22530,7 +22545,6 @@ function defaultRuntime(io) {
 }
 var COMMANDS = {
   sync: runCheck,
-  init: runInit,
   pull: runPull,
   push: runPush,
   status: runStatus,
@@ -22551,7 +22565,7 @@ async function execute(argv, runtime) {
   const command = commandNameSchema.safeParse(options.command);
   if (!command.success) throw new UsageError(`unknown command: ${options.command}`);
   const dataHome = resolveDataHome(runtime.env, runtime.homeDir, runtime.platform);
-  const repoDir = path16.join(dataHome, "repo");
+  const repoDir = path14.join(dataHome, "repo");
   const git = new Git(runtime.env);
   return COMMANDS[command.data]({
     agent,

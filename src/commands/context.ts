@@ -13,7 +13,7 @@ export interface CommandContext {
   readonly argument: string | undefined;
   /** Second positional argument (`add <kind> <name>`, `remove <kind> <name>`). */
   readonly argument2: string | undefined;
-  /** Repository name given with --name (only meaningful for `init` without a URL). */
+  /** Repository name given with --name (only meaningful for the first-run setup). */
   readonly repoName: string | undefined;
   /** How `resolve` should settle a conflict (only meaningful for `resolve <path>`). */
   readonly resolution: Resolution | undefined;
@@ -34,7 +34,7 @@ export interface CommandContext {
   readonly git: Git;
   /** Git bound to the local clone of the user's repository. */
   readonly repoGit: Git;
-  /** GitHub CLI, used by `init` to create the repository. */
+  /** GitHub CLI, used by the first-run setup. */
   readonly gh: GitHubCli;
   readonly hostname: string;
   readonly env: Env;

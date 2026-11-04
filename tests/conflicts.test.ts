@@ -18,9 +18,9 @@ describe('three-way conflict handling', () => {
     sandbox.write('A', 'CLAUDE.md', 'shared v1\n');
     sandbox.write('A', 'commands/notes.md', MULTI_LINE);
     sandbox.write('A', 'agents/a.md', 'agent a\n');
-    await sandbox.run('A', ['init', sandbox.remote]);
+    await sandbox.connect('A');
     await sandbox.run('A', ['push']);
-    await sandbox.run('B', ['init', sandbox.remote]);
+    await sandbox.connect('B');
     await sandbox.run('B', ['pull']);
   });
 
@@ -110,10 +110,10 @@ describe('three-way conflict handling', () => {
       const fresh = new Sandbox({ autoList: true });
       try {
         fresh.write('A', 'CLAUDE.md', 'from A\n');
-        await fresh.run('A', ['init', fresh.remote]);
+        await fresh.connect('A');
         await fresh.run('A', ['push']);
         fresh.write('B', 'CLAUDE.md', 'older local copy\n');
-        await fresh.run('B', ['init', fresh.remote]);
+        await fresh.connect('B');
 
         const result = await fresh.run('B', ['pull']);
 

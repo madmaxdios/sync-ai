@@ -56,24 +56,22 @@ describe('command line handling', () => {
     expect(result.code).toBe(1);
   });
 
-  it('asks to run init when there is no local clone', async () => {
+  it('asks to run sync when there is no local clone', async () => {
     const result = await sandbox.run('A', ['status']);
 
     expect(result.code).toBe(1);
-    expect(result.stderr).toContain('Run first: init [repo-url]');
+    expect(result.stderr).toContain('Run first: sync');
   });
 
-  it('refuses to init over a clone that points to another remote', async () => {
-    await sandbox.run('A', ['init', sandbox.remote]);
+  it('has no init command', async () => {
+    const result = await sandbox.run('A', ['init']);
 
-    const result = await sandbox.run('A', ['init', `${sandbox.remote}-other`]);
-
-    expect(result.code).toBe(1);
-    expect(result.stderr).toContain('a clone already exists');
+    expect(result.code).toBe(2);
+    expect(result.stderr).toContain('unknown command: init');
   });
 
   it('does not clone with --dry-run', async () => {
-    const result = await sandbox.run('A', ['init', sandbox.remote, '--dry-run']);
+    const result = await sandbox.run('A', ['sync', '--dry-run'], { env: { AGENT_SYNC_REPO_URL: sandbox.remote } });
 
     expect(result.code).toBe(0);
     expect(result.stdout).toContain('[dry-run]');
@@ -81,7 +79,7 @@ describe('command line handling', () => {
   });
 
   it('reports an empty remote on pull and status', async () => {
-    await sandbox.run('A', ['init', sandbox.remote]);
+    await sandbox.connect('A');
 
     const pull = await sandbox.run('A', ['pull']);
     const status = await sandbox.run('A', ['status']);
@@ -92,7 +90,7 @@ describe('command line handling', () => {
   });
 
   it('fails push with exit 1 when there is nothing to sync', async () => {
-    await sandbox.run('A', ['init', sandbox.remote]);
+    await sandbox.connect('A');
 
     const result = await sandbox.run('A', ['push']);
 

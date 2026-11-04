@@ -15,7 +15,7 @@ export class GitHubCli {
       throw new AppError(
         'the GitHub CLI (gh) is required to create the repository automatically. ' +
           'Install it from https://cli.github.com and run `gh auth login`, ' +
-          'or pass the URL of a private repository: init <url>',
+          'or set AGENT_SYNC_REPO_URL to the URL of a private repository',
         ExitCode.Usage,
       );
     }

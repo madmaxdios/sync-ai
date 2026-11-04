@@ -8,9 +8,9 @@ describe('pull conflict handling', () => {
   beforeEach(async () => {
     sandbox = new Sandbox({ autoList: true });
     sandbox.write('A', 'CLAUDE.md', 'shared v1\n');
-    await sandbox.run('A', ['init', sandbox.remote]);
+    await sandbox.connect('A');
     await sandbox.run('A', ['push']);
-    await sandbox.run('B', ['init', sandbox.remote]);
+    await sandbox.connect('B');
     await sandbox.run('B', ['pull']);
   });
 
