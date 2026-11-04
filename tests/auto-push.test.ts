@@ -213,7 +213,7 @@ describe('automatic push inside check', () => {
           stdin: JSON.stringify({ hook_event_name: 'SessionStart', session_id: 's' }),
           now: minutesFromNow(10),
         });
-        expect(result.stdout).toContain('no sync baseline');
+        expect(result.stdout).toContain('has not synced yet');
         expect(other.remoteFiles()).toEqual([]);
       } finally {
         other.cleanup();

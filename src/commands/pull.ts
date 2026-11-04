@@ -101,6 +101,8 @@ export async function runPull(context: CommandContext): Promise<ExitCode> {
       reportKeptLocalFiles(context, plan);
     }
     if (!context.dryRun) await saveState(dataHome, recordInSyncBases(loaded.state, agent.name, plan));
+    // The files may already match while a plugin they list is still missing on this device.
+    if (!context.dryRun && !context.hook) await installPluginManifest(context);
     return ExitCode.Ok;
   }
 

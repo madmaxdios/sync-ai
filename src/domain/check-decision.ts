@@ -4,8 +4,12 @@ import { CheckEvent } from './check-event';
 /** What the comparison between this device and the repository found. */
 export interface CheckFacts {
   readonly event: CheckEvent;
-  /** False when this device has never recorded a sync (no state): nothing is auto-applied. */
+  /** True for a `sync` the user ran by hand, false for the agent's hooks. */
+  readonly manual: boolean;
+  /** False when this device has never recorded a sync (no state): the next pull is its first install. */
   readonly hasBaseline: boolean;
+  /** False when a state file exists but cannot be read: nothing is applied until it is fixed. */
+  readonly stateReadable: boolean;
   /** Local files that the repository does not have yet (new or changed here). */
   readonly toPush: number;
   /** Local files that were deleted here and still exist in the repository. */
@@ -35,14 +39,18 @@ export interface CheckReport {
   readonly signature: string;
 }
 
-/** Pulling is only automatic at the start of a chat, with a baseline and without conflicts. */
+/**
+ * Pulls happen on a manual `sync` and at the start of a chat, never when a prompt is sent.
+ * A pull never overwrites a conflict; the hook still skips the whole pull when there is one,
+ * while a manual `sync` installs the rest and records the conflicts for `resolve`.
+ * Without a baseline the pull is the device's first install, which also records the files that
+ * already match, so it runs even when nothing is new.
+ */
 export function shouldAutoPull(facts: CheckFacts): boolean {
-  return (
-    facts.event === CheckEvent.SessionStart &&
-    facts.hasBaseline &&
-    facts.conflicts === 0 &&
-    facts.toPull > 0
-  );
+  if (!facts.stateReadable) return false;
+  const pending = facts.toPull > 0 || !facts.hasBaseline;
+  if (facts.manual) return pending || facts.conflicts > 0;
+  return facts.event === CheckEvent.SessionStart && facts.conflicts === 0 && pending;
 }
 
 function plural(count: number, word: string): string {
@@ -82,7 +90,7 @@ function describeConflicts(facts: CheckFacts, lines: Lines): void {
 function describePull(facts: CheckFacts, outcome: CheckOutcome, lines: Lines): void {
   if (outcome.pulled > 0) {
     lines.user.push(`pulled ${plural(outcome.pulled, 'file')} from the repository`);
-  } else if (outcome.dryRun && shouldAutoPull(facts)) {
+  } else if (outcome.dryRun && facts.toPull > 0 && shouldAutoPull(facts)) {
     lines.user.push(`would pull ${plural(facts.toPull, 'file')} from the repository`);
   } else if (facts.toPull > 0) {
     const commits = facts.behind > 0 ? ` (${plural(facts.behind, 'newer commit')})` : '';
@@ -146,18 +154,45 @@ function describePush(facts: CheckFacts, outcome: CheckOutcome, lines: Lines): v
   }
 }
 
+function describeMissingBaseline(facts: CheckFacts, outcome: CheckOutcome, dryRun: string): CheckReport | undefined {
+  if (!facts.manual && facts.event !== CheckEvent.SessionStart) return undefined;
+  const signature = signatureOf(facts, outcome);
+  if (!facts.stateReadable) {
+    return {
+      user: `${dryRun}sync-ai: the sync state file cannot be read, so nothing was installed (run /sync-ai:status)`,
+      claude: 'sync-ai: the sync state file is unreadable, so nothing is applied. Suggest running /sync-ai:status.',
+      signature,
+    };
+  }
+  if (outcome.dryRun && shouldAutoPull(facts)) {
+    return {
+      user: `${dryRun}sync-ai: first sync on this device, would install ${plural(facts.toPull, 'file')} from the repository`,
+      claude: undefined,
+      signature,
+    };
+  }
+  if (facts.toPull === 0 && facts.conflicts === 0) {
+    return {
+      user: `${dryRun}sync-ai: this device has not synced yet and the repository has nothing to install`,
+      claude: undefined,
+      signature,
+    };
+  }
+  const differing = facts.conflicts > 0 ? ` and ${plural(facts.conflicts, 'local file')} ${facts.conflicts === 1 ? 'differs' : 'differ'} from the repository` : '';
+  return {
+    user: `${dryRun}sync-ai: this device has not synced yet${differing}, so nothing was installed (run /sync-ai:sync)`,
+    claude:
+      'sync-ai: the repository configuration is not installed on this device yet. Offer /sync-ai:sync, which installs it and never overwrites differing local files.',
+    signature,
+  };
+}
+
 /** Builds the message for the user (and for the agent when action is needed), or nothing when in sync. */
 export function buildReport(facts: CheckFacts, outcome: CheckOutcome): CheckReport | undefined {
   const dryRun = outcome.dryRun ? '[dry-run] ' : '';
 
-  if (!facts.hasBaseline) {
-    if (facts.event !== CheckEvent.SessionStart) return undefined;
-    return {
-      user: `${dryRun}sync-ai: this device has no sync baseline yet, so nothing is applied automatically (run /sync-ai:status)`,
-      claude: 'sync-ai: this device has no sync baseline, so automatic pulls are off. Suggest running /sync-ai:status.',
-      signature: signatureOf(facts, outcome),
-    };
-  }
+  // A successful first install records the baseline, so only an unfinished one reaches this branch.
+  if (!facts.hasBaseline) return describeMissingBaseline(facts, outcome, dryRun);
 
   const lines: Lines = { user: [], claude: [] };
   describeConflicts(facts, lines);

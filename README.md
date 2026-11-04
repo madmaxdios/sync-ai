@@ -123,7 +123,7 @@ The plugin registers two hooks (`hooks/hooks.json`) that run `agent-sync check -
 
 | When | What `check` does |
 | --- | --- |
-| A chat starts, resumes or is cleared (`SessionStart`) | Always asks the remote whether it has new commits. If the repository has changes this device does not have, it **pulls them**, but only when this device has a sync baseline (`state.json`) and there are no conflicts. Then it tells you what it did |
+| A chat starts, resumes or is cleared (`SessionStart`) | Always asks the remote whether it has new commits. If the repository has changes this device does not have, it **pulls them** when there are no conflicts. On a device that has never finished a sync (a clone without `state.json`), this first pull installs the repository and records the baseline; files that differ locally are never overwritten. Then it tells you what it did |
 | You send a prompt (`UserPromptSubmit`) | Compares your local files with the last sync (offline and instant). It contacts the remote **at most every 10 minutes**. It never pulls; it may [push automatically](#automatic-push) |
 
 What you see, as one short line in the chat:
@@ -135,7 +135,7 @@ What you see, as one short line in the chat:
 - `sync-ai: auto-push skipped, 1 file contains possible secrets or personal data (commands/x.md:3); fix them or review with /sync-ai:sync`: only the places are named, never the content. Items that are not on your list are never mentioned in these messages.
 - `sync-ai: the repository has 1 file change (1 newer commit) (run /sync-ai:sync)`: shown when a prompt is sent, because files are only pulled when a chat starts.
 - `sync-ai: 1 conflict, run /sync-ai:resolve`: nothing is overwritten.
-- `sync-ai: this device has no sync baseline yet ...`: once per chat. Without `state.json` the tool cannot tell "I deleted this on purpose" from "this is new", so it never pulls on its own. Run `/sync-ai:status` to inspect the setup.
+- `sync-ai: this device has not synced yet and 1 local file differs from the repository, so nothing was installed (run /sync-ai:sync)`: once per chat. The hook never installs over a differing file; `/sync-ai:sync` installs the rest and leaves the differing files for `/sync-ai:resolve`.
 
 While a hook runs, its status message says that sync-ai is checking and synchronizing
 the current agent. Each scheduled remote check reports its result, including
@@ -197,7 +197,9 @@ Then restart Claude Code.
 2. Run `/sync-ai:sync` again whenever you want to synchronize.
 3. On another device, install the plugin and run `/sync-ai:sync`. Because
    `<your-user>/sync-ai-data` already exists, it clones it and installs your
-   configuration with `pull`. That is all.
+   configuration with `pull`. That is all. If that first install is
+   interrupted (for example, the hook ran out of time after cloning), the next
+   chat or `/sync-ai:sync` finishes it.
 
 If local files on the new device differ from the repository, `sync` still clones
 it but changes nothing locally and exits with code 5: this device has no record

@@ -2,7 +2,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { resolveAgent } from '../agents/registry';
 import type { Env } from '../agents/agent-config';
-import { runCheck } from '../commands/check';
+import { runCheck, runSync } from '../commands/check';
 import { runAdd, runRemove } from '../commands/items';
 import { runPull } from '../commands/pull';
 import { runPush } from '../commands/push';
@@ -60,7 +60,7 @@ export function defaultRuntime(io: Io): Runtime {
 }
 
 const COMMANDS: Record<CommandName, (context: CommandContext) => Promise<ExitCode>> = {
-  sync: runCheck,
+  sync: runSync,
   pull: runPull,
   push: runPush,
   status: runStatus,

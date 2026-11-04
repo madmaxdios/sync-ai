@@ -113,15 +113,25 @@ export async function ensurePluginManifest(context: CommandContext): Promise<voi
   }
 }
 
+/** Names of the marketplaces the agent already knows, whatever source they were added from. */
+async function knownMarketplaces(context: CommandContext): Promise<Set<string>> {
+  if (context.agent.name !== 'claude') return new Set();
+  const marketplaces = await readJson(path.join(context.agent.home, 'plugins', 'known_marketplaces.json'));
+  return new Set(Object.keys(marketplaces ?? {}));
+}
+
 /** Installs plugins declared by the repository after its manifest is pulled. */
 export async function installPluginManifest(context: CommandContext): Promise<void> {
   const manifest = await readManifest(context);
   if (manifest.plugins.length === 0) return;
   const installed = new Set((await installedPlugins(context)).map((plugin) => plugin.id));
+  const known = await knownMarketplaces(context);
   for (const plugin of manifest.plugins) {
     if (installed.has(plugin.id)) continue;
     const [marketplace] = plugin.id.split('@').slice(1);
-    if (plugin.source) {
+    // Adding a marketplace that is already registered fails when its recorded source is spelled
+    // differently (a git URL instead of owner/repo), so only add the ones that are missing.
+    if (plugin.source && !(marketplace && known.has(marketplace))) {
       const addMarketplace = context.agent.name === 'claude'
         ? await runProcess('claude', ['plugin', 'marketplace', 'add', plugin.source], context.env, { timeoutMs: 120_000 })
         : await runProcess('codex', ['plugin', 'marketplace', 'add', plugin.source], context.env, { timeoutMs: 120_000 });

@@ -174,18 +174,71 @@ describe('check', () => {
       sandbox.removeDataFile('A', 'state.json');
     });
 
-    it('does not pull and reports it once at the start of a chat', async () => {
+    it('installs the repository at the start of a chat and records the baseline', async () => {
       await pushFromB('skills/bar/SKILL.md', 'skill bar\n');
 
       const first = await hook('A', 'SessionStart');
-      const again = await hook('A', 'SessionStart');
+
+      expect(first.output?.systemMessage).toBe('sync-ai: pulled 1 file from the repository');
+      expect(sandbox.read('A', 'skills/bar/SKILL.md')).toBe('skill bar\n');
+      expect(sandbox.dataFile('A', 'state.json')).toBeDefined();
+      expect((await sandbox.run('A', ['status'])).stdout).toContain('no differences');
+    });
+
+    it('records the baseline even when every file already matches', async () => {
+      const first = await hook('A', 'SessionStart');
+
+      expect(first.output?.systemMessage).toBe('sync-ai: in sync.');
+      expect(sandbox.dataFile('A', 'state.json')).toBeDefined();
+    });
+
+    it('is installed by a manual sync, which used to report "in sync" without pulling', async () => {
+      await pushFromB('skills/bar/SKILL.md', 'skill bar\n');
+
+      const result = await sandbox.run('A', ['sync']);
+
+      expect(result.code).toBe(0);
+      expect(result.output).toContain('+ skills/bar/SKILL.md');
+      expect(result.output).toContain('sync-ai: pulled 1 file from the repository');
+      expect(sandbox.read('A', 'skills/bar/SKILL.md')).toBe('skill bar\n');
+      expect(sandbox.dataFile('A', 'state.json')).toBeDefined();
+    });
+
+    it('never overwrites a differing local file: the hook waits, the manual sync records the conflict', async () => {
+      sandbox.write('A', 'CLAUDE.md', 'instructions edited on A\n');
+      await pushFromB('skills/bar/SKILL.md', 'skill bar\n');
+
+      const first = await hook('A', 'SessionStart');
+      expect(first.output?.systemMessage).toContain('has not synced yet and 1 local file differs');
+      expect(first.output?.systemMessage).toContain('/sync-ai:sync');
+      expect(sandbox.exists('A', 'skills/bar/SKILL.md')).toBe(false);
+
+      const manual = await sandbox.run('A', ['sync']);
+      expect(manual.output).toContain('1 conflict, run /sync-ai:resolve');
+      expect(sandbox.read('A', 'CLAUDE.md')).toBe('instructions edited on A\n');
+      expect(sandbox.read('A', 'skills/bar/SKILL.md')).toBe('skill bar\n');
+    });
+
+    it('stays quiet when a prompt is sent', async () => {
+      await pushFromB('skills/bar/SKILL.md', 'skill bar\n');
+
       const prompt = await hook('A', 'UserPromptSubmit');
 
-      expect(first.output?.systemMessage).toContain('no sync baseline');
-      expect(sandbox.exists('A', 'skills/bar/SKILL.md')).toBe(false);
-      expect(again.stdout).toBe('');
       expect(prompt.stdout).toBe('');
+      expect(sandbox.exists('A', 'skills/bar/SKILL.md')).toBe(false);
       expect(sandbox.dataFile('A', 'state.json')).toBeUndefined();
+    });
+  });
+
+  describe('a manual sync on a device with a baseline', () => {
+    it('pulls changes from another device, not only at the start of a chat', async () => {
+      await pushFromB('skills/bar/SKILL.md', 'skill bar\n');
+
+      const result = await sandbox.run('A', ['sync']);
+
+      expect(result.code).toBe(0);
+      expect(sandbox.read('A', 'skills/bar/SKILL.md')).toBe('skill bar\n');
+      expect(result.output).toContain('sync-ai: pulled 1 file from the repository');
     });
   });
 

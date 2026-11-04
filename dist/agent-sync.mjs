@@ -19868,7 +19868,10 @@ function resolveAgent(name, environment) {
 
 // src/domain/check-decision.ts
 function shouldAutoPull(facts) {
-  return facts.event === "SessionStart" /* SessionStart */ && facts.hasBaseline && facts.conflicts === 0 && facts.toPull > 0;
+  if (!facts.stateReadable) return false;
+  const pending = facts.toPull > 0 || !facts.hasBaseline;
+  if (facts.manual) return pending || facts.conflicts > 0;
+  return facts.event === "SessionStart" /* SessionStart */ && facts.conflicts === 0 && pending;
 }
 function plural2(count, word) {
   return `${count} ${word}${count === 1 ? "" : "s"}`;
@@ -19899,7 +19902,7 @@ function describeConflicts(facts, lines) {
 function describePull(facts, outcome2, lines) {
   if (outcome2.pulled > 0) {
     lines.user.push(`pulled ${plural2(outcome2.pulled, "file")} from the repository`);
-  } else if (outcome2.dryRun && shouldAutoPull(facts)) {
+  } else if (outcome2.dryRun && facts.toPull > 0 && shouldAutoPull(facts)) {
     lines.user.push(`would pull ${plural2(facts.toPull, "file")} from the repository`);
   } else if (facts.toPull > 0) {
     const commits = facts.behind > 0 ? ` (${plural2(facts.behind, "newer commit")})` : "";
@@ -19957,16 +19960,40 @@ function describePush(facts, outcome2, lines) {
       return;
   }
 }
-function buildReport(facts, outcome2) {
-  const dryRun = outcome2.dryRun ? "[dry-run] " : "";
-  if (!facts.hasBaseline) {
-    if (facts.event !== "SessionStart" /* SessionStart */) return void 0;
+function describeMissingBaseline(facts, outcome2, dryRun) {
+  if (!facts.manual && facts.event !== "SessionStart" /* SessionStart */) return void 0;
+  const signature = signatureOf(facts, outcome2);
+  if (!facts.stateReadable) {
     return {
-      user: `${dryRun}sync-ai: this device has no sync baseline yet, so nothing is applied automatically (run /sync-ai:status)`,
-      claude: "sync-ai: this device has no sync baseline, so automatic pulls are off. Suggest running /sync-ai:status.",
-      signature: signatureOf(facts, outcome2)
+      user: `${dryRun}sync-ai: the sync state file cannot be read, so nothing was installed (run /sync-ai:status)`,
+      claude: "sync-ai: the sync state file is unreadable, so nothing is applied. Suggest running /sync-ai:status.",
+      signature
     };
   }
+  if (outcome2.dryRun && shouldAutoPull(facts)) {
+    return {
+      user: `${dryRun}sync-ai: first sync on this device, would install ${plural2(facts.toPull, "file")} from the repository`,
+      claude: void 0,
+      signature
+    };
+  }
+  if (facts.toPull === 0 && facts.conflicts === 0) {
+    return {
+      user: `${dryRun}sync-ai: this device has not synced yet and the repository has nothing to install`,
+      claude: void 0,
+      signature
+    };
+  }
+  const differing = facts.conflicts > 0 ? ` and ${plural2(facts.conflicts, "local file")} ${facts.conflicts === 1 ? "differs" : "differ"} from the repository` : "";
+  return {
+    user: `${dryRun}sync-ai: this device has not synced yet${differing}, so nothing was installed (run /sync-ai:sync)`,
+    claude: "sync-ai: the repository configuration is not installed on this device yet. Offer /sync-ai:sync, which installs it and never overwrites differing local files.",
+    signature
+  };
+}
+function buildReport(facts, outcome2) {
+  const dryRun = outcome2.dryRun ? "[dry-run] " : "";
+  if (!facts.hasBaseline) return describeMissingBaseline(facts, outcome2, dryRun);
   const lines = { user: [], claude: [] };
   describeConflicts(facts, lines);
   describePull(facts, outcome2, lines);
@@ -20885,14 +20912,20 @@ async function ensurePluginManifest(context) {
     context.io.info(`Plugin manifest updated: ${plugins.length} plugin${plugins.length === 1 ? "" : "s"}.`);
   }
 }
+async function knownMarketplaces(context) {
+  if (context.agent.name !== "claude") return /* @__PURE__ */ new Set();
+  const marketplaces = await readJson(path9.join(context.agent.home, "plugins", "known_marketplaces.json"));
+  return new Set(Object.keys(marketplaces ?? {}));
+}
 async function installPluginManifest(context) {
   const manifest = await readManifest(context);
   if (manifest.plugins.length === 0) return;
   const installed = new Set((await installedPlugins(context)).map((plugin) => plugin.id));
+  const known = await knownMarketplaces(context);
   for (const plugin of manifest.plugins) {
     if (installed.has(plugin.id)) continue;
     const [marketplace] = plugin.id.split("@").slice(1);
-    if (plugin.source) {
+    if (plugin.source && !(marketplace && known.has(marketplace))) {
       const addMarketplace = context.agent.name === "claude" ? await runProcess("claude", ["plugin", "marketplace", "add", plugin.source], context.env, { timeoutMs: 12e4 }) : await runProcess("codex", ["plugin", "marketplace", "add", plugin.source], context.env, { timeoutMs: 12e4 });
       if (addMarketplace === void 0 || addMarketplace.code !== 0) {
         context.io.warn(`Could not add marketplace for ${plugin.id}${marketplace ? ` (${marketplace})` : ""}.`);
@@ -21461,6 +21494,7 @@ async function runPull(context) {
       reportKeptLocalFiles(context, plan);
     }
     if (!context.dryRun) await saveState(dataHome, recordInSyncBases(loaded.state, agent.name, plan));
+    if (!context.dryRun && !context.hook) await installPluginManifest(context);
     return 0 /* Ok */;
   }
   printPlan(context, plan);
@@ -21712,12 +21746,15 @@ function printDetectedChanges(context, findings) {
     for (const line of formatList("!", findings.conflictFiles)) io.info(line);
   }
 }
-async function pullQuietly(context, files) {
+async function pullRepository(context, files) {
+  const io = context.hook ? SILENT_IO : context.io;
   try {
-    const code = await runPull({ ...context, io: SILENT_IO, assumeYes: false, dryRun: false });
-    return code === 0 /* Ok */ ? files : 0;
-  } catch {
-    return 0;
+    const code = await runPull({ ...context, io, assumeYes: false, dryRun: false });
+    const completed = code === 0 /* Ok */ || code === 5 /* Conflicts */;
+    return { files: completed ? files : 0, completed };
+  } catch (error62) {
+    if (!context.hook) context.io.warn(`Error: ${error62 instanceof Error ? error62.message : String(error62)}`);
+    return { files: 0, completed: false };
   }
 }
 function announce(context, input2, cache, message) {
@@ -21754,9 +21791,10 @@ async function manualFirstRun(context) {
     context.io.warn(`Error: ${error62 instanceof Error ? error62.message : String(error62)}`);
   }
 }
-async function check2(context) {
+async function check2(context, mode) {
   const { agent, dataHome, repoGit } = context;
   const manual = !context.hook;
+  const manualSync = manual && mode === "sync";
   const input2 = manual ? manualInput() : parseHookInput(await context.readStdin());
   if (!await hasLocalRepository(context)) {
     if (manual) await manualFirstRun(context);
@@ -21767,33 +21805,43 @@ async function check2(context) {
   const overallDeadline = startDeadline(OVERALL_BUDGET_MS);
   const now = context.now();
   let state = await loadState(dataHome);
-  const hasBaseline = !state.invalid && Object.keys(basesOf(state.state, agent.name)).length > 0;
+  const baselineOf = (loaded) => !loaded.invalid && Object.keys(basesOf(loaded.state, agent.name)).length > 0;
+  let hasBaseline = baselineOf(state);
+  const eager = manual || input2.event === "SessionStart" /* SessionStart */;
+  const compares = hasBaseline || eager && !state.invalid;
   let cache = await loadCheckCache(dataHome);
   const before = cache;
   const branch = (await repoGit.must(["symbolic-ref", "--short", "HEAD"])).trim();
   const interval = intervalFrom(context.env.AGENT_SYNC_CHECK_INTERVAL_MINUTES);
-  const remoteDue = hasBaseline && (manual || input2.event === "SessionStart" /* SessionStart */ || isRemoteCheckDue(cache, now, interval));
+  const remoteDue = compares && (eager || isRemoteCheckDue(cache, now, interval));
   let remoteProbe;
   if (remoteDue) {
     remoteProbe = await probeRemote(repoGit, branch, probeDeadline);
     cache = withRemoteCheck(cache, now);
   }
   let behind = await countBehind(repoGit, branch);
-  let findings = hasBaseline ? await compare(context, state.state, behind > 0 ? `origin/${branch}` : "HEAD") : NO_FINDINGS;
+  let findings = compares ? await compare(context, state.state, behind > 0 ? `origin/${branch}` : "HEAD") : NO_FINDINGS;
   const factsOf = () => ({
     event: input2.event,
+    manual: manualSync,
     hasBaseline,
+    stateReadable: !state.invalid,
     behind,
     toPush: findings.pushFiles.length,
     deletions: findings.deletions,
     toPull: findings.toPull,
     conflicts: findings.conflicts
   });
-  const pulled = shouldAutoPull(factsOf()) && !context.dryRun ? await pullQuietly(context, findings.toPull) : 0;
-  if (pulled > 0) {
-    state = await loadState(dataHome);
-    behind = await countBehind(repoGit, branch);
-    findings = await compare(context, state.state, "HEAD");
+  let pulled = 0;
+  if (shouldAutoPull(factsOf()) && !context.dryRun) {
+    const ran = await pullRepository(context, findings.toPull);
+    pulled = ran.files;
+    if (ran.completed) {
+      state = await loadState(dataHome);
+      hasBaseline = baselineOf(state);
+      behind = await countBehind(repoGit, branch);
+      findings = await compare(context, state.state, "HEAD");
+    }
   }
   let autoPush = AUTO_PUSH_OFF;
   let pushFailed = false;
@@ -21830,18 +21878,21 @@ async function check2(context) {
   else if (manual && !context.quiet) context.io.info("sync-ai: in sync.");
   if (!context.dryRun && cache !== before) await saveCheckCache(dataHome, cache);
 }
-async function runCheck(context) {
+async function runCheck(context, mode = "check") {
   if (context.env.AGENT_SYNC_CHECK === "0") return 0 /* Ok */;
   let reported = false;
   try {
     await check2({ ...context, io: { ...context.io, info: (message) => {
       reported = true;
       context.io.info(message);
-    } } });
+    } } }, mode);
   } catch {
     if (context.hook && !reported) context.io.info(JSON.stringify({ systemMessage: "sync-ai: automatic synchronization check failed; run sync-ai status to inspect." }));
   }
   return 0 /* Ok */;
+}
+function runSync(context) {
+  return runCheck(context, "sync");
 }
 
 // src/commands/items.ts
@@ -22544,7 +22595,7 @@ function defaultRuntime(io) {
   };
 }
 var COMMANDS = {
-  sync: runCheck,
+  sync: runSync,
   pull: runPull,
   push: runPush,
   status: runStatus,

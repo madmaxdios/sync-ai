@@ -4,7 +4,9 @@ import { CheckEvent } from '../../src/domain/check-event';
 
 const inSync: CheckFacts = {
   event: CheckEvent.SessionStart,
+  manual: false,
   hasBaseline: true,
+  stateReadable: true,
   toPush: 0,
   deletions: 0,
   toPull: 0,
@@ -21,15 +23,37 @@ describe('shouldAutoPull', () => {
   it.each([
     ['a prompt is sent', { event: CheckEvent.UserPromptSubmit, toPull: 2 }],
     ['another event happens', { event: CheckEvent.Other, toPull: 2 }],
-    ['the device has no baseline', { hasBaseline: false, toPull: 2 }],
-    ['there is a conflict', { conflicts: 1, toPull: 2 }],
+    ['a hook finds a conflict', { conflicts: 1, toPull: 2 }],
     ['there is nothing to apply', { toPull: 0, behind: 3 }],
+    ['the state file is unreadable', { hasBaseline: false, stateReadable: false, toPull: 2 }],
+    ['a manual sync finds an unreadable state file', { manual: true, hasBaseline: false, stateReadable: false, toPull: 2 }],
+    ['a prompt is sent on a device without a baseline', { event: CheckEvent.UserPromptSubmit, hasBaseline: false, toPull: 2 }],
   ])('never pulls when %s', (_name, change) => {
     expect(shouldAutoPull({ ...inSync, ...change })).toBe(false);
   });
 
   it('does not depend on local changes to push', () => {
     expect(shouldAutoPull({ ...inSync, toPull: 1, toPush: 4 })).toBe(true);
+  });
+
+  it.each([
+    ['at the start of a chat', {}],
+    ['on a manual sync', { manual: true, event: CheckEvent.Other }],
+  ])('installs the repository on a device without a baseline %s, even with nothing new', (_name, change) => {
+    expect(shouldAutoPull({ ...inSync, ...change, hasBaseline: false, toPull: 0 })).toBe(true);
+    expect(shouldAutoPull({ ...inSync, ...change, hasBaseline: false, toPull: 3 })).toBe(true);
+  });
+
+  it('pulls on a manual sync with something to apply, even when a conflict must be kept', () => {
+    const manual = { ...inSync, manual: true, event: CheckEvent.Other };
+
+    expect(shouldAutoPull({ ...manual, toPull: 2 })).toBe(true);
+    expect(shouldAutoPull({ ...manual, toPull: 2, conflicts: 1 })).toBe(true);
+    expect(shouldAutoPull({ ...manual, toPull: 0 })).toBe(false);
+  });
+
+  it('keeps a device without a baseline away from a conflicting pull in a hook', () => {
+    expect(shouldAutoPull({ ...inSync, hasBaseline: false, toPull: 3, conflicts: 1 })).toBe(false);
   });
 });
 
@@ -79,11 +103,31 @@ describe('buildReport', () => {
     expect(report?.user).toContain('(run /sync-ai:sync); 2 local changes not pushed');
   });
 
-  it('reports the missing baseline once, and only at the start of a chat', () => {
-    const noBaseline = { ...inSync, hasBaseline: false };
+  it('reports an unfinished first install at the start of a chat and points to sync', () => {
+    const noBaseline = { ...inSync, hasBaseline: false, toPull: 3, conflicts: 1 };
+    const report = buildReport(noBaseline, apply);
 
-    expect(buildReport(noBaseline, apply)?.user).toContain('no sync baseline');
+    expect(report?.user).toBe(
+      'sync-ai: this device has not synced yet and 1 local file differs from the repository, so nothing was installed (run /sync-ai:sync)',
+    );
+    expect(report?.claude).toContain('Offer /sync-ai:sync');
     expect(buildReport({ ...noBaseline, event: CheckEvent.UserPromptSubmit }, apply)).toBeUndefined();
+  });
+
+  it('points to status, not sync, when the state file is unreadable', () => {
+    const report = buildReport({ ...inSync, hasBaseline: false, stateReadable: false }, apply);
+
+    expect(report?.user).toContain('cannot be read');
+    expect(report?.user).toContain('/sync-ai:status');
+  });
+
+  it('says what a dry-run first install would do', () => {
+    const report = buildReport(
+      { ...inSync, manual: true, event: CheckEvent.Other, hasBaseline: false, toPull: 4 },
+      { pulled: 0, dryRun: true, autoPush: { kind: 'off' } },
+    );
+
+    expect(report?.user).toBe('[dry-run] sync-ai: first sync on this device, would install 4 files from the repository');
   });
 
   it('marks a dry run and says what it would pull', () => {
