@@ -7,7 +7,7 @@ import { Sandbox } from './helpers/sandbox';
 
 const hookConfigSchema = z.object({
   hooks: z.record(z.string(), z.array(z.object({
-    hooks: z.array(z.object({ command: z.string(), statusMessage: z.string() })),
+    hooks: z.array(z.object({ command: z.string(), args: z.array(z.string()).optional(), statusMessage: z.string() })),
   }))),
 });
 
@@ -33,8 +33,10 @@ describe('installed plugin hook commands', () => {
     const command = config.hooks.SessionStart?.[0]?.hooks[0];
     if (!command) throw new Error(`Missing ${agent} SessionStart hook`);
     expect(command.statusMessage).toContain('sync');
-    const result = spawnSync(command.command.replaceAll('${CLAUDE_PLUGIN_ROOT}', root), {
-      shell: true,
+    const expand = (value: string): string => value.replaceAll('${CLAUDE_PLUGIN_ROOT}', root);
+    // Hooks with `args` run the program directly, without a shell; the one-string form needs one.
+    const result = spawnSync(expand(command.command), (command.args ?? []).map(expand), {
+      shell: command.args === undefined,
       encoding: 'utf8',
       input: JSON.stringify({ hook_event_name: 'SessionStart', session_id: 'plugin-test' }),
       env: {
