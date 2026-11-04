@@ -1,8 +1,5 @@
 # sync-ai
 
-Directory metadata and the short privacy/terms documents live in
-`sync-ai/.claude-plugin/plugin.json`, `PRIVACY.md` and `TERMS.md`.
-
 Sync your skills, commands, agents and global instructions across devices
 through **your own private git repository**, much like VS Code Settings Sync.
 This plugin is public and contains nothing personal: your data lives only in
@@ -11,6 +8,33 @@ your repository.
 Claude Code, Codex and OpenCode are supported. Claude uses the plugin commands
 below; Codex uses the bundled `sync-*` skills; OpenCode uses the same core
 commands with `--agent opencode` and the same private repository.
+
+Directory metadata and the short privacy and terms documents live in
+`.claude-plugin/plugin.json`, [`PRIVACY.md`](PRIVACY.md) and [`TERMS.md`](TERMS.md).
+
+## What this plugin runs and sends
+
+- **What it runs:** `node "${CLAUDE_PLUGIN_ROOT}/dist/agent-sync.mjs"`, the
+  bundled build of the readable source in `src/`. It runs from the commands
+  (`/sync-ai:*`) and from two hooks, `SessionStart` and `UserPromptSubmit` (see
+  [Staying in sync automatically](#staying-in-sync-automatically)).
+- **What it contacts:** only the git remote of **your own data repository**,
+  through `git ls-remote`, `git fetch`, `git pull` and `git push`. During `init`,
+  and only if you use it, the GitHub CLI (`gh`) creates that private repository
+  with your existing `gh` login. There is no other destination, telemetry or
+  analytics.
+- **What it sends:** only the files on your sync list (see
+  [What is synced](#what-is-synced)), and only after the [secret scan](#security)
+  passes. Credentials, settings, history and sessions are
+  [never synced](#what-is-never-synced).
+- **Automatic push is on by default.** The `UserPromptSubmit` hook may push
+  quiet, clean changes without asking (see [Automatic push](#automatic-push)).
+  Set `AGENT_SYNC_AUTO_PUSH=0` to turn it off; the hook then only tells you
+  about pending changes. Deletions always need your confirmation.
+- **Where it works:** Claude Code, because it needs `node`, `git` and your local
+  configuration folder. In claude.ai chat the hooks are ignored and the commands
+  can't reach your machine. In Cowork it only works in sessions that run on your
+  computer.
 
 ## Requirements
 
@@ -38,6 +62,17 @@ codex plugin add sync-ai@sync-ai
 ```
 
 The available skills are `$sync-sync`, `$sync-status` and `$sync-resolve`.
+
+For OpenCode, install the CLI from npm and run it from your terminal:
+
+```bash
+npm install -g @madmaxdios/sync-ai
+agent-sync --agent opencode status
+agent-sync --agent opencode sync
+```
+
+OpenCode uses `~/.config/opencode` and the same private repository as the other
+agents. Installing the Claude or Codex plugin does not register it in OpenCode.
 
 ## Usage
 
@@ -68,6 +103,18 @@ update the plugin:
 
 ```bash
 claude plugin marketplace update sync-ai && claude plugin update sync-ai@sync-ai
+```
+
+**Codex.** Refresh the marketplace:
+
+```bash
+codex plugin marketplace upgrade sync-ai
+```
+
+**OpenCode.** Update the CLI:
+
+```bash
+npm update -g @madmaxdios/sync-ai
 ```
 
 ## Staying in sync automatically

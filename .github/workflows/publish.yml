@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  id-token: write
 
 jobs:
   validate-and-tag:
@@ -47,3 +48,16 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git tag "$tag"
           git push origin "$tag"
+
+      # Checked against the registry, not the tag, so a failed publish is retried on the next run.
+      - name: Publish to npm when the version is new
+        run: |
+          set -euo pipefail
+          package="$(node -p "require('./package.json').name")"
+          version="$(node -p "require('./package.json').version")"
+          if npm view "$package@$version" version >/dev/null 2>&1; then
+            echo "$package@$version is already on npm; nothing to publish."
+            exit 0
+          fi
+          # Trusted publishing (OIDC) needs npm 11.5.1 or newer.
+          npx -y npm@11 publish

@@ -1,5 +1,6 @@
 {
   "name": "sync-ai",
+  "displayName": "sync-ai: AI agent config sync",
   "version": "0.8.4",
   "description": "Sync your skills, commands, agents and global instructions across devices through your own private git repository.",
   "author": {
